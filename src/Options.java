@@ -7,4 +7,7 @@ public interface Options {
 
     @Option(defaultValue = {"token.txt"})
     String getTokenFile();
+    
+    @Option(defaultValue = {"edoz.txt"})
+    String getEdozFile();
 }
