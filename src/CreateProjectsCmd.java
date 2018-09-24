@@ -17,7 +17,7 @@ public class CreateProjectsCmd extends CmdWithEdoz<CreateProjectsCmd.Args> {
 
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
-        var existingProjects = gitlab.getGroupApi().getProjects(studGroup.getId()).stream()
+        var existingProjects = getProjectsIn(studGroup).stream()
                 .map(Project::getName).collect(toSet());
         int created = 0;
         int existing = 0;

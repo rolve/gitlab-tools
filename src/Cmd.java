@@ -1,4 +1,3 @@
-import static java.lang.Integer.MAX_VALUE;
 import static java.nio.file.Files.readAllLines;
 import static java.util.stream.Collectors.joining;
 
@@ -58,6 +57,12 @@ public abstract class Cmd<A extends Cmd.Args> {
         return gitlab.getGroupApi().getSubGroups(group.getId()).stream()
                 .filter(g -> g.getName().equals(subGroupName))
                 .findFirst().get();
+    }
+
+    protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
+        var projects = new ArrayList<Project>();
+        gitlab.getGroupApi().getProjects(group.getId(), 100).forEachRemaining(projects::addAll);
+        return projects;
     }
 
     public interface Args {
