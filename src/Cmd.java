@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.User;
 
 import com.lexicalscope.jewel.cli.Option;
@@ -46,6 +47,18 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     abstract void call() throws Exception;
+
+    protected Group getGroup(String groupName) throws GitLabApiException {
+        return gitlab.getGroupApi().getGroups().stream()
+                .filter(g -> g.getName().equals(groupName))
+                .findFirst().get();
+    }
+
+    protected Group getSubGroup(Group group, String subGroupName) throws GitLabApiException {
+        return gitlab.getGroupApi().getSubGroups(group.getId()).stream()
+                .filter(g -> g.getName().equals(subGroupName))
+                .findFirst().get();
+    }
 
     public interface Args {
         @Option(defaultValue = {"token.txt"})

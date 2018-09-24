@@ -1,7 +1,6 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.util.stream.Collectors.toSet;
 
-import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
 
 import com.lexicalscope.jewel.cli.Option;
@@ -16,12 +15,8 @@ public class CreateProjectsCmd extends CmdWithEdoz<CreateProjectsCmd.Args> {
     void call() throws Exception {
         System.out.printf("Creating projects for %d students...\n", students.size());
 
-        var mainGroup = gitlab.getGroupApi().getGroups().stream()
-                .filter(g -> g.getName().equals(args.getGroupName()))
-                .findFirst().get();
-        var studGroup = gitlab.getGroupApi().getSubGroups(mainGroup.getId()).stream()
-                .filter(g -> g.getName().equals("students"))
-                .findFirst().get();
+        var mainGroup = getGroup(args.getGroupName());
+        var studGroup = getSubGroup(mainGroup, "students");
         var existingProjects = gitlab.getGroupApi().getProjects(studGroup.getId()).stream()
                 .map(Project::getName).collect(toSet());
         int created = 0;
