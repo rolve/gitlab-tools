@@ -1,5 +1,5 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
+import static java.util.stream.Collectors.toSet;
 
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Project;
@@ -14,29 +14,36 @@ public class CreateProjectsCmd extends CmdWithEdoz<CreateProjectsCmd.Args> {
 
     @Override
     void call() throws Exception {
-        var groupId = getGroupId(args.getGroupName());
-        
         System.out.printf("Creating projects for %d students...\n", students.size());
-        var projects = gitlab.getProjectApi();
-        for (int s = 0; s < students.size(); s++) {
-            var student = students.get(s);
+
+        var mainGroup = gitlab.getGroupApi().getGroups().stream()
+                .filter(g -> g.getName().equals(args.getGroupName()))
+                .findFirst().get();
+        var studGroup = gitlab.getGroupApi().getSubGroups(mainGroup.getId()).stream()
+                .filter(g -> g.getName().equals("students"))
+                .findFirst().get();
+        var existingProjects = gitlab.getGroupApi().getProjects(studGroup.getId()).stream()
+                .map(Project::getName).collect(toSet());
+        int created = 0;
+        int existing = 0;
+        for (var student : students) {
             if (student.nethz.isPresent()) {
-                Project project = projects.createProject(groupId, student.nethz.get());
-                gitlab.getProjectApi().addMember(project.getId(), student.user.get().getId(), DEVELOPER);
+                if (existingProjects.contains(student.nethz.get())) {
+                    existing++;
+                } else {
+                    gitlab.getProjectApi().createProject(studGroup.getId(), student.nethz.get());
+                    created++;
+                }
             } else {
-                System.err.printf("Warning: no project created for %s\n", student.firstAndLastName);
+                System.err.printf("Warning: no project created for %s\n",
+                        student.firstAndLastName);
             }
-            if (s % 10 == 9) {
-                System.out.printf("%d projects created\n", s + 1);
+            if (created % 10 == 0 && created > 0) {
+                System.out.printf("%d projects created\n", created);
             }
         }
-        System.out.println("Done.");
-    }
-
-    private int getGroupId(String groupName) throws GitLabApiException {
-        return gitlab.getGroupApi().getGroups(groupName).stream()
-                .filter(g -> g.getName().equals(groupName))
-                .findFirst().get().getId();
+        System.out.printf("Done. %d projects created, %d already existed.\n",
+                created, existing);
     }
 
     public interface Args extends CmdWithEdoz.Args {
