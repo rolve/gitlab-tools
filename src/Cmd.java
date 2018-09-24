@@ -1,8 +1,10 @@
 import static java.lang.Integer.MAX_VALUE;
 import static java.nio.file.Files.readAllLines;
+import static java.util.stream.Collectors.joining;
 
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.gitlab4j.api.GitLabApi;
@@ -27,14 +29,20 @@ public abstract class Cmd<A extends Cmd.Args> {
 
     private void fetchUsers() throws GitLabApiException {
         System.out.println("Fetching users from Gitlab...");
+        var duplicateNames = new HashSet<String>();
         gitlab.getUserApi().getUsers(MAX_VALUE).forEachRemaining(page -> {
             page.forEach(user -> {
                 if (users.put(user.getName(), user) != null) {
-                    System.err.printf("Warning: multiple users with name %s!\n", user.getName());
+                    duplicateNames.add(user.getName());
                 }
             });
         });
+        users.keySet().removeAll(duplicateNames);
         System.out.printf("%d users fetched\n", users.size());
+        if (!duplicateNames.isEmpty()) {
+            var dups = duplicateNames.stream().collect(joining(", "));
+            System.err.printf("Warning: multiple users found for the following names: %s!\n", dups);
+        }
     }
 
     abstract void call() throws Exception;
