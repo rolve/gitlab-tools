@@ -8,6 +8,7 @@ public class GitlabToolsCli {
     private static Map<String, Class<? extends Cmd<?>>> commands = new HashMap<>() {{
         put("create-issues", CreateIssuesCmd.class);
         put("create-projects", CreateProjectsCmd.class);
+        put("assign-members", AssignMembersCmd.class);
     }};
 
     public static void main(String[] args) throws Exception {

@@ -31,7 +31,7 @@ public abstract class CmdWithEdoz<A extends CmdWithEdoz.Args> extends Cmd<A> {
     }
 
     private void findNethzAndUser(Student student) {
-        student.user = Optional.ofNullable(users.get(student.firstAndLastName));
+        student.user = Optional.ofNullable(nameToUserMap.get(student.firstAndLastName));
 
         var mailParts = student.mail.split("@");
         if (mailParts[0].matches("[a-z]+") && mailParts[1].matches("(student\\.)?ethz\\.ch")) {

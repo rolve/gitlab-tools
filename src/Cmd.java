@@ -2,13 +2,16 @@ import static java.nio.file.Files.readAllLines;
 import static java.util.stream.Collectors.joining;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 
 import com.lexicalscope.jewel.cli.Option;
@@ -17,7 +20,8 @@ public abstract class Cmd<A extends Cmd.Args> {
 
     protected final A args;
     protected final GitLabApi gitlab;
-    protected final Map<String, User> users = new HashMap<>();
+    protected final List<User> users = new ArrayList<>();
+    protected final Map<String, User> nameToUserMap = new HashMap<>();
 
     public Cmd(A args) throws Exception {
         this.args = args;
@@ -30,14 +34,15 @@ public abstract class Cmd<A extends Cmd.Args> {
     private void fetchUsers() throws GitLabApiException {
         System.out.println("Fetching users from Gitlab...");
         var duplicateNames = new HashSet<String>();
-        gitlab.getUserApi().getUsers(MAX_VALUE).forEachRemaining(page -> {
+        gitlab.getUserApi().getUsers(100).forEachRemaining(page -> {
             page.forEach(user -> {
-                if (users.put(user.getName(), user) != null) {
+                users.add(user);
+                if (nameToUserMap.put(user.getName(), user) != null) {
                     duplicateNames.add(user.getName());
                 }
             });
         });
-        users.keySet().removeAll(duplicateNames);
+        nameToUserMap.keySet().removeAll(duplicateNames);
         System.out.printf("%d users fetched\n", users.size());
         if (!duplicateNames.isEmpty()) {
             var dups = duplicateNames.stream().collect(joining(", "));
