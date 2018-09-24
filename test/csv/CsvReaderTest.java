@@ -23,15 +23,31 @@ public class CsvReaderTest {
 
         assertEquals(2, students.size());
         assertEquals("Hans-Peter Moll", students.get(0).name);
+        assertEquals("Hans-Peter Moll", students.get(0).nameAgain);
         assertEquals("hpmoll@example.com", students.get(0).email);
+        assertEquals(null, students.get(0).nethz);
+        assertEquals(null, students.get(0).nethzAgain);
         assertEquals("Frieda Graf", students.get(1).name);
+        assertEquals("Frieda Graf", students.get(1).nameAgain);
         assertEquals("graff@example.com", students.get(1).email);
+        assertEquals(null, students.get(1).nethz);
+        assertEquals(null, students.get(1).nethzAgain);
     }
 
     public static class Student {
         @Column("Name")
         private String name;
+
+        @ColumnIndex(0)
+        private String nameAgain;
+
         @Column("E-Mail-Adresse")
         private String email;
+
+        @Column("NETHZ")
+        private String nethz;
+
+        @ColumnIndex(3)
+        private String nethzAgain;
     }
 }

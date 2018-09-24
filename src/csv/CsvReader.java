@@ -1,5 +1,6 @@
 package csv;
 
+import static java.lang.reflect.Modifier.isFinal;
 import static java.nio.file.Files.readAllLines;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -31,27 +32,14 @@ public class CsvReader {
             throw new IllegalCsvFormatException("header contains duplicate entries");
         }
 
-        var columnsToFields = new HashMap<Integer, Set<Field>>();
+        var colsToFields = new HashMap<Integer, Set<Field>>();
         for (var f : clazz.getDeclaredFields()) {
-            var column = f.getAnnotation(Column.class);
-            var index = f.getAnnotation(ColumnIndex.class);
-
-            if (column != null && index != null) {
-                throw new AssertionError("Column and ColumnIndex not allowed on same field");
-            } else if (index != null) {
-                if (index.value() < 0 || index.value() >= header.size()) {
-                    throw new IllegalCsvFormatException("unexpected number of columns in header");
-                }
-                columnsToFields.computeIfAbsent(index.value(),
-                        k -> new HashSet<>()).add(f);
-            } else if (column != null) {
-                columnsToFields.computeIfAbsent(header.indexOf(column.value()),
-                        k -> new HashSet<>()).add(f);
+            var index = colIndexFor(f, header);
+            if (index != null) {
+                colsToFields.computeIfAbsent(index, k -> new HashSet<>()).add(f);
+                f.setAccessible(true);
             }
         }
-
-        columnsToFields.values().stream().flatMap(Set::stream)
-                .forEach(f -> f.setAccessible(true));
 
         var result = new ArrayList<E>();
         for(var line : lines.subList(1, lines.size())) {
@@ -61,13 +49,47 @@ public class CsvReader {
             }
             var object = clazz.getConstructor().newInstance();
             for(int c = 0; c < cells.length; c++) {
-                for (var f : columnsToFields.getOrDefault(c, emptySet())) {
+                for (var f : colsToFields.getOrDefault(c, emptySet())) {
                     f.set(object, cells[c]);
                 }
             }
             result.add(object);
         }
         return result;
+    }
+
+    private Integer colIndexFor(Field f, List<String> header) {
+        var col = f.getAnnotation(Column.class);
+        var colIndex = f.getAnnotation(ColumnIndex.class);
+
+        if (col != null && colIndex != null) {
+            throw new AssertionError("Column and ColumnIndex not allowed on same field");
+        } else if (colIndex != null) {
+            checkField(f);
+            if (colIndex.value() < 0) {
+                throw new AssertionError("negative ColumnIndex annotation");
+            } else if(colIndex.value() >= header.size()) {
+                System.err.printf("Warning: missing column %d\n", colIndex.value());
+            }
+            return colIndex.value();
+        } else if (col != null) {
+            checkField(f);
+            int index = header.indexOf(col.value());
+            if (index == -1) {
+                System.err.printf("Warning: missing column \"%s\"\n", col.value());
+            }
+            return index;
+        } else {
+            return null;
+        }
+    }
+
+    private void checkField(Field f) {
+        if (isFinal(f.getModifiers())) {
+            throw new AssertionError("annotated field is final");
+        } else if (f.getType() != String.class) {
+            throw new AssertionError("unsupported field type " + f.getType().getName());
+        }
     }
 
     public enum Separator {
