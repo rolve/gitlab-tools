@@ -9,6 +9,7 @@ public class GitlabToolsCli {
         put("create-issues", CreateIssuesCmd.class);
         put("create-projects", CreateProjectsCmd.class);
         put("assign-members", AssignMembersCmd.class);
+        put("publish", PublishCmd.class);
     }};
 
     public static void main(String[] args) throws Exception {

@@ -14,14 +14,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 public class GitTest {
 
     public static void main(String[] args) throws IOException, GitAPIException, URISyntaxException {
         var token = readAllLines(Paths.get("token.txt")).get(0);
-        CredentialsProvider credentials = new UsernamePasswordCredentialsProvider("mfaes", token);
+        var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var dir = Paths.get("temp");
         if (exists(dir)) {

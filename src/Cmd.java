@@ -19,6 +19,7 @@ import com.lexicalscope.jewel.cli.Option;
 public abstract class Cmd<A extends Cmd.Args> {
 
     protected final A args;
+    protected final String token;
     protected final GitLabApi gitlab;
     protected final List<User> users = new ArrayList<>();
     protected final Map<String, User> nameToUserMap = new HashMap<>();
@@ -26,7 +27,7 @@ public abstract class Cmd<A extends Cmd.Args> {
     public Cmd(A args) throws Exception {
         this.args = args;
 
-        var token = readAllLines(Paths.get(args.getTokenFile())).get(0);
+        token = readAllLines(Paths.get(args.getTokenFile())).get(0);
         gitlab = new GitLabApi("https://gitlab.inf.ethz.ch/", token);
         fetchUsers();
     }
