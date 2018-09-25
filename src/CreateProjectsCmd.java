@@ -30,15 +30,13 @@ public class CreateProjectsCmd extends CmdWithEdoz<CreateProjectsCmd.Args> {
                     created++;
                 }
             } else {
-                System.err.printf("Warning: no project created for %s\n",
-                        student.firstAndLastName);
+                System.err.printf("Warning: no project created for %s\n", student.name());
             }
             if (created % 10 == 0 && created > 0) {
                 System.out.printf("%d projects created\n", created);
             }
         }
-        System.out.printf("Done. %d projects created, %d already existed.\n",
-                created, existing);
+        System.out.printf("Done. %d projects created, %d already exist.\n", created, existing);
     }
 
     public interface Args extends CmdWithEdoz.Args {
