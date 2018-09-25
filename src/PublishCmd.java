@@ -3,8 +3,10 @@ import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.Files.exists;
 import static java.nio.file.Files.walk;
+import static java.util.Comparator.reverseOrder;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
@@ -28,39 +30,44 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
         var studGroup = getSubGroup(mainGroup, "students-test");
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
-        
-        var sourceDir = Paths.get(args.getSourceDir());
-        var dirName = sourceDir.getFileName();
+
+        var sourceDir = Paths.get(args.getProjectDir());
+        var projectName = sourceDir.getFileName();
 
         int created = 0;
         int existing = 0;
         for(Project project : getProjectsIn(studGroup)) {
             var repoDir = createTempDirectory("gitlab-tools");
 
-            Git git = cloneRepository()
-                    .setURI(project.getWebUrl())
-                    .setDirectory(repoDir.toFile())
-                    .setCredentialsProvider(credentials)
-                    .call();
-
-            if (exists(repoDir.resolve(dirName))) {
-                existing++;
-            } else {
-                copyDir(sourceDir, repoDir.resolve(dirName));
-                created++;
-                
-                git.add()
-                        .addFilepattern(".")
-                        .call();
-                git.commit()
-                        .setMessage("Publish " + dirName)
-                        .call();
-                git.push()
-                        .add("master")
+            try {
+                Git git = cloneRepository()
+                        .setURI(project.getWebUrl())
+                        .setDirectory(repoDir.toFile())
                         .setCredentialsProvider(credentials)
                         .call();
+
+                if (exists(repoDir.resolve(projectName))) {
+                    existing++;
+                } else {
+                    copyDir(sourceDir, repoDir.resolve(projectName));
+                    created++;
+
+                    git.add()
+                            .addFilepattern(".")
+                            .call();
+                    git.commit()
+                            .setMessage("Publish " + projectName)
+                            .call();
+                    git.push()
+                            .add("master")
+                            .setCredentialsProvider(credentials)
+                            .call();
+                }
+                git.close();
+            } finally {
+                walk(repoDir).sorted(reverseOrder())
+                        .map(Path::toFile).forEach(File::delete);
             }
-            git.close();
         }
         System.out.printf("Done. %d published, %d already exist.\n", created, existing);
     }
@@ -78,8 +85,8 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
     interface Args extends Cmd.Args {
         @Option
         String getGroupName();
-        
+
         @Option
-        String getSourceDir();
+        String getProjectDir();
     }
 }
