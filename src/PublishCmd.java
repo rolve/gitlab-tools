@@ -31,7 +31,7 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
     @Override
     void call() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students-test");
+        var studGroup = getSubGroup(mainGroup, "students");
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
