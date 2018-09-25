@@ -2,8 +2,12 @@ import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.copy;
 import static java.nio.file.Files.createTempDirectory;
 import static java.nio.file.Files.exists;
+import static java.nio.file.Files.lines;
 import static java.nio.file.Files.walk;
+import static java.nio.file.Files.write;
+import static java.util.Arrays.asList;
 import static java.util.Comparator.reverseOrder;
+import static java.util.stream.Collectors.joining;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 
 import java.io.File;
@@ -38,19 +42,20 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
         int existing = 0;
         for(Project project : getProjectsIn(studGroup)) {
             var repoDir = createTempDirectory("gitlab-tools");
-
             try {
+                var destDir = repoDir.resolve(projectName);
+
                 Git git = cloneRepository()
                         .setURI(project.getWebUrl())
                         .setDirectory(repoDir.toFile())
                         .setCredentialsProvider(credentials)
                         .call();
 
-                if (exists(repoDir.resolve(projectName))) {
+                if (exists(destDir)) {
                     existing++;
                 } else {
-                    copyDir(sourceDir, repoDir.resolve(projectName));
-                    created++;
+                    copyDir(sourceDir, destDir);
+                    renameProject(destDir, project.getName());
 
                     git.add()
                             .addFilepattern(".")
@@ -62,6 +67,7 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
                             .add("master")
                             .setCredentialsProvider(credentials)
                             .call();
+                    created++;
                 }
                 git.close();
             } finally {
@@ -70,6 +76,16 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
             }
         }
         System.out.printf("Done. %d published, %d already exist.\n", created, existing);
+    }
+
+    private void renameProject(Path projectDir, String nethz) throws IOException {
+        var projectFile = projectDir.resolve(".project");
+        var content = lines(projectFile).collect(joining("\n"));
+        var newContent = content.replace("REPLACEME", nethz);
+        if (newContent.equals(content)) {
+            throw new AssertionError("REPLACEME not found");
+        }
+        write(projectFile, asList(newContent));
     }
 
     private void copyDir(Path src, Path dest) throws IOException {
