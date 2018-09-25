@@ -21,28 +21,52 @@ public abstract class Cmd<A extends Cmd.Args> {
     protected final A args;
     protected final String token;
     protected final GitLabApi gitlab;
-    protected final List<User> users = new ArrayList<>();
-    protected final Map<String, User> nameToUserMap = new HashMap<>();
+
+    private List<User> users = null;
+    private Map<String, User> nameToUserMap = null;
 
     public Cmd(A args) throws Exception {
         this.args = args;
 
         token = readAllLines(Paths.get(args.getTokenFile())).get(0);
         gitlab = new GitLabApi("https://gitlab.inf.ethz.ch/", token);
-        fetchUsers();
     }
 
-    private void fetchUsers() throws GitLabApiException {
+    abstract void call() throws Exception;
+
+    protected List<User> users() {
+        if (users == null) {
+            fetchUsers();
+        }
+        return users;
+    }
+
+    protected Map<String, User> nameToUserMap() {
+        if (users == null) {
+            fetchUsers();
+        }
+        return nameToUserMap;
+    }
+
+    private void fetchUsers() {
         System.out.println("Fetching users from Gitlab...");
+
+        users = new ArrayList<>();
+        nameToUserMap = new HashMap<>();
+
         var duplicateNames = new HashSet<String>();
-        gitlab.getUserApi().getUsers(100).forEachRemaining(page -> {
-            page.forEach(user -> {
-                users.add(user);
-                if (nameToUserMap.put(user.getName(), user) != null) {
-                    duplicateNames.add(user.getName());
-                }
+        try {
+            gitlab.getUserApi().getUsers(100).forEachRemaining(page -> {
+                page.forEach(user -> {
+                    users.add(user);
+                    if (nameToUserMap.put(user.getName(), user) != null) {
+                        duplicateNames.add(user.getName());
+                    }
+                });
             });
-        });
+        } catch(GitLabApiException e) {
+            throw new RuntimeException(e);
+        }
         nameToUserMap.keySet().removeAll(duplicateNames);
         System.out.printf("%d users fetched\n", users.size());
         if (!duplicateNames.isEmpty()) {
@@ -50,8 +74,6 @@ public abstract class Cmd<A extends Cmd.Args> {
             System.err.printf("Warning: multiple users found for the following names: %s!\n", dups);
         }
     }
-
-    abstract void call() throws Exception;
 
     protected Group getGroup(String groupName) throws GitLabApiException {
         return gitlab.getGroupApi().getGroups().stream()

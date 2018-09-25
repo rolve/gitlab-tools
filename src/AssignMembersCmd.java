@@ -17,7 +17,7 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
         var studGroup = getSubGroup(mainGroup, "students");
         var projects = getProjectsIn(studGroup);
         for(Project project : projects) {
-            var user = users.stream()
+            var user = users().stream()
                     .filter(u -> u.getUsername().equals(project.getName()))
                     .findFirst();
             if (user.isPresent()) {
