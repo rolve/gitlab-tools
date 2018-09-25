@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ public class CsvReader {
             throw new IllegalCsvFormatException("header contains duplicate entries");
         }
 
+        var constructor = clazz.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
         var colsToFields = new HashMap<Integer, Set<Field>>();
         for (var f : clazz.getDeclaredFields()) {
             var index = colIndexFor(f, header);
@@ -47,7 +51,7 @@ public class CsvReader {
             if (cells.length != header.size()) {
                 throw new IllegalCsvFormatException("unexpected number of cells");
             }
-            var object = clazz.getConstructor().newInstance();
+            var object = constructor.newInstance();
             for(int c = 0; c < cells.length; c++) {
                 for (var f : colsToFields.getOrDefault(c, emptySet())) {
                     f.set(object, cells[c]);
