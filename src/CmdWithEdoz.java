@@ -1,6 +1,6 @@
-import static csv.CsvReader.Separator.TAB;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
+import static org.apache.commons.csv.CSVFormat.TDF;
 
 import java.nio.file.Paths;
 import java.util.List;
@@ -14,12 +14,12 @@ import csv.Column;
 import csv.CsvReader;
 
 public abstract class CmdWithEdoz<A extends CmdWithEdoz.Args> extends Cmd<A> {
-    
+
     protected final List<Student> students;
 
     public CmdWithEdoz(A args) throws Exception {
         super(args);
-        students = new CsvReader(TAB).read(Paths.get(args.getEdozFile()), Student.class);
+        students = new CsvReader(TDF.withHeader()).read(Paths.get(args.getEdozFile()), Student.class);
         students.forEach(this::findNethzAndUser);
     }
 
@@ -58,7 +58,7 @@ public abstract class CmdWithEdoz<A extends CmdWithEdoz.Args> extends Cmd<A> {
     }
 
     public interface Args extends Cmd.Args {
-        @Option(defaultValue = {"edoz.txt"})
+        @Option(defaultValue = "edoz.txt")
         String getEdozFile();
     }
 }

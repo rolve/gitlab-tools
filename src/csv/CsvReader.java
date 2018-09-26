@@ -1,11 +1,9 @@
 package csv;
 
 import static java.lang.reflect.Modifier.isFinal;
-import static java.nio.file.Files.readAllLines;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
+import static java.nio.file.Files.newBufferedReader;
 
-import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,46 +12,43 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+
 public class CsvReader {
 
-    private final Separator separator;
+    private CSVFormat format;
 
-    public CsvReader(Separator separator) {
-        this.separator = separator;
+    public CsvReader(CSVFormat format) {
+        this.format = format;
     }
 
-    public <E> List<E> read(Path path, Class<E> clazz) throws IOException, ReflectiveOperationException {
-        return read(readAllLines(path), clazz);
+    public <E> List<E> read(Path path, Class<E> clazz) throws Exception {
+        return read(newBufferedReader(path), clazz);
     }
 
-    public <E> List<E> read(List<String> lines, Class<E> clazz) throws ReflectiveOperationException {
-        var header = asList(lines.get(0).split(separator.regex));
-        if (new HashSet<>(header).size() < header.size()) {
-            throw new IllegalCsvFormatException("header contains duplicate entries");
-        }
+    public <E> List<E> read(Reader reader, Class<E> clazz) throws Exception {
+        var parser = format.parse(reader);
 
         var constructor = clazz.getDeclaredConstructor();
         constructor.setAccessible(true);
 
-        var colsToFields = new HashMap<Integer, Set<Field>>();
+        var colsToFields = new HashMap<String, Set<Field>>();
         for (var f : clazz.getDeclaredFields()) {
-            var index = colIndexFor(f, header);
-            if (index != null) {
-                colsToFields.computeIfAbsent(index, k -> new HashSet<>()).add(f);
+            var name = colNameFor(f);
+            if (name != null) {
+                colsToFields.computeIfAbsent(name, k -> new HashSet<>()).add(f);
                 f.setAccessible(true);
             }
         }
 
         var result = new ArrayList<E>();
-        for(var line : lines.subList(1, lines.size())) {
-            var cells = line.split(separator.regex);
-            if (cells.length != header.size()) {
-                throw new IllegalCsvFormatException("unexpected number of cells");
-            }
+        for (CSVRecord record : parser) {
             var object = constructor.newInstance();
-            for(int c = 0; c < cells.length; c++) {
-                for (var f : colsToFields.getOrDefault(c, emptySet())) {
-                    f.set(object, cells[c]);
+            for (var entry : colsToFields.entrySet()) {
+                var name = entry.getKey();
+                for(var field : entry.getValue()) {
+                    field.set(object, record.get(name));
                 }
             }
             result.add(object);
@@ -61,47 +56,17 @@ public class CsvReader {
         return result;
     }
 
-    private Integer colIndexFor(Field f, List<String> header) {
+    private String colNameFor(Field f) {
         var col = f.getAnnotation(Column.class);
-        var colIndex = f.getAnnotation(ColumnIndex.class);
-
-        if (col != null && colIndex != null) {
-            throw new AssertionError("Column and ColumnIndex not allowed on same field");
-        } else if (colIndex != null) {
-            checkField(f);
-            if (colIndex.value() < 0) {
-                throw new AssertionError("negative ColumnIndex annotation");
-            } else if(colIndex.value() >= header.size()) {
-                System.err.printf("Warning: missing column %d\n", colIndex.value());
-            }
-            return colIndex.value();
-        } else if (col != null) {
-            checkField(f);
-            int index = header.indexOf(col.value());
-            if (index == -1) {
-                System.err.printf("Warning: missing column \"%s\"\n", col.value());
-            }
-            return index;
-        } else {
+        if (col == null) {
             return null;
-        }
-    }
-
-    private void checkField(Field f) {
-        if (isFinal(f.getModifiers())) {
-            throw new AssertionError("annotated field is final");
-        } else if (f.getType() != String.class) {
-            throw new AssertionError("unsupported field type " + f.getType().getName());
-        }
-    }
-
-    public enum Separator {
-        COMMA(","), SEMICOLON(";"), TAB("\t");
-        
-        private String regex;
-
-        private Separator(String regex) {
-            this.regex = regex;
+        } else {
+            if (isFinal(f.getModifiers())) {
+                throw new AssertionError("annotated field is final");
+            } else if (f.getType() != String.class) {
+                throw new AssertionError("unsupported field type " + f.getType().getName());
+            }
+            return col.value();
         }
     }
 
