@@ -1,5 +1,9 @@
 import static java.nio.file.Files.readAllLines;
+import static java.util.Spliterator.ORDERED;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -7,9 +11,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
@@ -76,21 +82,31 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     protected Group getGroup(String groupName) throws GitLabApiException {
-        return gitlab.getGroupApi().getGroups().stream()
+        return streamPager(gitlab.getGroupApi().getGroups(100))
                 .filter(g -> g.getName().equals(groupName))
                 .findFirst().get();
     }
 
     protected Group getSubGroup(Group group, String subGroupName) throws GitLabApiException {
-        return gitlab.getGroupApi().getSubGroups(group.getId()).stream()
+        return streamPager(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
                 .filter(g -> g.getName().equals(subGroupName))
                 .findFirst().get();
     }
 
     protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
-        var projects = new ArrayList<Project>();
-        gitlab.getGroupApi().getProjects(group.getId(), 100).forEachRemaining(projects::addAll);
-        return projects;
+        return streamPager(gitlab.getGroupApi().getProjects(group.getId(), 100))
+                .collect(toList());
+    }
+
+    protected Project getProject(Group group, String projectName) throws GitLabApiException {
+        return streamPager(gitlab.getGroupApi().getProjects(group.getId(), 100))
+                .filter(p -> p.getName().equals(projectName))
+                .findFirst().get();
+    }
+
+    protected static <E> Stream<E> streamPager(Pager<E> pager) {
+        var pages = stream(spliteratorUnknownSize(pager, ORDERED), false);
+        return pages.flatMap(List::stream);
     }
 
     public interface Args {

@@ -1,6 +1,8 @@
 import csv.Column;
 
 class EchoStudent {
+    @Column("Nummer")
+    String legi;
     @Column("Raumzeit")
     String room;
     @Column("Rufname")
