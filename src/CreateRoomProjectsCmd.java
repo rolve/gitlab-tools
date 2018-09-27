@@ -23,7 +23,6 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.lexicalscope.jewel.cli.Option;
 
-import csv.Column;
 import csv.CsvReader;
 
 public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
@@ -38,9 +37,9 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         var roomGroup = getSubGroup(mainGroup, "rooms");
 
         var students = new CsvReader(EXCEL.withHeader())
-                .read(Paths.get(args.getGroupsFile()), Student.class);
+                .read(Paths.get(args.getGroupsFile()), EchoStudent.class);
 
-        for (Student student : students) {
+        for (EchoStudent student : students) {
             if (!student.email.endsWith("@student.ethz.ch")) {
                 throw new RuntimeException("invalid email: " + student.email);
             }
@@ -51,7 +50,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         System.out.println("Done.");
 
         System.out.print("Fetching commit hashes...");
-        for (Student student : students) {
+        for (EchoStudent student : students) {
             var project = studentProjects.stream()
                     .filter(p -> p.getName().equals(student.nethz()))
                     .findFirst().get();
@@ -84,7 +83,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
 
                 var repo = git.getRepository();
                 var editor = repo.lockDirCache().editor();
-                for (Student student : roomStudents) {
+                for (EchoStudent student : roomStudents) {
                     editor.add(new PathEdit(student.nethz()) {
                         public void apply(DirCacheEntry ent) {
                             ent.setFileMode(GITLINK);
@@ -114,7 +113,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         System.out.println("\nDone.");
     }
 
-    private List<String> generateModules(List<Student> students) {
+    private List<String> generateModules(List<EchoStudent> students) {
         var entry = asList(
                 "[submodule \"STUDENT\"]",
                 "    path = STUDENT",
@@ -123,21 +122,6 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         return students.stream()
                 .flatMap(s -> entry.stream().map(l -> l.replace("STUDENT", s.nethz())))
                 .collect(toList());
-    }
-
-    static class Student {
-        @Column("Raumzeit")
-        String room;
-        @Column("Rufname")
-        String firstName;
-        @Column("Nachname")
-        String lastName;
-        @Column("E-Mail")
-        String email;
-
-        String commitHash;
-
-        String nethz() { return email.split("@")[0]; }
     }
 
     public interface Args extends Cmd.Args {

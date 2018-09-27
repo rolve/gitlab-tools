@@ -1,5 +1,3 @@
-import static java.lang.String.format;
-import static java.util.Optional.empty;
 import static org.apache.commons.csv.CSVFormat.TDF;
 
 import java.nio.file.Paths;
@@ -10,20 +8,19 @@ import org.gitlab4j.api.models.User;
 
 import com.lexicalscope.jewel.cli.Option;
 
-import csv.Column;
 import csv.CsvReader;
 
 public abstract class CmdWithEdoz<A extends CmdWithEdoz.Args> extends Cmd<A> {
 
-    protected final List<Student> students;
+    protected final List<EdozStudent> students;
 
     public CmdWithEdoz(A args) throws Exception {
         super(args);
-        students = new CsvReader(TDF.withHeader()).read(Paths.get(args.getEdozFile()), Student.class);
+        students = new CsvReader(TDF.withHeader()).read(Paths.get(args.getEdozFile()), EdozStudent.class);
         students.forEach(this::findNethzAndUser);
     }
 
-    private void findNethzAndUser(Student student) {
+    private void findNethzAndUser(EdozStudent student) {
         student.user = Optional.ofNullable(nameToUserMap().get(student.name()));
 
         var mailParts = student.mail.split("@");
@@ -36,24 +33,6 @@ public abstract class CmdWithEdoz<A extends CmdWithEdoz.Args> extends Cmd<A> {
                 System.err.printf("Warning: no nethz name for %s (%s)\n",
                         student.name(), student.legi);
             }
-        }
-    }
-
-    static class Student {
-        @Column("Nummer") String legi;
-        @Column("Rufname") String firstName;
-        @Column("Familienname") String lastName;
-        @Column("E-Mail") String mail;
-
-        Optional<String> nethz = empty();
-        Optional<User> user = empty();
-
-        public String name() {
-            return firstName + " " + lastName;
-        }
-
-        public String toString() {
-            return format("%s (%s)", name(), nethz.orElse("???"));
         }
     }
 
