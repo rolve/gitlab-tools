@@ -29,7 +29,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
     @Override
     void call() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students-test");
+        var studGroup = getSubGroup(mainGroup, "students");
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
