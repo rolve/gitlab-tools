@@ -1,7 +1,10 @@
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 public class GitlabToolsCli {
     
@@ -23,9 +26,22 @@ public class GitlabToolsCli {
         if (cmdClass == null) {
             System.err.println("unknown command " + args[0]);
         }
+
+        // To prevent accidental execution of a command within Eclipse (and possibly
+        // disastrous consequences), require confirmation. To profit from this safety net,
+        // add "-ea" as a default VM argument to your Eclipse JRE definition.
+        assert confirm(args);
+
         var cmd = cmdClass.getConstructor(String[].class)
                 .newInstance(new Object[] { subarray(args, 1, args.length) });
-        
         cmd.call();
+    }
+
+    @SuppressWarnings("resource")
+    private static boolean confirm(String[] args) {
+        System.out.print("Really execute " + stream(args).collect(joining(" ")) + "?");
+        new Scanner(System.in).nextLine();
+        System.out.println("Ok...");
+        return true;
     }
 }
