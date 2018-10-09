@@ -40,9 +40,9 @@ public class GitlabToolsCli {
 
     @SuppressWarnings("resource")
     private static boolean confirm(String[] args) {
-        System.out.print("Really execute " + stream(args).collect(joining(" ")) + "?");
+        System.out.println("About to execute " + stream(args).collect(joining(" ")));
+        System.out.print("Press Enter to continue.");
         new Scanner(System.in).nextLine();
-        System.out.println("Ok...");
         return true;
     }
 }
