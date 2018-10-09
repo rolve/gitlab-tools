@@ -14,6 +14,7 @@ public class GitlabToolsCli {
         put("create-room-projects", CreateRoomProjectsCmd.class);
         put("assign-members", AssignMembersCmd.class);
         put("publish", PublishCmd.class);
+        put("publish-fast", PublishFastCmd.class);
     }};
 
     public static void main(String[] args) throws Exception {
