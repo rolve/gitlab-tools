@@ -55,7 +55,9 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
                     existing++;
                 } else {
                     copyDir(sourceDir, destDir);
-                    renameProject(destDir, project.getName());
+                    if (!projectName.endsWith("sol")) {
+                        renameProject(destDir, project.getName());
+                    }
 
                     git.add()
                             .addFilepattern(".")
