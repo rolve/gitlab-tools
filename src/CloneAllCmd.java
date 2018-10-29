@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.Constants.ActionType;
 import org.gitlab4j.api.Constants.SortOrder;
@@ -59,31 +60,55 @@ public class CloneAllCmd extends Cmd<CloneAllCmd.Args> {
 				continue;
 			}
 			
-			Git git;
-			if (exists(repoDir)) {
-				git = open(repoDir.toFile());
-                git.pull()
-                	.setCredentialsProvider(credentials)
-                	.call();
-			} else {
-				git = cloneRepository()
-						.setURI(project.getWebUrl())
-						.setDirectory(repoDir.toFile())
-						.setCredentialsProvider(credentials)
+			Git git = null;
+			int attempts = 2;
+			while (attempts-- > 0) {
+				try {
+					if (exists(repoDir)) {
+						git = open(repoDir.toFile());
+						// need to switch to master, in case we are in "detached head" state (from previous
+						// checkout)
+						git.checkout()
+							.setName("master")
+							.call();
+		                git.pull()
+		                	.setCredentialsProvider(credentials)
+		                	.call();
+					} else {
+						git = cloneRepository()
+								.setURI(project.getWebUrl())
+								.setDirectory(repoDir.toFile())
+								.setCredentialsProvider(credentials)
+								.call();
+					}
+					
+					// go to last commit befor the deadline
+					String lastCommitSHA = lastEvent.get().getPushData().getCommitTo();
+					
+					git.checkout()
+						.setName(lastCommitSHA)
 						.call();
+					
+					// done
+					attempts = 0;
+				} catch (TransportException e) {
+					e.printStackTrace(System.err);
+					System.err.println("Transport exception! Attempts left: " + attempts);
+					if (attempts == 0) {
+						throw e;
+					}
+				} finally {
+					if (git != null)
+						git.close();
+				}
 			}
-			
-			// go to last commit befor the deadline
-			String lastCommitSHA = lastEvent.get().getPushData().getCommitTo();
-			
-			git.checkout()
-				.setName(lastCommitSHA)
-				.call();
 			
 			cloned++;
 			System.out.print(".");
+			if (cloned % 80 == 0)
+				System.out.println();
 
-			git.close();
+			
 		}
 		System.out.printf("Done. %d repos cloned\n", cloned);
 	}
