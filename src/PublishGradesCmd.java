@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.RepositoryFile;
 
 import com.lexicalscope.jewel.cli.Option;
@@ -21,11 +22,11 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
     @Override
     void call() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studProjects = getProjectsIn(getSubGroup(mainGroup, "students"));
 
-        CSVParser parser = CSVFormat.newFormat(';').withHeader()
+        var parser = CSVFormat.newFormat(';').withHeader()
                 .parse(new FileReader(args.getGradesFile()));
-        String appendix = lines(Paths.get(args.getAppendixFile()))
+        var appendix = lines(Paths.get(args.getAppendixFile()))
                 .collect(joining("\n"));
 
         var fileApi = gitlab.getRepositoryFileApi();
@@ -40,17 +41,22 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
             builder.append("\n").append(appendix);
 
             var name = record.get("Name");
-            var project = getProject(studGroup, name);
+            var project = studProjects.stream()
+                    .filter(p -> p.getName().equals(name)).findFirst().get();
 
             var path = args.getProjectName() + "/grade.txt";
-            if (fileApi.getOptionalFileInfo(project.getId(), path, "master").isPresent()) {
-                existing++;
-            } else {
-                var file = new RepositoryFile();
-                file.setContent(builder.toString());
-                file.setFilePath(path);
+            var file = new RepositoryFile();
+            file.setContent(builder.toString());
+            file.setFilePath(path);
+            try {
                 fileApi.createFile(file, project.getId(), "master", "publish grades for " + args.getProjectName());
                 created++;
+            } catch (GitLabApiException e) {
+                if (e.getMessage().contains("already exists")) {
+                    existing++;
+                } else {
+                    throw e;
+                }
             }
             if ((existing + created) % 10 == 0) {
                 System.out.printf("%d processed\n", existing + created);
