@@ -15,6 +15,7 @@ public class GitlabToolsCli {
         put("assign-members", AssignMembersCmd.class);
         put("publish", PublishCmd.class);
         put("publish-fast", PublishFastCmd.class);
+        put("publish-grades", PublishGradesCmd.class);
         put("clone-all", CloneAllCmd.class);
     }};
 
