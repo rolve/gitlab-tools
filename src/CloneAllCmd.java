@@ -108,7 +108,7 @@ public class CloneAllCmd extends Cmd<CloneAllCmd.Args> {
 			if (cloned % 80 == 0)
 				System.out.println();
 
-			
+			Thread.sleep(500);
 		}
 		System.out.printf("Done. %d repos cloned\n", cloned);
 	}

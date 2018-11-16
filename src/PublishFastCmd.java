@@ -82,6 +82,8 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 created++;
             }
             git.close();
+            
+            Thread.sleep(1000);
         }
         System.out.printf("Done. %d published, %d already exist. (%d repos newly cloned)\n", created, existing, cloned);
     }

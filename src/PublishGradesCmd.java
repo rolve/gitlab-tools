@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.nio.file.Paths;
 
 import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVParser;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.RepositoryFile;
 
@@ -39,7 +38,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 builder.append(col + (col.isEmpty() ? "" : ": ") + record.get(col)).append("\n");
             }
             builder.append("\n").append(appendix);
-
+            
             var name = record.get("Name");
             var project = studProjects.stream()
                     .filter(p -> p.getName().equals(name)).findFirst().get();
@@ -60,6 +59,9 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
             }
             if ((existing + created) % 10 == 0) {
                 System.out.printf("%d processed\n", existing + created);
+                Thread.sleep(3000);
+            } else {
+            	Thread.sleep(1000);
             }
         }
         System.out.printf("Done. %d published, %d already exist.\n", created, existing);

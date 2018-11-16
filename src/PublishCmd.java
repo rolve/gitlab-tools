@@ -76,6 +76,7 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
                 walk(repoDir).sorted(reverseOrder())
                         .map(Path::toFile).forEach(File::delete);
             }
+            Thread.sleep(1000);
         }
         System.out.printf("Done. %d published, %d already exist.\n", created, existing);
     }
