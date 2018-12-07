@@ -31,9 +31,8 @@ public class GitlabToolsCli {
         }
 
         // To prevent accidental execution of a command within Eclipse (and possibly
-        // disastrous consequences), require confirmation. To profit from this safety net,
-        // add "-ea" as a default VM argument to your Eclipse JRE definition.
-        assert confirm(args);
+        // disastrous consequences), require confirmation.
+        confirm(args);
 
         var cmd = cmdClass.getConstructor(String[].class)
                 .newInstance(new Object[] { subarray(args, 1, args.length) });

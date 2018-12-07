@@ -61,7 +61,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 System.out.printf("%d processed\n", existing + created);
                 Thread.sleep(3000);
             } else {
-            	Thread.sleep(1000);
+            	Thread.sleep(500);
             }
         }
         System.out.printf("Done. %d published, %d already exist.\n", created, existing);
