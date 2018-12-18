@@ -38,7 +38,12 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 builder.append(col + (col.isEmpty() ? "" : ": ") + record.get(col)).append("\n");
             }
             builder.append("\n").append(appendix);
-            
+
+            if (args.isDryRun()) {
+                System.out.println(builder + "\n\n----------------------------------\n");
+                continue;
+            }
+
             var name = record.get("Name");
             var project = studProjects.stream()
                     .filter(p -> p.getName().equals(name)).findFirst().get();
@@ -79,5 +84,8 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
 
         @Option
         String getAppendixFile();
+        
+        @Option
+        boolean isDryRun();
     }
 }
