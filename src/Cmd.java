@@ -62,13 +62,11 @@ public abstract class Cmd<A extends Cmd.Args> {
 
         var duplicateNames = new HashSet<String>();
         try {
-            gitlab.getUserApi().getUsers(100).forEachRemaining(page -> {
-                page.forEach(user -> {
-                    users.add(user);
-                    if (nameToUserMap.put(user.getName(), user) != null) {
-                        duplicateNames.add(user.getName());
-                    }
-                });
+            streamPager(gitlab.getUserApi().getUsers(100)).forEach(user -> {
+                users.add(user);
+                if (nameToUserMap.put(user.getName(), user) != null) {
+                    duplicateNames.add(user.getName());
+                }
             });
         } catch(GitLabApiException e) {
             throw new RuntimeException(e);
