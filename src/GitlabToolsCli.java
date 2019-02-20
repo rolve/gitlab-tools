@@ -17,6 +17,7 @@ public class GitlabToolsCli {
         put("publish-fast", PublishFastCmd.class);
         put("publish-grades", PublishGradesCmd.class);
         put("checkout-submissions", CheckoutSubmissionsCmd.class);
+        put("export", ExportCmd.class);
     }};
 
     public static void main(String[] args) throws Exception {
@@ -24,7 +25,7 @@ public class GitlabToolsCli {
             System.err.println("no command specified");
             return;
         }
-        
+
         var cmdClass = commands.get(args[0]);
         if (cmdClass == null) {
             System.err.println("unknown command " + args[0]);
