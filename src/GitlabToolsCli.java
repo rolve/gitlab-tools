@@ -16,7 +16,7 @@ public class GitlabToolsCli {
         put("publish", PublishCmd.class);
         put("publish-fast", PublishFastCmd.class);
         put("publish-grades", PublishGradesCmd.class);
-        put("clone-all", CloneAllCmd.class);
+        put("checkout-submissions", CheckoutSubmissionsCmd.class);
     }};
 
     public static void main(String[] args) throws Exception {
