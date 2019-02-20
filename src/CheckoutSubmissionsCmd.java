@@ -17,9 +17,6 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.lexicalscope.jewel.cli.Option;
 
-/**
- * Clones all 
- */
 public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
 	public CheckoutSubmissionsCmd(String[] rawArgs) throws Exception {
