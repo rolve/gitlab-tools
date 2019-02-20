@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -44,6 +45,7 @@ public class ExportCmd extends Cmd<ExportCmd.Args> {
 
 			checkout(project.getWebUrl(), repoDir);
 			deleteRecursive(repoDir.resolve(".git"));
+		    removeClassFiles(repoDir);
 
 			exported++;
 			System.out.print(".");
@@ -102,13 +104,27 @@ public class ExportCmd extends Cmd<ExportCmd.Args> {
 
     private void deleteRecursive(Path path) {
         try (var paths = Files.walk(path).sorted(reverseOrder())) {
-            for (var p : (Iterable<Path>) () -> paths.iterator()) {
+            for (var p : iterable(paths)) {
                 p.toFile().setWritable(true);
                 delete(p);
             }
         } catch (IOException e) {
             throw new RuntimeException("could not delete " + path, e);
         }
+    }
+
+    private void removeClassFiles(Path dir) {
+        try (var paths = Files.walk(dir)) {
+            for (var p : iterable(paths.filter(p -> p.toString().endsWith(".class")))) {
+                delete(p);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private <T> Iterable<T> iterable(Stream<T> stream) {
+        return () -> stream.iterator();
     }
 
 	interface Args extends Cmd.Args {
