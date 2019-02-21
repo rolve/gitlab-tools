@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.nio.file.Paths;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.RepositoryFile;
 
@@ -23,19 +24,32 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
         var mainGroup = getGroup(args.getGroupName());
         var studProjects = getProjectsIn(getSubGroup(mainGroup, "students"));
 
-        var parser = CSVFormat.newFormat(';').withHeader()
-                .parse(new FileReader(args.getGradesFile()));
-        var appendix = lines(Paths.get(args.getAppendixFile()))
-                .collect(joining("\n"));
+        CSVParser parser = null;
+        try {
+            parser = CSVFormat.newFormat(';').withHeader()
+                    .parse(new FileReader(args.getGradesFile()));
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("duplicate name")) {
+                throw new RuntimeException("If you want multiple empty lines, you'll " +
+                        "have to hack around this limitation using a different amount " +
+                        "of spaces for each empty column...", e);
+            }
+        }
+        var appendix = lines(Paths.get(args.getAppendixFile())).collect(joining("\n"));
 
         var fileApi = gitlab.getRepositoryFileApi();
 
         int created = 0;
         int existing = 0;
+        int missing = 0;
         for (var record : parser) {
             var builder = new StringBuilder();
             for (var col : parser.getHeaderMap().keySet()) {
-                builder.append(col + (col.isEmpty() ? "" : ": ") + record.get(col)).append("\n");
+                if (col.trim().isEmpty()) {
+                    builder.append("\n");
+                } else {
+                    builder.append(col + ": " + record.get(col) + "\n");
+                }
             }
             builder.append("\n").append(appendix);
 
@@ -44,32 +58,38 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 continue;
             }
 
-            var name = record.get("Name");
+            var name = record.get("NETHZ");
             var project = studProjects.stream()
-                    .filter(p -> p.getName().equals(name)).findFirst().get();
+                    .filter(p -> p.getName().equals(name)).findFirst();
 
-            var path = args.getProjectName() + "/grade.txt";
-            var file = new RepositoryFile();
-            file.setContent(builder.toString());
-            file.setFilePath(path);
-            try {
-                fileApi.createFile(file, project.getId(), "master", "publish grades for " + args.getProjectName());
-                created++;
-            } catch (GitLabApiException e) {
-                if (e.getMessage().contains("already exists")) {
-                    existing++;
-                } else {
-                    throw e;
+            if (project.isPresent()) {
+                var path = args.getProjectName() + "/grade.txt";
+                var file = new RepositoryFile();
+                file.setContent(builder.toString());
+                file.setFilePath(path);
+                try {
+                    fileApi.createFile(file, project.get().getId(), "master", "publish grades for " + args.getProjectName());
+                    created++;
+                } catch (GitLabApiException e) {
+                    if (e.getMessage().contains("already exists")) {
+                        existing++;
+                    } else {
+                        throw e;
+                    }
                 }
+            } else {
+                System.err.println("Warning: no project found for " + name);
+                missing++;
             }
-            if ((existing + created) % 10 == 0) {
-                System.out.printf("%d processed\n", existing + created);
+            if ((existing + created + missing) % 10 == 0) {
+                System.out.printf("%d processed\n", existing + created + missing);
                 Thread.sleep(3000);
             } else {
             	Thread.sleep(500);
             }
         }
-        System.out.printf("Done. %d published, %d already exist.\n", created, existing);
+        System.out.printf("Done. %d published, %d already exist, %d missing.\n",
+                created, existing, missing);
     }
 
     interface Args extends Cmd.Args {
