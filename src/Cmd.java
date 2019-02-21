@@ -1,7 +1,6 @@
 import static java.nio.file.Files.readAllLines;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
@@ -73,10 +72,6 @@ public abstract class Cmd<A extends Cmd.Args> {
         }
         nameToUserMap.keySet().removeAll(duplicateNames);
         System.out.printf("%d users fetched\n", users.size());
-        if (!duplicateNames.isEmpty()) {
-            var dups = duplicateNames.stream().collect(joining(", "));
-            System.err.printf("Warning: multiple users found for the following names: %s!\n", dups);
-        }
     }
 
     protected Group getGroup(String groupName) throws GitLabApiException {
@@ -92,6 +87,7 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
+        System.out.println("Fetching projects from group " + group.getName() + "...");
         return streamPager(gitlab.getGroupApi().getProjects(group.getId(), 100))
                 .collect(toList());
     }
@@ -105,6 +101,14 @@ public abstract class Cmd<A extends Cmd.Args> {
     protected static <E> Stream<E> streamPager(Pager<E> pager) {
         var pages = stream(spliteratorUnknownSize(pager, ORDERED), false);
         return pages.flatMap(List::stream);
+    }
+
+    /**
+     * Helper method to be able to iterate over a stream in a for loop,
+     * which is useful if the body throws a checked exception.
+     */
+    protected static <T> Iterable<T> iterable(Stream<T> stream) {
+        return () -> stream.iterator();
     }
 
     public interface Args {

@@ -3,8 +3,6 @@ import static java.util.Optional.empty;
 
 import java.util.Optional;
 
-import org.gitlab4j.api.models.User;
-
 import csv.Column;
 
 class EdozStudent {
@@ -14,7 +12,6 @@ class EdozStudent {
     @Column("E-Mail") String mail;
 
     Optional<String> nethz = empty();
-    Optional<User> user = empty();
 
     public String name() {
         return firstName + " " + lastName;
