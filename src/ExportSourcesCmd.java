@@ -18,13 +18,13 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.lexicalscope.jewel.cli.Option;
 
-public class ExportCmd extends Cmd<ExportCmd.Args> {
+public class ExportSourcesCmd extends Cmd<ExportSourcesCmd.Args> {
 
     private CredentialsProvider credentials;
     private int cloned;
     private int exported;
 
-    public ExportCmd(String[] rawArgs) throws Exception {
+    public ExportSourcesCmd(String[] rawArgs) throws Exception {
 		super(createCli(Args.class).parseArguments(rawArgs));
 	}
 
@@ -45,7 +45,9 @@ public class ExportCmd extends Cmd<ExportCmd.Args> {
 
 			checkout(project.getWebUrl(), repoDir);
 			deleteRecursive(repoDir.resolve(".git"));
-		    removeClassFiles(repoDir);
+		    removeNonSubmissions(repoDir);
+		    removeNonSources(repoDir);
+		    removeEmptyDirs(repoDir);
 
 			exported++;
 			System.out.print(".");
@@ -57,7 +59,7 @@ public class ExportCmd extends Cmd<ExportCmd.Args> {
 		        exported, cloned);
 	}
 
-    private void checkout(String projectUrl, Path repoDir) throws GitAPIException {
+    private void checkout(String projectUrl, Path repoDir) throws GitAPIException, IOException {
         int attempts = 2;
         while (attempts-- > 0) {
         	try {
@@ -87,7 +89,7 @@ public class ExportCmd extends Cmd<ExportCmd.Args> {
         }
     }
 
-    private boolean tryPull(Path repoDir) {
+    private boolean tryPull(Path repoDir) throws IOException {
         try (Git git = open(repoDir.toFile())) {
             git.pull()
             	.setCredentialsProvider(credentials)
@@ -102,24 +104,46 @@ public class ExportCmd extends Cmd<ExportCmd.Args> {
         }
     }
 
-    private void deleteRecursive(Path path) {
+    private void removeNonSubmissions(Path dir) throws IOException {
+        try (var paths = list(dir)) {
+            var nonSubs = paths.filter(p ->
+                    !isDirectory(p) ||
+                    !p.getFileName().toString().matches("u\\d+"));
+            for (var p : iterable(nonSubs)) {
+                deleteRecursive(p);
+            }
+        }
+    }
+
+    private void removeNonSources(Path dir) throws IOException {
+        try (var paths = walk(dir)) {
+            var filtered = paths.filter(p ->
+                    isRegularFile(p) &&
+                    !p.toString().toLowerCase().endsWith(".java"));
+            for (var p : iterable(filtered)) {
+                delete(p);
+            }
+        }
+    }
+
+    private void removeEmptyDirs(Path dir) throws IOException {
+        try (var paths = walk(dir)) {
+            var dirs = paths.sorted(reverseOrder())
+                    .filter(Files::isDirectory);
+            for (var d : iterable(dirs)) {
+                if (!list(d).findAny().isPresent()) {
+                    delete(d);
+                }
+            }
+        }
+    }
+
+    private void deleteRecursive(Path path) throws IOException {
         try (var paths = Files.walk(path).sorted(reverseOrder())) {
             for (var p : iterable(paths)) {
                 p.toFile().setWritable(true);
                 delete(p);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("could not delete " + path, e);
-        }
-    }
-
-    private void removeClassFiles(Path dir) {
-        try (var paths = Files.walk(dir)) {
-            for (var p : iterable(paths.filter(p -> p.toString().endsWith(".class")))) {
-                delete(p);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
