@@ -30,7 +30,7 @@ public class GroupMaker {
 
     static final List<Slot> slots = List.of(TUE, WED);
 
-    static final int TRIES = 100000;
+    static final int TRIES = 10000;
     /**
      * Max size of allowed clusters. Reduce this number if the groups don't turn out
      * balanced enough.
@@ -88,6 +88,19 @@ public class GroupMaker {
                 System.out.println("Best so far (" + bestSmallest + "-" + bestLargest + "):");
                 printGroups(best);
             }
+        }
+        
+        for (var slot : slots) {
+            System.out.println(slot.name);
+            for (int i = 0; i < best.get(slot).size(); i++) {
+                System.out.println("    Gruppe " + (i + 1));
+                for (var student : best.get(slot).get(i)) {
+                    System.out.println("        " + student.niceLegi() + " ("
+                            + student.name() + ", " + student.nethz + ")");
+                }
+                System.out.println();
+            }
+            System.out.println();
         }
     }
 

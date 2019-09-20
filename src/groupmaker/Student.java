@@ -25,6 +25,9 @@ class Student {
 
     @Column("Wie lautet Ihre Legi-Nummer (im Format XX-XXX-XXX)?")
     String legi;
+    
+    @Column("Ihr nethz Konto (nur die ID, nicht eine eMail Adresse)")
+    String nethz;
 
     @Column("Können Sie am Dienstag Nachmittag  (13-15) eine Übungsgruppe besuchen?")
     String tuesday;
