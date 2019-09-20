@@ -17,61 +17,61 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
     private CredentialsProvider credentials;
 
     public CloneCmd(String[] rawArgs) throws Exception {
-		super(createCli(Args.class).parseArguments(rawArgs));
-	}
+        super(createCli(Args.class).parseArguments(rawArgs));
+    }
 
-	@Override
-	void call() throws Exception {
-		var mainGroup = getGroup(args.getGroupName());
-		var studGroup = getSubGroup(mainGroup, "students");
-		
-		credentials = new UsernamePasswordCredentialsProvider("", token);
+    @Override
+    void call() throws Exception {
+        var mainGroup = getGroup(args.getGroupName());
+        var studGroup = getSubGroup(mainGroup, "students");
 
-		var destDir = Paths.get(args.getDestinationDir());
-		createDirectories(destDir);
+        credentials = new UsernamePasswordCredentialsProvider("", token);
 
-		int cloned = 0;
-		for (var project : getProjectsIn(studGroup)) {
-		    var repoDir = destDir.resolve(project.getName());
+        var destDir = Paths.get(args.getDestinationDir());
+        createDirectories(destDir);
 
-			clone(project.getWebUrl(), repoDir);
+        int cloned = 0;
+        for (var project : getProjectsIn(studGroup)) {
+            var repoDir = destDir.resolve(project.getName());
 
-			cloned++;
-			System.out.print(".");
-			if (cloned % 80 == 0) {
+            clone(project.getWebUrl(), repoDir);
+
+            cloned++;
+            System.out.print(".");
+            if (cloned % 80 == 0) {
                 System.out.println();
             }
-		}
-		System.out.printf("Done. %d submissions cloned\n", cloned);
-	}
+        }
+        System.out.printf("Done. %d submissions cloned\n", cloned);
+    }
 
     private void clone(String projectUrl, Path repoDir) throws GitAPIException {
         int attempts = 2;
         while (attempts-- > 0) {
-        	try {
+            try {
                 cloneRepository()
-    					.setURI(projectUrl)
-    					.setDirectory(repoDir.toFile())
-    					.setCredentialsProvider(credentials)
-    					.call()
-    					.close();
-        		break; // done
-        	} catch (TransportException e) {
-        		if (attempts == 0) {
-        			throw e;
-        		} else {
-        		    e.printStackTrace(System.err);
-        		    System.err.println("Transport exception! Attempts left: " + attempts);
-        		}
-        	}
+                        .setURI(projectUrl)
+                        .setDirectory(repoDir.toFile())
+                        .setCredentialsProvider(credentials)
+                        .call()
+                        .close();
+                break; // done
+            } catch (TransportException e) {
+                if (attempts == 0) {
+                    throw e;
+                } else {
+                    e.printStackTrace(System.err);
+                    System.err.println("Transport exception! Attempts left: " + attempts);
+                }
+            }
         }
     }
 
-	interface Args extends CmdWithEdoz.Args {
-		@Option
-		String getGroupName();
+    interface Args extends CmdWithEdoz.Args {
+        @Option
+        String getGroupName();
 
-		@Option
-		String getDestinationDir();
-	}
+        @Option
+        String getDestinationDir();
+    }
 }

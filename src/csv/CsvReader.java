@@ -47,7 +47,7 @@ public class CsvReader {
             var object = constructor.newInstance();
             for (var entry : colsToFields.entrySet()) {
                 var name = entry.getKey();
-                for(var field : entry.getValue()) {
+                for (var field : entry.getValue()) {
                     field.set(object, record.get(name));
                 }
             }

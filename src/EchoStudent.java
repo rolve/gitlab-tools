@@ -14,5 +14,7 @@ class EchoStudent {
 
     String commitHash;
 
-    String nethz() { return email.split("@")[0]; }
+    String nethz() {
+        return email.split("@")[0];
+    }
 }

@@ -82,7 +82,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 created++;
             }
             git.close();
-            
+
             Thread.sleep(1000);
         }
         System.out.printf("Done. %d published, %d already exist. (%d repos newly cloned)\n", created, existing, cloned);
@@ -102,7 +102,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         walk(src).forEach(source -> {
             try {
                 copy(source, dest.resolve(src.relativize(source)));
-            } catch(IOException e) {
+            } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         });
@@ -111,7 +111,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
     interface Args extends Cmd.Args {
         @Option
         String getGroupName();
-        
+
         @Option
         String getWorkDir();
 

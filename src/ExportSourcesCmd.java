@@ -41,89 +41,89 @@ public class ExportSourcesCmd extends CmdWithEdoz<ExportSourcesCmd.Args> {
     private int cloned;
 
     public ExportSourcesCmd(String[] rawArgs) throws Exception {
-		super(createCli(Args.class).parseArguments(rawArgs));
-	}
+        super(createCli(Args.class).parseArguments(rawArgs));
+    }
 
-	@Override
-	void call() throws Exception {
-		var mainGroup = getGroup(args.getGroupName());
-		var studGroup = getSubGroup(mainGroup, "students");
-		
-		credentials = new UsernamePasswordCredentialsProvider("", token);
+    @Override
+    void call() throws Exception {
+        var mainGroup = getGroup(args.getGroupName());
+        var studGroup = getSubGroup(mainGroup, "students");
 
-		var destDir = Paths.get(args.getDestinationDir());
-		createDirectories(destDir);
+        credentials = new UsernamePasswordCredentialsProvider("", token);
 
-		var projects = getProjectsIn(studGroup);
+        var destDir = Paths.get(args.getDestinationDir());
+        createDirectories(destDir);
 
-		var numbers = range(0, projects.size())
-		        .mapToObj(Integer::toString).collect(toList());
-		shuffle(numbers);
-		var newNames = numbers.iterator();
+        var projects = getProjectsIn(studGroup);
 
-		cloned = 0;
+        var numbers = range(0, projects.size())
+                .mapToObj(Integer::toString).collect(toList());
+        shuffle(numbers);
+        var newNames = numbers.iterator();
+
+        cloned = 0;
         for (var project : projects) {
-		    var repoDir = destDir.resolve(project.getName());
+            var repoDir = destDir.resolve(project.getName());
 
-			checkout(project.getWebUrl(), repoDir);
-			deleteRecursive(repoDir.resolve(".git"));
-		    removeNonSubmissions(repoDir);
-		    removeNonSources(repoDir);
-		    removeEmptyDirs(repoDir);
+            checkout(project.getWebUrl(), repoDir);
+            deleteRecursive(repoDir.resolve(".git"));
+            removeNonSubmissions(repoDir);
+            removeNonSources(repoDir);
+            removeEmptyDirs(repoDir);
 
-		    var student = students.stream()
-		            .filter(s -> s.nethz.get().equals(project.getName()))
-		            .findFirst();
-		    if (student.isPresent()) {
-		        var stud = student.get();
-		        var tokens = List.of(stud.nethz.get(), stud.firstName, stud.lastName);
-		        anonymizeSources(repoDir, tokens);
-		    } else {
-		        System.err.println("No EDoz entry for " + project.getName());
-		    }
+            var student = students.stream()
+                    .filter(s -> s.nethz.get().equals(project.getName()))
+                    .findFirst();
+            if (student.isPresent()) {
+                var stud = student.get();
+                var tokens = List.of(stud.nethz.get(), stud.firstName, stud.lastName);
+                anonymizeSources(repoDir, tokens);
+            } else {
+                System.err.println("No EDoz entry for " + project.getName());
+            }
 
-		    move(repoDir, destDir.resolve(newNames.next()));
-		}
+            move(repoDir, destDir.resolve(newNames.next()));
+        }
 
-		System.out.printf("Done. %d submissions exported (%d newly cloned)\n",
-		        projects.size(), cloned);
-	}
+        System.out.printf("Done. %d submissions exported (%d newly cloned)\n",
+                projects.size(), cloned);
+    }
 
     private void checkout(String projectUrl, Path repoDir) throws GitAPIException, IOException {
         int attempts = 2;
         while (attempts-- > 0) {
-        	try {
-        	    var clone = true;
-        		if (exists(repoDir)) {
-        		    var success = tryPull(repoDir);
+            try {
+                var clone = true;
+                if (exists(repoDir)) {
+                    var success = tryPull(repoDir);
                     clone = !success;
-        		}
-        		if (clone) {
+                }
+                if (clone) {
                     cloneRepository()
-        					.setURI(projectUrl)
-        					.setDirectory(repoDir.toFile())
-        					.setCredentialsProvider(credentials)
-        					.call()
-        					.close();
-        			cloned++;
-        		}
-        		break; // done
-        	} catch (TransportException e) {
-        		if (attempts == 0) {
-        			throw e;
-        		} else {
-        		    e.printStackTrace(System.err);
-        		    System.err.println("Transport exception! Attempts left: " + attempts);
-        		}
-        	}
+                            .setURI(projectUrl)
+                            .setDirectory(repoDir.toFile())
+                            .setCredentialsProvider(credentials)
+                            .call()
+                            .close();
+                    cloned++;
+                }
+                break; // done
+            } catch (TransportException e) {
+                if (attempts == 0) {
+                    throw e;
+                } else {
+                    e.printStackTrace(System.err);
+                    System.err.println("Transport exception! Attempts left: " + attempts);
+                }
+            }
         }
     }
 
     private boolean tryPull(Path repoDir) throws IOException {
         try (Git git = open(repoDir.toFile())) {
             git.pull()
-            	.setCredentialsProvider(credentials)
-            	.call();
+                    .setCredentialsProvider(credentials)
+                    .call();
             return true;
         } catch (Exception e) {
             // something went wrong before, delete everything and clone
@@ -283,11 +283,11 @@ public class ExportSourcesCmd extends CmdWithEdoz<ExportSourcesCmd.Args> {
         throw new AssertionError("no matching encoding found for " + f);
     }
 
-	interface Args extends CmdWithEdoz.Args {
-		@Option
-		String getGroupName();
+    interface Args extends CmdWithEdoz.Args {
+        @Option
+        String getGroupName();
 
-		@Option
-		String getDestinationDir();
-	}
+        @Option
+        String getDestinationDir();
+    }
 }

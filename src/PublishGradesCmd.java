@@ -68,7 +68,8 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 file.setContent(builder.toString());
                 file.setFilePath(path);
                 try {
-                    fileApi.createFile(file, project.get().getId(), "master", "publish grades for " + args.getProjectName());
+                    fileApi.createFile(file, project.get().getId(), "master",
+                            "publish grades for " + args.getProjectName());
                     created++;
                 } catch (GitLabApiException e) {
                     if (e.getMessage().contains("already exists")) {
@@ -85,7 +86,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 System.out.printf("%d processed\n", existing + created + missing);
                 Thread.sleep(3000);
             } else {
-            	Thread.sleep(500);
+                Thread.sleep(500);
             }
         }
         System.out.printf("Done. %d published, %d already exist, %d missing.\n",
@@ -95,7 +96,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
     interface Args extends Cmd.Args {
         @Option
         String getGroupName();
-        
+
         @Option
         String getProjectName();
 
@@ -104,7 +105,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
 
         @Option
         String getAppendixFile();
-        
+
         @Option
         boolean isDryRun();
     }

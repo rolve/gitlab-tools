@@ -40,7 +40,7 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
 
         int created = 0;
         int existing = 0;
-        for(Project project : getProjectsIn(studGroup)) {
+        for (Project project : getProjectsIn(studGroup)) {
             var repoDir = createTempDirectory("gitlab-tools");
             try {
                 var destDir = repoDir.resolve(projectName);
@@ -95,7 +95,7 @@ public class PublishCmd extends Cmd<PublishCmd.Args> {
         walk(src).forEach(source -> {
             try {
                 copy(source, dest.resolve(src.relativize(source)));
-            } catch(IOException e) {
+            } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
         });

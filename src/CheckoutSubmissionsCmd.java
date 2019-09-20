@@ -19,110 +19,110 @@ import com.lexicalscope.jewel.cli.Option;
 
 public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
-	public CheckoutSubmissionsCmd(String[] rawArgs) throws Exception {
-		super(createCli(Args.class).parseArguments(rawArgs));
-	}
+    public CheckoutSubmissionsCmd(String[] rawArgs) throws Exception {
+        super(createCli(Args.class).parseArguments(rawArgs));
+    }
 
-	@Override
-	void call() throws Exception {
-		var mainGroup = getGroup(args.getGroupName());
-		var studGroup = getSubGroup(mainGroup, "students");
-		Date deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm").parse(args.getDate());
-		
-		System.out.println(deadline);
-		
-		var credentials = new UsernamePasswordCredentialsProvider("", token);
+    @Override
+    void call() throws Exception {
+        var mainGroup = getGroup(args.getGroupName());
+        var studGroup = getSubGroup(mainGroup, "students");
+        Date deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm").parse(args.getDate());
 
-		var workDir = Paths.get(args.getWorkDir());
-		createDirectories(workDir);
+        System.out.println(deadline);
 
-		int cloned = 0;
-		int checkedOut = 0;
-		for (var project : getProjectsIn(studGroup)) {
-			var repoDir = workDir.resolve(project.getName());
+        var credentials = new UsernamePasswordCredentialsProvider("", token);
 
-			// add 1 day to deadline since gitlab ignores time of day
-			Calendar tempCal = Calendar.getInstance();
-			tempCal.setTime(deadline);
-			tempCal.add(Calendar.DATE, 1);
+        var workDir = Paths.get(args.getWorkDir());
+        createDirectories(workDir);
 
-			// fetch all push-events the day of the deadline (and before)
-			var pager = gitlab.getEventsApi().getProjectEvents(project.getId(),
-			        PUSHED, null, tempCal.getTime(), null, DESC, 100);
+        int cloned = 0;
+        int checkedOut = 0;
+        for (var project : getProjectsIn(studGroup)) {
+            var repoDir = workDir.resolve(project.getName());
 
-			var lastPush = streamPager(pager)
-				.filter(e -> e.getCreatedAt().before(deadline))
-				.filter(e -> e.getPushData().getRef().equals("master"))
-				.findFirst();
+            // add 1 day to deadline since gitlab ignores time of day
+            Calendar tempCal = Calendar.getInstance();
+            tempCal.setTime(deadline);
+            tempCal.add(Calendar.DATE, 1);
 
-			if (!lastPush.isPresent()) {
-				System.err.printf("Skipping %s, no push events found before date.\n", project.getName());
-				continue;
-			}
+            // fetch all push-events the day of the deadline (and before)
+            var pager = gitlab.getEventsApi().getProjectEvents(project.getId(),
+                    PUSHED, null, tempCal.getTime(), null, DESC, 100);
 
-			Git git = null;
-			int attempts = 2;
-			while (attempts-- > 0) {
-				try {
-					if (exists(repoDir)) {
-						git = open(repoDir.toFile());
-						// need to switch to master, in case we are in "detached head"
-						// state (from previous checkout)
-						git.checkout()
-							.setName("master")
-							.call();
-		                git.pull()
-		                	.setCredentialsProvider(credentials)
-		                	.call();
-					} else {
-						git = cloneRepository()
-								.setURI(project.getWebUrl())
-								.setDirectory(repoDir.toFile())
-								.setCredentialsProvider(credentials)
-								.call();
-						cloned++;
-					}
+            var lastPush = streamPager(pager)
+                    .filter(e -> e.getCreatedAt().before(deadline))
+                    .filter(e -> e.getPushData().getRef().equals("master"))
+                    .findFirst();
 
-					// go to last commit before the deadline
-					String lastCommitSHA = lastPush.get().getPushData().getCommitTo();
+            if (!lastPush.isPresent()) {
+                System.err.printf("Skipping %s, no push events found before date.\n", project.getName());
+                continue;
+            }
 
-					git.checkout()
-						.setName(lastCommitSHA)
-						.call();
+            Git git = null;
+            int attempts = 2;
+            while (attempts-- > 0) {
+                try {
+                    if (exists(repoDir)) {
+                        git = open(repoDir.toFile());
+                        // need to switch to master, in case we are in "detached head"
+                        // state (from previous checkout)
+                        git.checkout()
+                                .setName("master")
+                                .call();
+                        git.pull()
+                                .setCredentialsProvider(credentials)
+                                .call();
+                    } else {
+                        git = cloneRepository()
+                                .setURI(project.getWebUrl())
+                                .setDirectory(repoDir.toFile())
+                                .setCredentialsProvider(credentials)
+                                .call();
+                        cloned++;
+                    }
 
-					// done
-					attempts = 0;
-				} catch (TransportException e) {
-					e.printStackTrace(System.err);
-					System.err.println("Transport exception! Attempts left: " + attempts);
-					if (attempts == 0) {
-						throw e;
-					}
-				} finally {
-					if (git != null)
-						git.close();
-				}
-			}
+                    // go to last commit before the deadline
+                    String lastCommitSHA = lastPush.get().getPushData().getCommitTo();
 
-			checkedOut++;
-			System.out.print(".");
-			if (checkedOut % 80 == 0)
-				System.out.println();
+                    git.checkout()
+                            .setName(lastCommitSHA)
+                            .call();
 
-			Thread.sleep(500);
-		}
-		System.out.printf("Done. %d submissions checked out (%d newly cloned)\n",
-		        checkedOut, cloned);
-	}
+                    // done
+                    attempts = 0;
+                } catch (TransportException e) {
+                    e.printStackTrace(System.err);
+                    System.err.println("Transport exception! Attempts left: " + attempts);
+                    if (attempts == 0) {
+                        throw e;
+                    }
+                } finally {
+                    if (git != null)
+                        git.close();
+                }
+            }
 
-	interface Args extends Cmd.Args {
-		@Option
-		String getGroupName();
+            checkedOut++;
+            System.out.print(".");
+            if (checkedOut % 80 == 0)
+                System.out.println();
 
-		@Option
-		String getWorkDir();
+            Thread.sleep(500);
+        }
+        System.out.printf("Done. %d submissions checked out (%d newly cloned)\n",
+                checkedOut, cloned);
+    }
 
-		@Option
-		String getDate();
-	}
+    interface Args extends Cmd.Args {
+        @Option
+        String getGroupName();
+
+        @Option
+        String getWorkDir();
+
+        @Option
+        String getDate();
+    }
 }

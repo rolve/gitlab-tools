@@ -67,7 +67,7 @@ public abstract class Cmd<A extends Cmd.Args> {
                     duplicateNames.add(user.getName());
                 }
             });
-        } catch(GitLabApiException e) {
+        } catch (GitLabApiException e) {
             throw new RuntimeException(e);
         }
         nameToUserMap.keySet().removeAll(duplicateNames);
@@ -104,15 +104,15 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     /**
-     * Helper method to be able to iterate over a stream in a for loop,
-     * which is useful if the body throws a checked exception.
+     * Helper method to be able to iterate over a stream in a for loop, which is
+     * useful if the body throws a checked exception.
      */
     protected static <T> Iterable<T> iterable(Stream<T> stream) {
         return () -> stream.iterator();
     }
 
     public interface Args {
-        @Option(defaultValue = {"token.txt"})
+        @Option(defaultValue = { "token.txt" })
         String getTokenFile();
     }
 }
