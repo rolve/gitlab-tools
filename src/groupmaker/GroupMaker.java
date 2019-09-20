@@ -3,7 +3,9 @@ package groupmaker;
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static groupmaker.Pref.Strength.NONE;
 import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Integer.valueOf;
 import static java.util.Collections.shuffle;
+import static java.util.Collections.sort;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.*;
@@ -93,10 +95,13 @@ public class GroupMaker {
         for (var slot : slots) {
             System.out.println(slot.name);
             for (int i = 0; i < best.get(slot).size(); i++) {
-                System.out.println("    Gruppe " + (i + 1));
-                for (var student : best.get(slot).get(i)) {
-                    System.out.println("        " + student.niceLegi() + " ("
-                            + student.name() + ", " + student.nethz + ")");
+                var group = best.get(slot).get(i);
+                System.out.println("    Gruppe " + (i + 1) + " (" + group.size() + ")");
+                sort(group, comparing(Student::pseudoMagicNumber));
+                for (var student : group) {
+                    System.out.printf("        %-11s ", student.niceLegi());
+                    System.out.printf("[%8s] ", student.magicNumber);
+                    System.out.println(student.name() + " (" + student.nethz + ")");
                 }
                 System.out.println();
             }
