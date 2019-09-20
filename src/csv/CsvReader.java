@@ -69,10 +69,4 @@ public class CsvReader {
             return col.value();
         }
     }
-
-    public static class IllegalCsvFormatException extends RuntimeException {
-        public IllegalCsvFormatException(String message) {
-            super(message);
-        }
-    }
 }
