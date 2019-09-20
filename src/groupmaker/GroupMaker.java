@@ -2,6 +2,8 @@ package groupmaker;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static groupmaker.Pref.Strength.NONE;
+import static java.lang.Integer.MAX_VALUE;
+import static java.util.Collections.shuffle;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.*;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
+import java.util.stream.Stream;
 
 import com.lexicalscope.jewel.cli.Option;
 
@@ -24,9 +27,15 @@ public class GroupMaker {
 
     static final Slot TUE = new Slot("tue", 13);
     static final Slot WED = new Slot("wed", 10);
-    static final int MAX_SIZE = 24;
 
     static final List<Slot> slots = List.of(TUE, WED);
+
+    static final int TRIES = 100000;
+    /**
+     * Max size of allowed clusters. Reduce this number if the groups don't turn out
+     * balanced enough.
+     */
+    static final int MAX_CLUSTER_SIZE = 30;
 
     public static void main(String[] rawArgs) throws Exception {
         var args = createCli(Args.class).parseArguments(rawArgs);
@@ -37,48 +46,57 @@ public class GroupMaker {
         checkValidLegis(students);
         checkDuplicateLegis(students);
 
-        var slotGroups = new HashMap<Slot, List<List<Student>>>();
+        Map<Slot, List<List<Student>>> best = null;
+        int bestLargest = MAX_VALUE;
+        int bestSmallest = 0;
 
-        /*
-         * Assign students with slot preferences first (if this is impossible, the code
-         * needs to be changed to take into account only STRONG preferences :P )
-         */
-        for (var slot : slots) {
-            var groups = new ArrayList<List<Student>>();
-            range(0, slot.groups).forEach($ -> groups.add(new ArrayList<>()));
-            slotGroups.put(slot, groups);
+        for (int i = 0; i < TRIES; i++) {
+            shuffle(students);
+            var slotGroups = new HashMap<Slot, List<List<Student>>>();
 
-            var slotStudents = students.stream()
-                    .filter(s -> s.pref().strength != NONE && s.pref().slot == slot)
-                    .collect(toList());
-            if (slotStudents.size() > slot.groups * MAX_SIZE) {
-                System.err.println("Too many students (" + slotStudents.size() + ") for " + slot);
-                System.exit(1);
+            /*
+             * Assign students with slot preferences first (if this doesn't produce the
+             * desired results, the code needs to be changed to take into account only
+             * STRONG preferences :P )
+             */
+            for (var slot : slots) {
+                var groups = new ArrayList<List<Student>>();
+                range(0, slot.groups).forEach($ -> groups.add(new ArrayList<>()));
+                slotGroups.put(slot, groups);
+
+                var slotStudents = students.stream()
+                        .filter(s -> s.pref().strength != NONE && s.pref().slot == slot);
+                assignClusters(slotStudents, groups);
             }
 
-            assignClusters(slotStudents, groups);
-        }
-        printGroups(slotGroups, "After slot preferences");
+            /*
+             * Now assign students without slot preference. Try to put them together with
+             * their magic number mates.
+             */
+            var rest = students.stream()
+                    .filter(s -> s.pref().strength == NONE);
+            var allGroups = slotGroups.values().stream()
+                    .flatMap(List::stream).collect(toList());
+            assignClusters(rest, allGroups);
 
-        /*
-         * Now assign students without slot preference. Try to put them together with
-         * their magic number mates.
-         */
-        var rest = students.stream()
-                .filter(s -> s.pref().strength == NONE)
-                .collect(toList());
-        var allGroups = slotGroups.values().stream()
-                .flatMap(List::stream).collect(toList());
-        assignClusters(rest, allGroups);
-        printGroups(slotGroups, "Finished");
+            var stats = allGroups.stream().mapToInt(List::size).summaryStatistics();
+            if (stats.getMax() < bestLargest ||
+                    stats.getMax() == bestLargest && stats.getMin() > bestSmallest) {
+                best = slotGroups;
+                bestLargest = stats.getMax();
+                bestSmallest = stats.getMin();
+                System.out.println("Best so far (" + bestSmallest + "-" + bestLargest + "):");
+                printGroups(best);
+            }
+        }
     }
 
-    private static void assignClusters(List<Student> students,
+    private static void assignClusters(Stream<Student> students,
             List<List<Student>> groups) {
         boolean matchExisting = !groups.stream().allMatch(List::isEmpty);
 
         var clusters = new PriorityQueue<List<Student>>(comparing(List::size, reverseOrder()));
-        clusters.addAll(students.stream()
+        clusters.addAll(students
                 .collect(groupingBy(Student::pseudoMagicNumber)).values());
         var groupQueue = new PriorityQueue<List<Student>>(comparing(List::size));
         groupQueue.addAll(groups);
@@ -100,33 +118,20 @@ public class GroupMaker {
                 smallestGroup = groupQueue.remove();
             }
 
-            var clusterSize = largestCluster.size();
-            // If we can fit the entire cluster in the smallest (matching) group,
-            // or if it's just one person...
-            if (smallestGroup.size() + clusterSize <= MAX_SIZE || clusterSize == 1) {
-                // ...add them
-                smallestGroup.addAll(largestCluster);
-                groupQueue.add(smallestGroup);
-            } else if (largestCluster.size() >= 4) {
-                // else, if the cluster is relatively large, split it
-                System.err.println("Need to split cluster with magic number "
+            int clusterSize = largestCluster.size();
+            if (clusterSize > MAX_CLUSTER_SIZE) {
+                System.err.println("Splitting cluster with magic number "
                         + largestCluster.get(0).magicNumber);
                 clusters.add(largestCluster.subList(0, clusterSize / 2));
                 clusters.add(largestCluster.subList(clusterSize / 2, clusterSize));
             } else {
-                // else, just add it to the smallest (not necessarily matching) group
-                System.err.println("Couldn't put " + clusterSize + " folks with magic number "
-                        + largestCluster.get(0).magicNumber + " together with others");
-                groupQueue.add(smallestGroup);
-                smallestGroup = groupQueue.remove();
                 smallestGroup.addAll(largestCluster);
                 groupQueue.add(smallestGroup);
             }
         }
     }
 
-    private static void printGroups(Map<Slot, List<List<Student>>> groups, String msg) {
-        System.out.println(msg + ":");
+    private static void printGroups(Map<Slot, List<List<Student>>> groups) {
         for (var slot : slots) {
             System.out.println(slot);
             for (var group : groups.get(slot)) {
