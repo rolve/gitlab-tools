@@ -20,10 +20,10 @@ public abstract class CmdWithEdoz<A extends CmdWithEdoz.Args> extends Cmd<A> {
     public CmdWithEdoz(A args) throws Exception {
         super(args);
         students = new CsvReader(TDF.withHeader()).read(Paths.get(args.getEdozFile()), EdozStudent.class);
-        students.forEach(this::findNethzAndUser);
+        students.forEach(this::findNethz);
     }
 
-    private void findNethzAndUser(EdozStudent student) {
+    private void findNethz(EdozStudent student) {
         var mailParts = student.mail.split("@");
         if (mailParts[0].matches("[a-z]+") && mailParts[1].matches("(student\\.)?ethz\\.ch")) {
             // first, try to infer NETHZ from email address
