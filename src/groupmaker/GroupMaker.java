@@ -4,6 +4,8 @@ import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static groupmaker.Pref.Strength.NONE;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.valueOf;
+import static java.nio.file.Files.newBufferedWriter;
+import static java.nio.file.Path.of;
 import static java.util.Collections.shuffle;
 import static java.util.Collections.sort;
 import static java.util.Comparator.comparing;
@@ -12,6 +14,9 @@ import static java.util.stream.Collectors.*;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
 
+import java.io.BufferedWriter;
+import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -96,10 +101,10 @@ public class GroupMaker {
             System.out.println(slot.name);
             for (int i = 0; i < best.get(slot).size(); i++) {
                 var group = best.get(slot).get(i);
-                System.out.println("    Gruppe " + (i + 1) + " (" + group.size() + ")");
+                System.out.println("  Gruppe " + (i + 1) + " (" + group.size() + ")");
                 sort(group, comparing(Student::pseudoMagicNumber));
                 for (var student : group) {
-                    System.out.printf("        %-11s ", student.niceLegi());
+                    System.out.printf("    %-11s ", student.niceLegi());
                     System.out.printf("[%8s] ", student.magicNumber);
                     System.out.println(student.name() + " (" + student.nethz + ")");
                 }
@@ -107,6 +112,24 @@ public class GroupMaker {
             }
             System.out.println();
         }
+        
+        var writer = new PrintWriter(newBufferedWriter(of("groups.txt")));
+        writer.println("Raumzeit,Nachname,Rufname,Nummer,NETHZ");
+        for (var slot : slots) {
+            var niceSlot = slot == TUE ? "Di" : "Mi";
+            for (int i = 0; i < best.get(slot).size(); i++) {
+                var group = best.get(slot).get(i);
+                sort(group, comparing(Student::pseudoMagicNumber));
+                for (var student : group) {
+                    writer.print(niceSlot + " Gruppe " + (i+1) + ",");
+                    writer.print(student.nachname + ",");
+                    writer.print(student.vorname + ",");
+                    writer.print(student.niceLegi() + ",");
+                    writer.println(student.nethz);
+                }
+            }
+        }
+        writer.close();
     }
 
     private static void assignClusters(Stream<Student> students,
