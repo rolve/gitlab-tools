@@ -1,6 +1,6 @@
 import csv.Column;
 
-class EchoStudent {
+class GroupStudent {
     @Column("Nummer")
     String legi;
     @Column("Raumzeit")
@@ -9,12 +9,8 @@ class EchoStudent {
     String firstName;
     @Column("Nachname")
     String lastName;
-    @Column("E-Mail")
-    String email;
+    @Column("NETHZ")
+    String nethz;
 
     String commitHash;
-
-    String nethz() {
-        return email.split("@")[0];
-    }
 }

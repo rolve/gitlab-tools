@@ -37,11 +37,11 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         var roomGroup = getSubGroup(mainGroup, "rooms");
 
         var students = new CsvReader(EXCEL.withHeader())
-                .read(Paths.get(args.getGroupsFile()), EchoStudent.class);
+                .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 
-        for (EchoStudent student : students) {
-            if (!student.email.endsWith("@student.ethz.ch")) {
-                throw new RuntimeException("invalid email: " + student.email);
+        for (GroupStudent student : students) {
+            if (!student.nethz.isBlank()) {
+                throw new RuntimeException("invalid NETHZ for " + student.firstName + " " + student.lastName);
             }
         }
 
@@ -50,9 +50,9 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         System.out.println("Done.");
 
         System.out.print("Fetching commit hashes...");
-        for (EchoStudent student : students) {
+        for (GroupStudent student : students) {
             var project = studentProjects.stream()
-                    .filter(p -> p.getName().equals(student.nethz()))
+                    .filter(p -> p.getName().equals(student.nethz))
                     .findFirst().get();
             var master = gitlab.getRepositoryApi().getBranch(project.getId(), "master");
             student.commitHash = master.getCommit().getId();
@@ -83,8 +83,8 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
 
                 var repo = git.getRepository();
                 var editor = repo.lockDirCache().editor();
-                for (EchoStudent student : roomStudents) {
-                    editor.add(new PathEdit(student.nethz()) {
+                for (var student : roomStudents) {
+                    editor.add(new PathEdit(student.nethz) {
                         public void apply(DirCacheEntry ent) {
                             ent.setFileMode(GITLINK);
                             ent.setObjectId(fromString(student.commitHash));
@@ -113,14 +113,14 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         System.out.println("\nDone.");
     }
 
-    private List<String> generateModules(List<EchoStudent> students) {
+    private List<String> generateModules(List<GroupStudent> students) {
         var entry = asList(
                 "[submodule \"STUDENT\"]",
                 "    path = STUDENT",
                 "    url = https://gitlab.inf.ethz.ch/" + args.getGroupName() + "/students/STUDENT.git",
                 "    branch = master");
         return students.stream()
-                .flatMap(s -> entry.stream().map(l -> l.replace("STUDENT", s.nethz())))
+                .flatMap(s -> entry.stream().map(l -> l.replace("STUDENT", s.nethz)))
                 .collect(toList());
     }
 

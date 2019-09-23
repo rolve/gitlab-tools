@@ -19,14 +19,14 @@ public class CreateIssuesCmd extends CmdWithEdoz<CreateIssuesCmd.Args> {
         var matGroup = getSubGroup(mainGroup, "material");
         var projectId = getProject(matGroup, "student-issues").getId();
 
-        var echoStudents = new CsvReader(EXCEL.withHeader())
-                .read(Paths.get(args.getGroupsFile()), EchoStudent.class);
+        var groupStudents = new CsvReader(EXCEL.withHeader())
+                .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 
         System.out.printf("Creating issues for %d students...\n", students.size());
         var issues = gitlab.getIssuesApi();
         for (int s = 0; s < students.size(); s++) {
             var student = students.get(s);
-            var echoStudent = echoStudents.stream()
+            var groupStudent = groupStudents.stream()
                     .filter(e -> e.legi.equals(student.legi))
                     .findFirst();
 
@@ -35,7 +35,7 @@ public class CreateIssuesCmd extends CmdWithEdoz<CreateIssuesCmd.Args> {
                     "E-Mail-Adresse: %s\n\n" +
                     "Repository: https://gitlab.inf.ethz.ch/%s/students/%s",
                     student.legi, student.mail, args.getGroupName(), student.nethz.orElse("???"));
-            var label = echoStudent.map(e -> e.room).orElse("Without group");
+            var label = groupStudent.map(e -> e.room).orElse("Without group");
 
             issues.createIssue(projectId, student.toString(), description,
                     null, null, null, label, null, null, null, null);
