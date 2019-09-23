@@ -48,7 +48,7 @@ public class TestStudentDataCmd extends CmdWithEdoz<TestStudentDataCmd.Args> {
                         .findFirst();
                 if (user.isEmpty()) {
                     System.err.println("No Gitlab user found for " + student.firstName +
-                        " " + student.lastName + " (" + student.legi + ")");
+                        " " + student.lastName + " (" + student.legi + ", " + student.nethz.get() + ")");
                 } else {
                     foundUser++;
                 }
