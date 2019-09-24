@@ -28,15 +28,15 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
                 if (user.isPresent()) {
                     gitlab.getProjectApi().addMember(project.getId(), user.get().getId(), DEVELOPER);
                     assigned++;
+                    if (assigned % 10 == 0) {
+                        System.out.printf("%d users assigned\n", assigned);
+                    }
                 } else {
                     System.err.printf("Warning: user %s not among Gitlab users\n", project.getName());
                     error++;
                 }
             } else {
                 existing++;
-            }
-            if (assigned % 10 == 0 && assigned > 0) {
-                System.out.printf("%d users assigned\n", assigned);
             }
         }
         System.out.printf("Done. %d users assigned, %d already exist, %d errors\n",
