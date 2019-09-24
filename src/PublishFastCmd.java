@@ -23,7 +23,7 @@ import com.lexicalscope.jewel.cli.Option;
 
 public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
 
-    private static final int RETRIES = 3;
+    private static final int ATTEMPTS = 3;
 
     public PublishFastCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -49,7 +49,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
             var repoDir = workDir.resolve(project.getName());
 
             Git git = null;
-            for (int attempts = RETRIES; attempts-- > 0;) {
+            for (int attempts = ATTEMPTS; attempts-- > 0;) {
                 try {
                     if (exists(repoDir)) {
                         git = open(repoDir.toFile());
@@ -90,7 +90,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 git.commit()
                         .setMessage("Publish " + projectName)
                         .call();
-                for (int attempts = RETRIES; attempts-- > 0;) {
+                for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
                         git.push()
                                 .add("master")

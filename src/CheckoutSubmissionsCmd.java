@@ -19,7 +19,7 @@ import com.lexicalscope.jewel.cli.Option;
 
 public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
-    private static final int RETRIES = 3;
+    private static final int ATTEMPTS = 3;
 
     public CheckoutSubmissionsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -63,7 +63,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
             }
 
             Git git = null;
-            for (int attempts = RETRIES; attempts-- > 0;) {
+            for (int attempts = ATTEMPTS; attempts-- > 0;) {
                 try {
                     if (exists(repoDir)) {
                         git = open(repoDir.toFile());
