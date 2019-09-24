@@ -16,11 +16,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.lexicalscope.jewel.cli.Option;
 
 public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
+
+    private static final int RETRIES = 3;
 
     public PublishFastCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -45,19 +48,32 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         for (var project : getProjectsIn(studGroup)) {
             var repoDir = workDir.resolve(project.getName());
 
-            Git git;
-            if (exists(repoDir)) {
-                git = open(repoDir.toFile());
-                git.pull()
-                        .setCredentialsProvider(credentials)
-                        .call();
-            } else {
-                git = cloneRepository()
-                        .setURI(project.getWebUrl())
-                        .setDirectory(repoDir.toFile())
-                        .setCredentialsProvider(credentials)
-                        .call();
-                cloned++;
+            Git git = null;
+            for (int attempts = RETRIES; attempts-- > 0;) {
+                try {
+                    if (exists(repoDir)) {
+                        git = open(repoDir.toFile());
+                        git.pull()
+                                .setCredentialsProvider(credentials)
+                                .call();
+                    } else {
+                        git = cloneRepository()
+                                .setURI(project.getWebUrl())
+                                .setDirectory(repoDir.toFile())
+                                .setCredentialsProvider(credentials)
+                                .call();
+                        cloned++;
+                    }
+                    // done
+                    attempts = 0;
+                } catch (TransportException e) {
+                    e.printStackTrace(System.err);
+                    System.err.println("Transport exception for " + project.getName() +
+                            "! Attempts left: " + attempts);
+                    if (attempts == 0) {
+                        throw e;
+                    }
+                }
             }
 
             var destDir = repoDir.resolve(projectName);
@@ -68,18 +84,29 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 if (!projectName.endsWith("-sol")) {
                     renameProject(destDir, project.getName());
                 }
-
                 git.add()
                         .addFilepattern(".")
                         .call();
                 git.commit()
                         .setMessage("Publish " + projectName)
                         .call();
-                git.push()
-                        .add("master")
-                        .setCredentialsProvider(credentials)
-                        .call();
-                created++;
+                for (int attempts = RETRIES; attempts-- > 0;) {
+                    try {
+                        git.push()
+                                .add("master")
+                                .setCredentialsProvider(credentials)
+                                .call();
+                        created++;
+                        attempts = 0;
+                    } catch (TransportException e) {
+                        e.printStackTrace(System.err);
+                        System.err.println("Transport exception for " + project.getName() +
+                                "! Attempts left: " + attempts);
+                        if (attempts == 0) {
+                            throw e;
+                        }
+                    }
+                }
             }
             git.close();
 

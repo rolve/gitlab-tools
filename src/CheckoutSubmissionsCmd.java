@@ -19,6 +19,8 @@ import com.lexicalscope.jewel.cli.Option;
 
 public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
+    private static final int RETRIES = 3;
+
     public CheckoutSubmissionsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
@@ -61,8 +63,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
             }
 
             Git git = null;
-            int attempts = 2;
-            while (attempts-- > 0) {
+            for (int attempts = RETRIES; attempts-- > 0;) {
                 try {
                     if (exists(repoDir)) {
                         git = open(repoDir.toFile());
@@ -94,7 +95,8 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                     attempts = 0;
                 } catch (TransportException e) {
                     e.printStackTrace(System.err);
-                    System.err.println("Transport exception! Attempts left: " + attempts);
+                    System.err.println("Transport exception for " + project.getName() +
+                            "! Attempts left: " + attempts);
                     if (attempts == 0) {
                         throw e;
                     }
