@@ -3,7 +3,6 @@ package groupmaker;
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static groupmaker.Pref.Strength.NONE;
 import static java.lang.Integer.MAX_VALUE;
-import static java.lang.Integer.valueOf;
 import static java.nio.file.Files.newBufferedWriter;
 import static java.nio.file.Path.of;
 import static java.util.Collections.shuffle;
@@ -14,9 +13,7 @@ import static java.util.stream.Collectors.*;
 import static java.util.stream.IntStream.range;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
 
-import java.io.BufferedWriter;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
