@@ -34,7 +34,7 @@ public abstract class Cmd<A extends Cmd.Args> {
         this.args = args;
 
         token = readAllLines(Paths.get(args.getTokenFile())).get(0);
-        gitlab = new GitLabApi("https://gitlab.inf.ethz.ch/", token);
+        gitlab = new GitLabApi(args.getGitlabUrl(), token);
     }
 
     abstract void call() throws Exception;
@@ -112,7 +112,10 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     public interface Args {
-        @Option(defaultValue = { "token.txt" })
+        @Option(defaultValue = "https://gitlab.inf.ethz.ch/")
+        String getGitlabUrl();
+
+        @Option(defaultValue = "token.txt")
         String getTokenFile();
     }
 }
