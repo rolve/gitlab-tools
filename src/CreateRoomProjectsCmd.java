@@ -1,12 +1,10 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.nio.file.Files.createTempDirectory;
-import static java.nio.file.Files.walk;
-import static java.nio.file.Files.write;
+import static java.nio.file.Files.*;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.csv.CSVFormat.EXCEL;
+import static org.apache.commons.csv.CSVFormat.TDF;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.lib.FileMode.GITLINK;
 import static org.eclipse.jgit.lib.ObjectId.fromString;
@@ -36,11 +34,11 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         var studGroup = getSubGroup(mainGroup, "students");
         var roomGroup = getSubGroup(mainGroup, "rooms");
 
-        var students = new CsvReader(EXCEL.withHeader())
+        var students = new CsvReader(TDF.withHeader())
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 
-        for (GroupStudent student : students) {
-            if (!student.nethz.isBlank()) {
+        for (var student : students) {
+            if (student.nethz.isBlank()) {
                 throw new RuntimeException("invalid NETHZ for " + student.firstName + " " + student.lastName);
             }
         }
@@ -50,11 +48,14 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         System.out.println("Done.");
 
         System.out.print("Fetching commit hashes...");
-        for (GroupStudent student : students) {
+        for (var student : students) {
             var project = studentProjects.stream()
                     .filter(p -> p.getName().equals(student.nethz))
-                    .findFirst().get();
-            var master = gitlab.getRepositoryApi().getBranch(project.getId(), "master");
+                    .findFirst();
+            if (project.isEmpty()) {
+                throw new RuntimeException("No project found for " + student.nethz);
+            }
+            var master = gitlab.getRepositoryApi().getBranch(project.get().getId(), "master");
             student.commitHash = master.getCommit().getId();
             System.out.print(".");
         }
@@ -64,7 +65,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
 
         System.out.print("Creating repos...");
         var rooms = students.stream().map(s -> s.room).collect(toSet());
-        for (String room : rooms) {
+        for (var room : rooms) {
             var roomStudents = students.stream()
                     .filter(s -> s.room.equals(room)).collect(toList());
 
@@ -128,7 +129,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         @Option
         String getGroupName();
 
-        @Option(defaultValue = "groups.txt")    // comma-separated, make sure contains
-        String getGroupsFile();                 // only @student.ethz.ch addresses!
+        @Option(defaultValue = "groups.txt") // tab-separated
+        String getGroupsFile();
     }
 }

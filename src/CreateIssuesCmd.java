@@ -1,5 +1,5 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static org.apache.commons.csv.CSVFormat.EXCEL;
+import static org.apache.commons.csv.CSVFormat.TDF;
 
 import java.nio.file.Paths;
 
@@ -19,7 +19,7 @@ public class CreateIssuesCmd extends CmdWithEdoz<CreateIssuesCmd.Args> {
         var matGroup = getSubGroup(mainGroup, "material");
         var projectId = getProject(matGroup, "student-issues").getId();
 
-        var groupStudents = new CsvReader(EXCEL.withHeader())
+        var groupStudents = new CsvReader(TDF.withHeader())
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 
         System.out.printf("Creating issues for %d students...\n", students.size());
@@ -51,7 +51,7 @@ public class CreateIssuesCmd extends CmdWithEdoz<CreateIssuesCmd.Args> {
         @Option
         String getGroupName();
 
-        @Option(defaultValue = "groups.txt")    // comma-separated, make sure contains
-        String getGroupsFile();                 // only @student.ethz.ch addresses!
+        @Option(defaultValue = "groups.txt") // tab-separated
+        String getGroupsFile();
     }
 }
