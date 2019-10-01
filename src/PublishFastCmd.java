@@ -40,7 +40,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         var workDir = Paths.get(args.getWorkDir());
         createDirectories(workDir);
 
-        var projectName = sourceDir.getFileName();
+        var projectName = sourceDir.getFileName().toString();
 
         int created = 0;
         int existing = 0;
