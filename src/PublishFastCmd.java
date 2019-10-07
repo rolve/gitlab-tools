@@ -42,7 +42,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
 
         var projectName = sourceDir.getFileName().toString();
 
-        int created = 0;
+        int published = 0;
         int existing = 0;
         int cloned = 0;
         for (var project : getProjectsIn(studGroup)) {
@@ -81,7 +81,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 existing++;
             } else {
                 copyDir(sourceDir, destDir);
-                if (!projectName.endsWith("-sol")) {
+                if (!projectName.endsWith("-sol") && !projectName.endsWith(" Lösungen")) {
                     renameProject(destDir, project.getName());
                 }
                 git.add()
@@ -96,7 +96,10 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                                 .add("master")
                                 .setCredentialsProvider(credentials)
                                 .call();
-                        created++;
+                        published++;
+                        if (published % 10 == 0) {
+                            System.out.println(published + " published");
+                        }
                         attempts = 0;
                     } catch (TransportException e) {
                         e.printStackTrace(System.err);
@@ -110,9 +113,9 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
             }
             git.close();
 
-            Thread.sleep(1000);
+            Thread.sleep(500);
         }
-        System.out.printf("Done. %d published, %d already exist. (%d repos newly cloned)\n", created, existing, cloned);
+        System.out.printf("Done. %d published, %d already exist. (%d repos newly cloned)\n", published, existing, cloned);
     }
 
     private void renameProject(Path projectDir, String nethz) throws IOException {
