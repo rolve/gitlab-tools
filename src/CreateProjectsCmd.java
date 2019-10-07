@@ -5,7 +5,7 @@ import org.gitlab4j.api.models.Project;
 
 import com.lexicalscope.jewel.cli.Option;
 
-public class CreateProjectsCmd extends CmdWithEdoz<CreateProjectsCmd.Args> {
+public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args> {
 
     public CreateProjectsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -22,11 +22,11 @@ public class CreateProjectsCmd extends CmdWithEdoz<CreateProjectsCmd.Args> {
         int created = 0;
         int existing = 0;
         for (var student : students) {
-            if (student.nethz.isPresent()) {
-                if (existingProjects.contains(student.nethz.get())) {
+            if (student.username.isPresent()) {
+                if (existingProjects.contains(student.username.get())) {
                     existing++;
                 } else {
-                    gitlab.getProjectApi().createProject(studGroup.getId(), student.nethz.get());
+                    gitlab.getProjectApi().createProject(studGroup.getId(), student.username.get());
                     created++;
                 }
             } else {
@@ -39,7 +39,7 @@ public class CreateProjectsCmd extends CmdWithEdoz<CreateProjectsCmd.Args> {
         System.out.printf("Done. %d projects created, %d already exist.\n", created, existing);
     }
 
-    public interface Args extends CmdWithEdoz.Args {
+    public interface Args extends CmdWithCourseData.Args {
         @Option
         String getGroupName();
     }

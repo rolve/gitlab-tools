@@ -10,7 +10,7 @@ class GroupStudent {
     @Column("Nachname")
     String lastName;
     @Column("NETHZ")
-    String nethz;
+    String username;
 
     String commitHash;
 }

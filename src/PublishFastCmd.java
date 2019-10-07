@@ -118,10 +118,10 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         System.out.printf("Done. %d published, %d already exist. (%d repos newly cloned)\n", published, existing, cloned);
     }
 
-    private void renameProject(Path projectDir, String nethz) throws IOException {
+    private void renameProject(Path projectDir, String username) throws IOException {
         var projectFile = projectDir.resolve(".project");
         var content = lines(projectFile).collect(joining("\n"));
-        var newContent = content.replace("REPLACEME", nethz);
+        var newContent = content.replace("REPLACEME", username);
         if (newContent.equals(content)) {
             throw new AssertionError("REPLACEME not found");
         }

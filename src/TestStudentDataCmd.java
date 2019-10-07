@@ -7,7 +7,7 @@ import com.lexicalscope.jewel.cli.Option;
 
 import csv.CsvReader;
 
-public class TestStudentDataCmd extends CmdWithEdoz<TestStudentDataCmd.Args> {
+public class TestStudentDataCmd extends CmdWithCourseData<TestStudentDataCmd.Args> {
 
     public TestStudentDataCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -18,46 +18,47 @@ public class TestStudentDataCmd extends CmdWithEdoz<TestStudentDataCmd.Args> {
         var groupStudents = new CsvReader(TDF.withHeader())
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 
-        var complete = students.stream().filter(s -> s.nethz.isPresent()).count();
-        System.out.printf("%d/%d students in eDoz have NETHZ.\n",
+        var complete = students.stream().filter(s -> s.username.isPresent()).count();
+        System.out.printf("%d/%d students in course have a username.\n",
                 complete, students.size());
 
-        int matchedEdoz = 0;
+        int matchedCourse = 0;
         for (var groupStudent : groupStudents) {
-            var edozStudent = students.stream()
+            var courseStudent = students.stream()
                     .filter(s -> s.legi.equals(groupStudent.legi))
                     .findFirst();
-            if (edozStudent.isEmpty()) {
-                System.err.println("No eDoz student found for " + groupStudent.firstName +
+            if (courseStudent.isEmpty()) {
+                System.err.println("No student found in course file for " + groupStudent.firstName +
                         " " + groupStudent.lastName + " (" + groupStudent.legi + ")");
-            } else if (!groupStudent.nethz.equals(edozStudent.get().nethz.orElse(null))) {
-                System.err.println("Different NETHZ for " + groupStudent.firstName + " " +
+            } else if (!groupStudent.username.equals(courseStudent.get().username.orElse(null))) {
+                System.err.println("Different username for " + groupStudent.firstName + " " +
                         groupStudent.lastName + " (" + groupStudent.legi + "): " +
-                        groupStudent.nethz + " vs. " + edozStudent.get().nethz.orElse(null));
+                        groupStudent.username + " vs. " + courseStudent.get().username.orElse(null));
             } else {
-                matchedEdoz++;
+                matchedCourse++;
             }
         }
-        System.out.printf("%d/%d students in groups matched with eDoz.\n", matchedEdoz, groupStudents.size());
+        System.out.printf("%d/%d students in groups matched with course file.\n",
+                matchedCourse, groupStudents.size());
 
         int foundUser = 0;
         for (var student : students) {
-            if (student.nethz.isPresent()) {
+            if (student.username.isPresent()) {
                 var user = users().stream()
-                        .filter(u -> u.getUsername().equals(student.nethz.get()))
+                        .filter(u -> u.getUsername().equals(student.username.get()))
                         .findFirst();
                 if (user.isEmpty()) {
                     System.err.println("No Gitlab user found for " + student.firstName +
-                        " " + student.lastName + " (" + student.legi + ", " + student.nethz.get() + ")");
+                        " " + student.lastName + " (" + student.legi + ", " + student.username.get() + ")");
                 } else {
                     foundUser++;
                 }
             }
         }
-        System.out.printf("%d/%d students in eDoz have a Gitlab user.\n", foundUser, students.size());
+        System.out.printf("%d/%d students in course file have a Gitlab user.\n", foundUser, students.size());
     }
 
-    public interface Args extends CmdWithEdoz.Args {
+    public interface Args extends CmdWithCourseData.Args {
         @Option(defaultValue = "groups.txt") // tab-separated
         String getGroupsFile();
     }

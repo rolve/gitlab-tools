@@ -67,7 +67,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
         }
     }
 
-    interface Args extends CmdWithEdoz.Args {
+    interface Args extends CmdWithCourseData.Args {
         @Option
         String getGroupName();
 

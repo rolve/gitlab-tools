@@ -35,7 +35,7 @@ import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.support.compiler.VirtualFile;
 
-public class ExportSourcesCmd extends CmdWithEdoz<ExportSourcesCmd.Args> {
+public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
 
     private CredentialsProvider credentials;
     private int cloned;
@@ -72,14 +72,14 @@ public class ExportSourcesCmd extends CmdWithEdoz<ExportSourcesCmd.Args> {
             removeEmptyDirs(repoDir);
 
             var student = students.stream()
-                    .filter(s -> s.nethz.get().equals(project.getName()))
+                    .filter(s -> s.username.get().equals(project.getName()))
                     .findFirst();
             if (student.isPresent()) {
                 var stud = student.get();
-                var tokens = List.of(stud.nethz.get(), stud.firstName, stud.lastName);
+                var tokens = List.of(stud.username.get(), stud.firstName, stud.lastName);
                 anonymizeSources(repoDir, tokens);
             } else {
-                System.err.println("No EDoz entry for " + project.getName());
+                System.err.println("No course file entry for " + project.getName());
             }
 
             move(repoDir, destDir.resolve(newNames.next()));
@@ -283,7 +283,7 @@ public class ExportSourcesCmd extends CmdWithEdoz<ExportSourcesCmd.Args> {
         throw new AssertionError("no matching encoding found for " + f);
     }
 
-    interface Args extends CmdWithEdoz.Args {
+    interface Args extends CmdWithCourseData.Args {
         @Option
         String getGroupName();
 

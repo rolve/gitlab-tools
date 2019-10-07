@@ -38,8 +38,8 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 
         for (var student : students) {
-            if (student.nethz.isBlank()) {
-                throw new RuntimeException("invalid NETHZ for " + student.firstName + " " + student.lastName);
+            if (student.username.isBlank()) {
+                throw new RuntimeException("invalid username for " + student.firstName + " " + student.lastName);
             }
         }
 
@@ -50,10 +50,10 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         System.out.print("Fetching commit hashes...");
         for (var student : students) {
             var project = studentProjects.stream()
-                    .filter(p -> p.getName().equals(student.nethz))
+                    .filter(p -> p.getName().equals(student.username))
                     .findFirst();
             if (project.isEmpty()) {
-                throw new RuntimeException("No project found for " + student.nethz);
+                throw new RuntimeException("No project found for " + student.username);
             }
             var master = gitlab.getRepositoryApi().getBranch(project.get().getId(), "master");
             student.commitHash = master.getCommit().getId();
@@ -85,7 +85,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
                 var repo = git.getRepository();
                 var editor = repo.lockDirCache().editor();
                 for (var student : roomStudents) {
-                    editor.add(new PathEdit(student.nethz) {
+                    editor.add(new PathEdit(student.username) {
                         public void apply(DirCacheEntry ent) {
                             ent.setFileMode(GITLINK);
                             ent.setObjectId(fromString(student.commitHash));
@@ -121,7 +121,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
                 "    url = https://gitlab.inf.ethz.ch/" + args.getGroupName() + "/students/STUDENT.git",
                 "    branch = master");
         return students.stream()
-                .flatMap(s -> entry.stream().map(l -> l.replace("STUDENT", s.nethz)))
+                .flatMap(s -> entry.stream().map(l -> l.replace("STUDENT", s.username)))
                 .collect(toList());
     }
 

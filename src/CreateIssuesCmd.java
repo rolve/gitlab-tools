@@ -7,7 +7,7 @@ import com.lexicalscope.jewel.cli.Option;
 
 import csv.CsvReader;
 
-public class CreateIssuesCmd extends CmdWithEdoz<CreateIssuesCmd.Args> {
+public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
 
     public CreateIssuesCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -34,7 +34,7 @@ public class CreateIssuesCmd extends CmdWithEdoz<CreateIssuesCmd.Args> {
                     "Legi-Nummer: %s\n\n" +
                     "E-Mail-Adresse: %s\n\n" +
                     "Repository: https://gitlab.inf.ethz.ch/%s/students/%s",
-                    student.legi, student.mail, args.getGroupName(), student.nethz.orElse("???"));
+                    student.legi, student.mail, args.getGroupName(), student.username.orElse("???"));
             var label = groupStudent.map(e -> e.room).orElse("Without group");
 
             issues.createIssue(projectId, student.toString(), description,
@@ -47,7 +47,7 @@ public class CreateIssuesCmd extends CmdWithEdoz<CreateIssuesCmd.Args> {
         System.out.println("Done.");
     }
 
-    public interface Args extends CmdWithEdoz.Args {
+    public interface Args extends CmdWithCourseData.Args {
         @Option
         String getGroupName();
 
