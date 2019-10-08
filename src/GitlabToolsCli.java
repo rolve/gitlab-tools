@@ -23,6 +23,8 @@ public class GitlabToolsCli {
     }};
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
+
         if (args.length == 0) {
             System.err.println("no command specified");
             return;
