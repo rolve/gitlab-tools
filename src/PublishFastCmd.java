@@ -45,41 +45,43 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         int published = 0;
         int existing = 0;
         int cloned = 0;
+        int errors = 0;
         for (var project : getProjectsIn(studGroup)) {
-            var repoDir = workDir.resolve(project.getName());
+            try {
+                var repoDir = workDir.resolve(project.getName());
+                var destDir = repoDir.resolve(projectName);
+                if (exists(destDir)) {
+                    existing++;
+                    continue;
+                }
 
-            Git git = null;
-            for (int attempts = ATTEMPTS; attempts-- > 0;) {
-                try {
-                    if (exists(repoDir)) {
-                        git = open(repoDir.toFile());
-                        git.pull()
-                                .setCredentialsProvider(credentials)
-                                .call();
-                    } else {
-                        git = cloneRepository()
-                                .setURI(project.getWebUrl())
-                                .setDirectory(repoDir.toFile())
-                                .setCredentialsProvider(credentials)
-                                .call();
-                        cloned++;
-                    }
-                    // done
-                    attempts = 0;
-                } catch (TransportException e) {
-                    e.printStackTrace(System.err);
-                    System.err.println("Transport exception for " + project.getName() +
-                            "! Attempts left: " + attempts);
-                    if (attempts == 0) {
-                        throw e;
+                Git git = null;
+                for (int attempts = ATTEMPTS; attempts-- > 0;) {
+                    try {
+                        if (exists(repoDir)) {
+                            git = open(repoDir.toFile());
+                            git.pull()
+                                    .setCredentialsProvider(credentials)
+                                    .call();
+                        } else {
+                            git = cloneRepository()
+                                    .setURI(project.getWebUrl())
+                                    .setDirectory(repoDir.toFile())
+                                    .setCredentialsProvider(credentials)
+                                    .call();
+                            cloned++;
+                        }
+                        // done
+                        attempts = 0;
+                    } catch (TransportException e) {
+                        e.printStackTrace(System.err);
+                        System.err.println("Transport exception for " + project.getName() +
+                                "! Attempts left: " + attempts);
+                        if (attempts == 0) {
+                            throw e;
+                        }
                     }
                 }
-            }
-
-            var destDir = repoDir.resolve(projectName);
-            if (exists(destDir)) {
-                existing++;
-            } else {
                 copyDir(sourceDir, destDir);
                 if (!projectName.endsWith("-sol") && !projectName.endsWith(" Lösungen")) {
                     renameProject(destDir, project.getName());
@@ -100,6 +102,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                         if (published % 10 == 0) {
                             System.out.println(published + " published");
                         }
+                        // done
                         attempts = 0;
                     } catch (TransportException e) {
                         e.printStackTrace(System.err);
@@ -110,12 +113,17 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                         }
                     }
                 }
-            }
-            git.close();
+                git.close();
 
-            Thread.sleep(500);
+                Thread.sleep(500);
+            } catch (Exception e) {
+                System.err.println("Problem with " + project.getName() + ":");
+                e.printStackTrace();
+                errors++;
+            }
         }
-        System.out.printf("Done. %d published, %d already exist. (%d repos newly cloned)\n", published, existing, cloned);
+        System.out.printf("Done. %d published, %d already exist, %d errors. (%d repos newly cloned)\n",
+                published, existing, errors, cloned);
     }
 
     private void renameProject(Path projectDir, String username) throws IOException {
