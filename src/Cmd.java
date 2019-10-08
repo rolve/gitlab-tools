@@ -1,4 +1,5 @@
 import static java.nio.file.Files.readAllLines;
+import static java.util.Comparator.comparing;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.toList;
@@ -89,6 +90,7 @@ public abstract class Cmd<A extends Cmd.Args> {
     protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
         System.out.println("Fetching projects from group " + group.getName() + "...");
         return streamPager(gitlab.getGroupApi().getProjects(group.getId(), 100))
+                .sorted(comparing(Project::getName))
                 .collect(toList());
     }
 

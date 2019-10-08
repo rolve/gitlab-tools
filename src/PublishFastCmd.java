@@ -1,13 +1,6 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.nio.file.Files.copy;
-import static java.nio.file.Files.createDirectories;
-import static java.nio.file.Files.exists;
-import static java.nio.file.Files.lines;
-import static java.nio.file.Files.walk;
-import static java.nio.file.Files.write;
+import static java.nio.file.Files.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.sort;
-import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
@@ -16,13 +9,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.gitlab4j.api.models.Project;
 
 import com.lexicalscope.jewel.cli.Option;
 
@@ -47,14 +37,11 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
 
         var projectName = sourceDir.getFileName().toString();
 
-        var projects = getProjectsIn(studGroup);
-        sort(projects, comparing(Project::getName));
-
         int published = 0;
         int existing = 0;
         int cloned = 0;
         int errors = 0;
-        for (var project : projects) {
+        for (var project : getProjectsIn(studGroup)) {
             try {
                 var repoDir = workDir.resolve(project.getName());
                 var destDir = repoDir.resolve(projectName);
