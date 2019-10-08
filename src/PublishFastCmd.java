@@ -82,6 +82,11 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                         }
                     }
                 }
+                if (exists(destDir)) {
+                    existing++;
+                    continue;
+                }
+
                 copyDir(sourceDir, destDir);
                 if (!projectName.endsWith("-sol") && !projectName.endsWith(" Lösungen")) {
                     renameProject(destDir, project.getName());
