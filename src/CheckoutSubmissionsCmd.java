@@ -125,6 +125,6 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
         String getWorkDir();
 
         @Option
-        String getDate();
+        String getDate(); // yyyy-MM-dd-HH:mm
     }
 }
