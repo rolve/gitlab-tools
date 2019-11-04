@@ -19,6 +19,7 @@ public class GitlabToolsCli {
         put("checkout-submissions", CheckoutSubmissionsCmd.class);
         put("export-sources", ExportSourcesCmd.class);
         put("test-student-data", TestStudentDataCmd.class);
+        put("protect-master", ProtectMasterCmd.class);
         put("clone", CloneCmd.class);
     }};
 
