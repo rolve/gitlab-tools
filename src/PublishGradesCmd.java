@@ -1,12 +1,13 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.csv.CSVFormat.TDF;
 
 import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Paths;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.RepositoryFile;
@@ -26,8 +27,8 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
 
         CSVParser parser = null;
         try {
-            parser = CSVFormat.newFormat(';').withHeader()
-                    .parse(new FileReader(args.getGradesFile()));
+            parser = TDF.withIgnoreSurroundingSpaces(false).withHeader()
+                    .parse(new FileReader(args.getGradesFile(), UTF_8));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("duplicate name")) {
                 throw new RuntimeException("If you want multiple empty lines, you'll " +
@@ -45,13 +46,13 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
         for (var record : parser) {
             var builder = new StringBuilder();
             for (var col : parser.getHeaderMap().keySet()) {
-                if (col.trim().isEmpty()) {
+                if (col.isBlank()) {
                     builder.append("\n");
-                } else {
+                } else if (!record.get(col).isBlank()) {
                     builder.append(col + ": " + record.get(col) + "\n");
                 }
             }
-            builder.append("\n").append(appendix);
+            builder.append("\n\n").append(appendix);
 
             if (args.isDryRun()) {
                 System.out.println(builder + "\n\n----------------------------------\n");
@@ -101,7 +102,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
         String getProjectName();
 
         @Option
-        File getGradesFile();
+        File getGradesFile(); // tsv, with "NETHZ" column, plus arbitrary other columns. UTF-8!
 
         @Option
         String getAppendixFile();
