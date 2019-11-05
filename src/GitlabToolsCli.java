@@ -41,7 +41,7 @@ public class GitlabToolsCli {
 
         var cmd = cmdClass.getConstructor(String[].class)
                 .newInstance(new Object[] { subarray(args, 1, args.length) });
-        cmd.call();
+        cmd.execute();
     }
 
     @SuppressWarnings("resource")

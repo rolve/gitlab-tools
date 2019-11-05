@@ -14,7 +14,7 @@ public class TestStudentDataCmd extends CmdWithCourseData<TestStudentDataCmd.Arg
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var groupStudents = new CsvReader(TDF.withHeader())
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 

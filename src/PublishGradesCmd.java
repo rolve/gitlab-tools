@@ -21,7 +21,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studProjects = getProjectsIn(getSubGroup(mainGroup, "students"));
 
@@ -39,10 +39,11 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
         var appendix = lines(Paths.get(args.getAppendixFile())).collect(joining("\n"));
 
         var fileApi = gitlab.getRepositoryFileApi();
-
-        int created = 0;
-        int existing = 0;
-        int missing = 0;
+        
+        System.out.println("Publishing grades...");
+        if (args.isDryRun()) {
+            progress.mute();
+        }
         for (var record : parser) {
             var builder = new StringBuilder();
             for (var col : parser.getHeaderMap().keySet()) {
@@ -71,27 +72,20 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 try {
                     fileApi.createFile(file, project.get().getId(), "master",
                             "publish grades for " + args.getProjectName());
-                    created++;
+                    progress.advance();
                 } catch (GitLabApiException e) {
                     if (e.getMessage().contains("already exists")) {
-                        existing++;
+                        progress.advance("existing");
                     } else {
                         throw e;
                     }
                 }
             } else {
-                System.err.println("Warning: no project found for " + name);
-                missing++;
-            }
-            if ((existing + created + missing) % 10 == 0) {
-                System.out.printf("%d processed\n", existing + created + missing);
-                Thread.sleep(3000);
-            } else {
-                Thread.sleep(500);
+                progress.advance("failed");
+                progress.interrupt();
+                System.out.println("Warning: no project found for " + name);
             }
         }
-        System.out.printf("Done. %d published, %d already exist, %d missing.\n",
-                created, existing, missing);
     }
 
     interface Args extends Cmd.Args {

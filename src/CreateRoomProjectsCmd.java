@@ -29,7 +29,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
         var roomGroup = getSubGroup(mainGroup, "rooms");
@@ -48,6 +48,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         System.out.println("Done.");
 
         System.out.print("Fetching commit hashes...");
+        var fetchProgress = new ProgressTracker();
         for (var student : students) {
             var project = studentProjects.stream()
                     .filter(p -> p.getName().equals(student.username))
@@ -57,14 +58,14 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
             }
             var master = gitlab.getRepositoryApi().getBranch(project.get().getId(), "master");
             student.commitHash = master.getCommit().getId();
-            System.out.print(".");
+            fetchProgress.advance();
         }
-        System.out.println("\nDone.");
+        fetchProgress.printSummary();
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        System.out.print("Creating repos...");
         var rooms = students.stream().map(s -> s.room).collect(toSet());
+        System.out.print("Creating " + rooms.size() + " room projects...");
         for (var room : rooms) {
             var roomStudents = students.stream()
                     .filter(s -> s.room.equals(room)).collect(toList());
@@ -105,13 +106,12 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
                         .setCredentialsProvider(credentials)
                         .call();
                 git.close();
-                System.out.print(".");
+                progress.advance();
             } finally {
                 walk(repoDir).sorted(reverseOrder())
                         .map(Path::toFile).forEach(File::delete);
             }
         }
-        System.out.println("\nDone.");
     }
 
     private List<String> generateModules(List<GroupStudent> students) {

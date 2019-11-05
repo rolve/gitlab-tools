@@ -21,7 +21,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
 
@@ -30,19 +30,13 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
         var destDir = Paths.get(args.getDestinationDir());
         createDirectories(destDir);
 
-        int cloned = 0;
-        for (var project : getProjectsIn(studGroup)) {
+        var projects = getProjectsIn(studGroup);
+        System.out.println("Cloning " + projects.size() + " projects...");
+        for (var project : projects) {
             var repoDir = destDir.resolve(project.getName());
-
             clone(project.getWebUrl(), repoDir);
-
-            cloned++;
-            System.out.print(".");
-            if (cloned % 80 == 0) {
-                System.out.println();
-            }
+            progress.advance();
         }
-        System.out.printf("Done. %d submissions cloned\n", cloned);
     }
 
     private void clone(String projectUrl, Path repoDir) throws GitAPIException {
@@ -60,8 +54,9 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
                 if (attempts == 0) {
                     throw e;
                 } else {
-                    e.printStackTrace(System.err);
-                    System.err.println("Transport exception! Attempts left: " + attempts);
+                    progress.interrupt();
+                    e.printStackTrace(System.out);
+                    System.out.println("Transport exception! Attempts left: " + attempts);
                 }
             }
         }

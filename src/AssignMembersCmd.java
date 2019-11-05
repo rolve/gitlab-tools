@@ -10,14 +10,11 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
         var projects = getProjectsIn(studGroup);
         
-        int assigned = 0;
-        int existing = 0;
-        int error = 0;
         for (var project : projects) {
             var exists = gitlab.getProjectApi().getMembers(project.getId()).stream()
                     .anyMatch(m -> m.getUsername().equals(project.getName()));
@@ -27,20 +24,16 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
                         .findFirst();
                 if (user.isPresent()) {
                     gitlab.getProjectApi().addMember(project.getId(), user.get().getId(), DEVELOPER);
-                    assigned++;
-                    if (assigned % 10 == 0) {
-                        System.out.printf("%d users assigned\n", assigned);
-                    }
+                    progress.advance();
                 } else {
-                    System.err.printf("Warning: user %s not among Gitlab users\n", project.getName());
-                    error++;
+                    progress.advance("failed");
+                    progress.interrupt();
+                    System.out.printf("Error: user %s not among Gitlab users\n", project.getName());
                 }
             } else {
-                existing++;
+                progress.advance("existing");
             }
         }
-        System.out.printf("Done. %d users assigned, %d already exist, %d errors\n",
-                assigned, existing, error);
     }
 
     public interface Args extends Cmd.Args {

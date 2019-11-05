@@ -12,31 +12,27 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
     }
 
     @Override
-    void call() throws Exception {
-        System.out.printf("Creating projects for %d students...\n", students.size());
-
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
         var existingProjects = getProjectsIn(studGroup).stream()
                 .map(Project::getName).collect(toSet());
-        int created = 0;
-        int existing = 0;
+
+        System.out.println("Creating projects for " + students.size() + " students...");
         for (var student : students) {
             if (student.username.isPresent()) {
                 if (existingProjects.contains(student.username.get())) {
-                    existing++;
+                    progress.advance("existing");
                 } else {
                     gitlab.getProjectApi().createProject(studGroup.getId(), student.username.get());
-                    created++;
+                    progress.advance();
                 }
             } else {
-                System.err.printf("Warning: no project created for %s\n", student.name());
-            }
-            if (created % 10 == 0 && created > 0) {
-                System.out.printf("%d projects created\n", created);
+                progress.advance("failed");
+                progress.interrupt();
+                System.out.printf("Warning: no project created for %s\n", student.name());
             }
         }
-        System.out.printf("Done. %d projects created, %d already exist.\n", created, existing);
     }
 
     public interface Args extends CmdWithCourseData.Args {

@@ -26,7 +26,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
         Date deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm").parse(args.getDate());
@@ -38,9 +38,9 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
         var workDir = Paths.get(args.getWorkDir());
         createDirectories(workDir);
 
-        int cloned = 0;
-        int checkedOut = 0;
-        for (var project : getProjectsIn(studGroup)) {
+        var projects = getProjectsIn(studGroup);
+        System.out.println("Checking out " + projects.size() + " projects...");
+        for (var project : projects) {
             var repoDir = workDir.resolve(project.getName());
 
             // add 1 day to deadline since gitlab ignores time of day
@@ -58,7 +58,9 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                     .findFirst();
 
             if (!lastPush.isPresent()) {
-                System.err.printf("Skipping %s, no push events found before date.\n", project.getName());
+                progress.advance("failed");
+                progress.interrupt();
+                System.out.printf("Skipping %s, no push events found before date.\n", project.getName());
                 continue;
             }
 
@@ -81,7 +83,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                                 .setDirectory(repoDir.toFile())
                                 .setCredentialsProvider(credentials)
                                 .call();
-                        cloned++;
+                        progress.additionalInfo("newly cloned");
                     }
 
                     // go to last commit before the deadline
@@ -94,8 +96,9 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                     // done
                     attempts = 0;
                 } catch (TransportException e) {
-                    e.printStackTrace(System.err);
-                    System.err.println("Transport exception for " + project.getName() +
+                    progress.interrupt();
+                    e.printStackTrace(System.out);
+                    System.out.println("Transport exception for " + project.getName() +
                             "! Attempts left: " + attempts);
                     if (attempts == 0) {
                         throw e;
@@ -105,16 +108,8 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                         git.close();
                 }
             }
-
-            checkedOut++;
-            System.out.print(".");
-            if (checkedOut % 80 == 0)
-                System.out.println();
-
-            Thread.sleep(500);
+            progress.advance();
         }
-        System.out.printf("Done. %d submissions checked out (%d newly cloned)\n",
-                checkedOut, cloned);
     }
 
     interface Args extends Cmd.Args {

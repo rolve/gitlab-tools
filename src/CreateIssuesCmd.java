@@ -14,7 +14,7 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var matGroup = getSubGroup(mainGroup, "material");
         var projectId = getProject(matGroup, "student-issues").getId();
@@ -22,7 +22,7 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
         var groupStudents = new CsvReader(TDF.withHeader())
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
 
-        System.out.printf("Creating issues for %d students...\n", students.size());
+        System.out.println("Creating issues for " + students.size() + " students...");
         var issues = gitlab.getIssuesApi();
         for (int s = 0; s < students.size(); s++) {
             var student = students.get(s);
@@ -39,12 +39,8 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
 
             issues.createIssue(projectId, student.toString(), description,
                     null, null, null, label, null, null, null, null);
-
-            if (s % 10 == 9) {
-                System.out.printf("%d issues created\n", s + 1);
-            }
+            progress.advance();
         }
-        System.out.println("Done.");
     }
 
     public interface Args extends CmdWithCourseData.Args {

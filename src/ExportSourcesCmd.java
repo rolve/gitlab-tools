@@ -38,14 +38,13 @@ import spoon.support.compiler.VirtualFile;
 public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
 
     private CredentialsProvider credentials;
-    private int cloned;
 
     public ExportSourcesCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
 
@@ -61,7 +60,7 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
         shuffle(numbers);
         var newNames = numbers.iterator();
 
-        cloned = 0;
+        System.out.println("Exporting sources of " + projects.size() + " repositories...");
         for (var project : projects) {
             var repoDir = destDir.resolve(project.getName());
 
@@ -79,14 +78,14 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
                 var tokens = List.of(stud.username.get(), stud.firstName, stud.lastName);
                 anonymizeSources(repoDir, tokens);
             } else {
-                System.err.println("No course file entry for " + project.getName());
+                progress.additionalInfo("not anonymized");
+                progress.interrupt();
+                System.out.println("Warning: no course file entry for " + project.getName());
             }
 
             move(repoDir, destDir.resolve(newNames.next()));
+            progress.advance();
         }
-
-        System.out.printf("Done. %d submissions exported (%d newly cloned)\n",
-                projects.size(), cloned);
     }
 
     private void checkout(String projectUrl, Path repoDir) throws GitAPIException, IOException {
@@ -105,15 +104,16 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
                             .setCredentialsProvider(credentials)
                             .call()
                             .close();
-                    cloned++;
+                    progress.additionalInfo("newly cloned");
                 }
                 break; // done
             } catch (TransportException e) {
                 if (attempts == 0) {
                     throw e;
                 } else {
-                    e.printStackTrace(System.err);
-                    System.err.println("Transport exception! Attempts left: " + attempts);
+                    progress.interrupt();
+                    e.printStackTrace(System.out);
+                    System.out.println("Transport exception! Attempts left: " + attempts);
                 }
             }
         }

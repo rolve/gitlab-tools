@@ -28,6 +28,8 @@ public abstract class Cmd<A extends Cmd.Args> {
     protected final String token;
     protected final GitLabApi gitlab;
 
+    protected ProgressTracker progress;
+
     private List<User> users = null;
     private Map<String, User> nameToUserMap = null;
 
@@ -38,7 +40,14 @@ public abstract class Cmd<A extends Cmd.Args> {
         gitlab = new GitLabApi(args.getGitlabUrl(), token);
     }
 
-    abstract void call() throws Exception;
+    public void execute() throws Exception {
+        progress = new ProgressTracker()
+                .usingChar("existing", '-').usingChar("failed", 'X');
+        doExecute();
+        progress.printSummary();
+    }
+
+    protected abstract void doExecute() throws Exception;
 
     protected List<User> users() {
         if (users == null) {

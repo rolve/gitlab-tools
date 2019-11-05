@@ -12,16 +12,13 @@ public class ProtectMasterCmd extends Cmd<ProtectMasterCmd.Args> {
     }
 
     @Override
-    void call() throws Exception {
+    protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
         var projects = getProjectsIn(studGroup);
         var api = gitlab.getProtectedBranchesApi();
 
-        System.out.printf("Protecting 'master' branch for %d projects...\n", projects.size());
-
-        int performed = 0;
-        int error = 0;
+        System.out.println("Protecting 'master' branch for " + projects.size() + " projects...");
         for (var project : projects) {
             try {
                 // remove all protected branches first
@@ -32,13 +29,13 @@ public class ProtectMasterCmd extends Cmd<ProtectMasterCmd.Args> {
 
                 // then protect 'master' from force-pushing (but DEVELOPERs may push and merge)
                 api.protectBranch(project.getId(), "master", DEVELOPER, DEVELOPER);
-                performed++;
+                progress.advance();
             } catch (GitLabApiException e) {
-                e.printStackTrace();
-                error++;
+                progress.advance("failed");
+                progress.interrupt();
+                e.printStackTrace(System.out);
             }
         }
-        System.out.printf("Done. %d branches protected, %d errors\n", performed, error);
     }
 
     public interface Args extends Cmd.Args {
