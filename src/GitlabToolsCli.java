@@ -13,7 +13,6 @@ public class GitlabToolsCli {
         put("create-projects", CreateProjectsCmd.class);
         put("create-room-projects", CreateRoomProjectsCmd.class);
         put("assign-members", AssignMembersCmd.class);
-        put("publish", PublishCmd.class);
         put("publish-fast", PublishFastCmd.class);
         put("publish-grades", PublishGradesCmd.class);
         put("checkout-submissions", CheckoutSubmissionsCmd.class);
