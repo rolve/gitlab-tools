@@ -52,7 +52,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
             var pager = gitlab.getEventsApi().getProjectEvents(project.getId(),
                     PUSHED, null, tempCal.getTime(), null, DESC, 100);
 
-            var lastPush = streamPager(pager)
+            var lastPush = stream(pager)
                     .filter(e -> e.getCreatedAt().before(deadline))
                     .filter(e -> e.getPushData().getRef().equals("master"))
                     .findFirst();

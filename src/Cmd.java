@@ -3,22 +3,14 @@ import static java.util.Comparator.comparing;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.StreamSupport.stream;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.User;
+import org.gitlab4j.api.*;
+import org.gitlab4j.api.models.*;
 
 import com.lexicalscope.jewel.cli.Option;
 
@@ -71,7 +63,7 @@ public abstract class Cmd<A extends Cmd.Args> {
 
         var duplicateNames = new HashSet<String>();
         try {
-            streamPager(gitlab.getUserApi().getUsers(100)).forEach(user -> {
+            stream(gitlab.getUserApi().getUsers(100)).forEach(user -> {
                 users.add(user);
                 if (nameToUserMap.put(user.getName(), user) != null) {
                     duplicateNames.add(user.getName());
@@ -85,32 +77,32 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     protected Group getGroup(String groupName) throws GitLabApiException {
-        return streamPager(gitlab.getGroupApi().getGroups(100))
+        return stream(gitlab.getGroupApi().getGroups(100))
                 .filter(g -> g.getName().equals(groupName))
                 .findFirst().get();
     }
 
     protected Group getSubGroup(Group group, String subGroupName) throws GitLabApiException {
-        return streamPager(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
+        return stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
                 .filter(g -> g.getName().equals(subGroupName))
                 .findFirst().get();
     }
 
     protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
         System.out.println("Fetching projects from group " + group.getName() + "...");
-        return streamPager(gitlab.getGroupApi().getProjects(group.getId(), 100))
+        return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))
                 .sorted(comparing(Project::getName))
                 .collect(toList());
     }
 
     protected Project getProject(Group group, String projectName) throws GitLabApiException {
-        return streamPager(gitlab.getGroupApi().getProjects(group.getId(), 100))
+        return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))
                 .filter(p -> p.getName().equals(projectName))
                 .findFirst().get();
     }
 
-    protected static <E> Stream<E> streamPager(Pager<E> pager) {
-        var pages = stream(spliteratorUnknownSize(pager, ORDERED), false);
+    protected static <E> Stream<E> stream(Pager<E> pager) {
+        var pages = StreamSupport.stream(spliteratorUnknownSize(pager, ORDERED), false);
         return pages.flatMap(List::stream);
     }
 
