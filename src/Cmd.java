@@ -16,6 +16,9 @@ import com.lexicalscope.jewel.cli.Option;
 
 public abstract class Cmd<A extends Cmd.Args> {
 
+    private static final Cache<Group> groupCache = new Cache<>();
+    private static final Cache<List<Project>> projectsCache = new Cache<>();
+
     protected final A args;
     protected final String token;
     protected final GitLabApi gitlab;
@@ -77,22 +80,29 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     protected Group getGroup(String groupName) throws GitLabApiException {
-        return stream(gitlab.getGroupApi().getGroups(100))
-                .filter(g -> g.getName().equals(groupName))
-                .findFirst().get();
+        var key = new Cache.Key(this, groupName);
+        return groupCache.update(key, () ->
+                stream(gitlab.getGroupApi().getGroups(100))
+                        .filter(g -> g.getName().equals(groupName))
+                        .findFirst().get());
     }
 
     protected Group getSubGroup(Group group, String subGroupName) throws GitLabApiException {
-        return stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
-                .filter(g -> g.getName().equals(subGroupName))
-                .findFirst().get();
+        var key = new Cache.Key(this, group.getId() + "#" + subGroupName);
+        return groupCache.update(key, () ->
+                stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
+                        .filter(g -> g.getName().equals(subGroupName))
+                        .findFirst().get());
     }
 
     protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
-        System.out.println("Fetching projects from group " + group.getName() + "...");
-        return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))
-                .sorted(comparing(Project::getName))
-                .collect(toList());
+        var key = new Cache.Key(this, group.getId());
+        return projectsCache.update(key, () -> {
+            System.out.println("Fetching projects from group " + group.getName() + "...");
+            return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))
+                    .sorted(comparing(Project::getName))
+                    .collect(toList());
+        });
     }
 
     protected Project getProject(Group group, String projectName) throws GitLabApiException {
