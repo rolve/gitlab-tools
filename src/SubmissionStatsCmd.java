@@ -1,11 +1,12 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.util.Calendar.DATE;
 import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
 import static org.gitlab4j.api.Constants.SortOrder.DESC;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.*;
@@ -13,6 +14,8 @@ import org.gitlab4j.api.models.*;
 import com.lexicalscope.jewel.cli.Option;
 
 public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
+
+    private static final Cache<List<Event>> eventCache = new Cache<>();
 
     public SubmissionStatsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -22,7 +25,7 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
         var studGroup = getSubGroup(mainGroup, "students");
-        Date deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm")
+        var deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm")
                 .parse(args.getDate());
 
         System.out.println(deadline);
@@ -33,16 +36,12 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
         for (var project : projects) {
             int id = project.getId();
 
-            // add 1 day to deadline since gitlab ignores time of day
-            var cal = Calendar.getInstance();
-            cal.setTime(deadline);
-            cal.add(DATE, 1);
+            var key = new Cache.Key(args.getGitlabUrl(), id + "#" + PUSHED);
+            var events = eventCache.update(key, () ->
+                    stream(gitlab.getEventsApi().getProjectEvents(id, PUSHED,
+                            null, null, null, DESC, 100)).collect(toList()));
 
-            // fetch all push-events the day of the deadline (and before)
-            var events = gitlab.getEventsApi().getProjectEvents(id, PUSHED,
-                    null, cal.getTime(), null, DESC, 100);
-
-            var lastPush = stream(events)
+            var lastPush = events.stream()
                     .filter(e -> e.getCreatedAt().before(deadline))
                     .filter(e -> e.getPushData().getRef().equals("master"))
                     .findFirst();
