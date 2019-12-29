@@ -91,9 +91,9 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
                 .anyMatch(args.getTaskFiles()::contains);
     }
 
-    public List<Commit> splitBeforeAfter(List<Commit> after, String id) {
+    public List<Commit> splitBeforeAfter(List<Commit> commits, String id) {
         var before = new ArrayList<Commit>();
-        for (var i = after.iterator(); i.hasNext();) {
+        for (var i = commits.iterator(); i.hasNext();) {
             var commit = i.next();
             before.add(commit);
             i.remove();

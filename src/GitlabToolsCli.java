@@ -1,27 +1,26 @@
 import static java.util.Arrays.stream;
+import static java.util.Map.entry;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
 public class GitlabToolsCli {
 
-    private static Map<String, Class<? extends Cmd<?>>> commands = new HashMap<>() {{
-        put("create-issues", CreateIssuesCmd.class);
-        put("create-projects", CreateProjectsCmd.class);
-        put("create-room-projects", CreateRoomProjectsCmd.class);
-        put("assign-members", AssignMembersCmd.class);
-        put("publish-fast", PublishFastCmd.class);
-        put("publish-grades", PublishGradesCmd.class);
-        put("checkout-submissions", CheckoutSubmissionsCmd.class);
-        put("export-sources", ExportSourcesCmd.class);
-        put("test-student-data", TestStudentDataCmd.class);
-        put("protect-master", ProtectMasterCmd.class);
-        put("submission-stats", SubmissionStatsCmd.class);
-        put("clone", CloneCmd.class);
-    }};
+    private static Map<String, Class<? extends Cmd<?>>> commands = Map.ofEntries(
+        entry("create-issues", CreateIssuesCmd.class),
+        entry("create-projects", CreateProjectsCmd.class),
+        entry("create-room-projects", CreateRoomProjectsCmd.class),
+        entry("assign-members", AssignMembersCmd.class),
+        entry("publish-fast", PublishFastCmd.class),
+        entry("publish-grades", PublishGradesCmd.class),
+        entry("checkout-submissions", CheckoutSubmissionsCmd.class),
+        entry("export-sources", ExportSourcesCmd.class),
+        entry("test-student-data", TestStudentDataCmd.class),
+        entry("protect-master", ProtectMasterCmd.class),
+        entry("submission-stats", SubmissionStatsCmd.class),
+        entry("clone", CloneCmd.class));
 
     public static void main(String[] args) throws Exception {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
