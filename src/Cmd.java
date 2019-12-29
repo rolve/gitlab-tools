@@ -80,7 +80,7 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     protected Group getGroup(String groupName) throws GitLabApiException {
-        var key = new Cache.Key(this, groupName);
+        var key = new Cache.Key(args.getGitlabUrl(), groupName);
         return groupCache.update(key, () ->
                 stream(gitlab.getGroupApi().getGroups(100))
                         .filter(g -> g.getName().equals(groupName))
@@ -88,7 +88,7 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     protected Group getSubGroup(Group group, String subGroupName) throws GitLabApiException {
-        var key = new Cache.Key(this, group.getId() + "#" + subGroupName);
+        var key = new Cache.Key(args.getGitlabUrl(), group.getId() + "#" + subGroupName);
         return groupCache.update(key, () ->
                 stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
                         .filter(g -> g.getName().equals(subGroupName))
@@ -96,7 +96,7 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
-        var key = new Cache.Key(this, group.getId());
+        var key = new Cache.Key(args.getGitlabUrl(), group.getId());
         return projectsCache.update(key, () -> {
             System.out.println("Fetching projects from group " + group.getName() + "...");
             return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))

@@ -1,3 +1,5 @@
+import static java.util.Objects.requireNonNull;
+
 import java.util.*;
 
 import org.gitlab4j.api.GitLabApiException;
@@ -21,19 +23,16 @@ public class Cache<V> {
 
     public static class Key {
         private final String url;
-        private final String token;
         private final Object aux;
 
-        public Key(Cmd<?> cmd, Object aux) {
-            this.url = cmd.args.getGitlabUrl();
-            this.token = cmd.token;
+        public Key(String url, Object aux) {
+            this.url = requireNonNull(url);
             this.aux = aux;
         }
 
         @Override
         public int hashCode() {
             int result = 31 + url.hashCode();
-            result = 31 * result + token.hashCode();
             result = 31 * result + ((aux == null) ? 0 : aux.hashCode());
             return result;
         }
@@ -41,8 +40,7 @@ public class Cache<V> {
         @Override
         public boolean equals(Object obj) {
             var other = (Key) obj;
-            return url.equals(other.url) && token.equals(other.token)
-                    && Objects.equals(aux, other.aux);
+            return url.equals(other.url) && Objects.equals(aux, other.aux);
         }
     }
 }
