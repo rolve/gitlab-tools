@@ -1,12 +1,13 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.util.stream.Collectors.toCollection;
+import static java.util.function.Function.identity;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
 import static org.gitlab4j.api.Constants.SortOrder.DESC;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.*;
@@ -16,6 +17,8 @@ import com.lexicalscope.jewel.cli.Option;
 public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
 
     private static final Cache<List<Event>> eventCache = new Cache<>();
+    private static final Cache<Map<String, Commit>> commitCache = new Cache<>();
+    private static final Cache<List<Diff>> diffCache = new Cache<>();
 
     public SubmissionStatsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -53,18 +56,31 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
                         + ", no push events found before date.");
                 continue;
             }
-            var lastId = lastPush.get().getPushData().getCommitTo();
 
-            var allCommits = gitlab.getCommitsApi().getCommits(id, "master",
-                    null, null, args.getProjectDir() + "/", 100);
-            var after = stream(allCommits)
+            var commits = commitCache.update(new Cache.Key(args.getGitlabUrl(), id),
+                    () -> stream(gitlab.getCommitsApi().getCommits(id, 100))
+                            .collect(toMap(Commit::getId, identity())));
+            var last = commits.get(lastPush.get().getPushData().getCommitTo());
+
+            var before = commits.values().stream()
+                    .filter(c -> isAncestorOf(c, last, commits))
+                    .collect(toList());
+            var after = commits.values().stream()
+                    .filter(not(before::contains))
+                    .collect(toList());
+            var beforeCount = before.stream()
+                    .map(commit -> getDiff(project, commit))
+                    .filter(diff -> modifiesProjectDir(diff))
                     .skip(1) // drop first commit, which published the template
-                    .filter(c -> modifiesTaskFiles(project, c))
-                    .collect(toCollection(ArrayList::new));
-            var before = splitBeforeAfter(after, lastId);
+                    .filter(diff -> modifiesTaskFiles(diff))
+                    .count();
+            var afterCount = after.stream()
+                    .map(commit -> getDiff(project, commit))
+                    .filter(diff -> modifiesTaskFiles(diff))
+                    .count();
 
-            stats.append(project.getName()).append("\t").append(before.size())
-                    .append("\t").append(after.size()).append("\n");
+            stats.append(project.getName()).append("\t").append(beforeCount)
+                    .append("\t").append(afterCount).append("\n");
 
             progress.advance();
         }
@@ -73,35 +89,38 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
         System.out.println(stats);
     }
 
-    private boolean modifiesTaskFiles(Project project, Commit c) {
-        if (args.getTaskFiles() == null) {
-            return true;
-        }
+    private static boolean isAncestorOf(Commit c, Commit other, Map<String, Commit> commits) {
+        return c == other || other.getParentIds().stream()
+                .map(commits::get)
+                .filter(Objects::nonNull)
+                .anyMatch(parent -> isAncestorOf(c, parent, commits));
+    }
 
-        List<Diff> diffs;
+    private List<Diff> getDiff(Project project, Commit c) {
         try {
-            diffs = gitlab.getCommitsApi().getDiff(project.getId(), c.getId());
+            var key = new Cache.Key(args.getGitlabUrl(), project.getId() + "#" + c.getId());
+            return diffCache.update(key, () ->
+                    gitlab.getCommitsApi().getDiff(project.getId(), c.getId()));
         } catch (GitLabApiException e) {
             throw new RuntimeException(e);
         }
-        return diffs.stream()
+    }
+
+    private boolean modifiesProjectDir(List<Diff> diff) {
+        return diff.stream()
+                .map(Diff::getNewPath)
+                .anyMatch(path -> path.startsWith(args.getProjectDir() + "/"));
+    }
+
+    private boolean modifiesTaskFiles(List<Diff> diff) {
+        if (args.getTaskFiles() == null) {
+            return true;
+        }
+        return diff.stream()
                 .map(Diff::getNewPath)
                 .filter(path -> path.startsWith(args.getProjectDir() + "/"))
                 .map(path -> path.substring(args.getProjectDir().length() + 1))
                 .anyMatch(args.getTaskFiles()::contains);
-    }
-
-    public List<Commit> splitBeforeAfter(List<Commit> commits, String id) {
-        var before = new ArrayList<Commit>();
-        for (var i = commits.iterator(); i.hasNext();) {
-            var commit = i.next();
-            before.add(commit);
-            i.remove();
-            if (commit.getId().equals(id)) {
-                break;
-            }
-        }
-        return before;
     }
 
     interface Args extends Cmd.Args {
