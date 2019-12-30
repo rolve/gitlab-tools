@@ -58,6 +58,7 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
             var allCommits = gitlab.getCommitsApi().getCommits(id, "master",
                     null, null, args.getProjectDir() + "/", 100);
             var after = stream(allCommits)
+                    .skip(1) // drop first commit, which published the template
                     .filter(c -> modifiesTaskFiles(project, c))
                     .collect(toCollection(ArrayList::new));
             var before = splitBeforeAfter(after, lastId);
@@ -100,8 +101,6 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
                 break;
             }
         }
-        // remove first commit, which published the template
-        before.remove(0);
         return before;
     }
 
