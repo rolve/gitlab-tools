@@ -62,7 +62,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
         }
     }
 
-    interface Args extends CmdWithCourseData.Args {
+    interface Args extends Cmd.Args {
         @Option
         String getGroupName();
 
