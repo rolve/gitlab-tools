@@ -59,6 +59,7 @@ public abstract class Cmd<A extends Cmd.Args> {
     }
 
     private void fetchUsers() {
+        progress.interrupt();
         System.out.println("Fetching users from Gitlab...");
 
         users = new ArrayList<>();
