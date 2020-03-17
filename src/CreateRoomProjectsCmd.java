@@ -31,7 +31,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
 
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
         var roomGroup = getSubGroup(mainGroup, "rooms");
 
         var students = new CsvReader(TDF.withHeader())
@@ -125,10 +125,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
                 .collect(toList());
     }
 
-    public interface Args extends Cmd.Args {
-        @Option
-        String getGroupName();
-
+    public interface Args extends ArgsWithProjectAccess {
         @Option(defaultValue = "groups.txt") // tab-separated
         String getGroupsFile();
     }

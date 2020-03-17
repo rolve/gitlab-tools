@@ -43,7 +43,7 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
         }
     }
 
-    public interface Args extends CmdWithCourseData.Args {
+    public interface Args extends ArgsWithCourseData {
         @Option
         String getGroupName();
 

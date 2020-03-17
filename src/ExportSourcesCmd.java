@@ -46,7 +46,7 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
 
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
@@ -283,10 +283,7 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
         throw new AssertionError("no matching encoding found for " + f);
     }
 
-    interface Args extends CmdWithCourseData.Args {
-        @Option
-        String getGroupName();
-
+    interface Args extends ArgsWithCourseData, ArgsWithProjectAccess {
         @Option
         String getDestinationDir();
     }

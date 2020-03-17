@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.lexicalscope.jewel.cli.Option;
-
 import csv.CsvReader;
 
-public abstract class CmdWithCourseData<A extends CmdWithCourseData.Args> extends Cmd<A> {
+public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cmd<A> {
 
     protected final List<Student> students;
     private Map<String, String> specialUsernames = null;
@@ -58,13 +56,5 @@ public abstract class CmdWithCourseData<A extends CmdWithCourseData.Args> extend
         } catch (IOException e) {
             throw new RuntimeException("could not load " + args.getSpecialUsernameFile(), e);
         }
-    }
-
-    public interface Args extends Cmd.Args {
-        @Option(defaultValue = "edoz.txt") // tab-separated
-        String getCourseFile();
-
-        @Option(defaultValue = "specialnethz.txt") // tab-separated file with legi & username
-        String getSpecialUsernameFile();
     }
 }

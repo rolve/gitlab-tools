@@ -1,9 +1,6 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
-import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.joining;
 import static org.eclipse.jgit.api.Git.cloneRepository;
-import static org.eclipse.jgit.api.Git.open;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -27,7 +24,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
@@ -83,7 +80,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 }
 
                 copyDir(sourceDir, destDir);
-                if (!projectName.endsWith("-sol") && !projectName.endsWith(" LÃ¶sungen")) {
+                if (!projectName.endsWith("-sol") && !projectName.endsWith(" Lösungen")) {
                     renameProject(destDir, project.getName());
                 }
                 git.add()
@@ -143,10 +140,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         });
     }
 
-    interface Args extends Cmd.Args {
-        @Option
-        String getGroupName();
-
+    interface Args extends ArgsWithProjectAccess {
         @Option
         String getWorkDir();
 

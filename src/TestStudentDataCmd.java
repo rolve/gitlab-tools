@@ -58,7 +58,7 @@ public class TestStudentDataCmd extends CmdWithCourseData<TestStudentDataCmd.Arg
         System.out.printf("%d/%d students in course file have a Gitlab user.\n", foundUser, students.size());
     }
 
-    public interface Args extends CmdWithCourseData.Args {
+    public interface Args extends ArgsWithCourseData {
         @Option(defaultValue = "groups.txt") // tab-separated
         String getGroupsFile();
     }

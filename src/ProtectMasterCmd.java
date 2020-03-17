@@ -3,18 +3,16 @@ import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
 
 import org.gitlab4j.api.GitLabApiException;
 
-import com.lexicalscope.jewel.cli.Option;
-
-public class ProtectMasterCmd extends Cmd<ProtectMasterCmd.Args> {
+public class ProtectMasterCmd extends Cmd<ArgsWithProjectAccess> {
 
     public ProtectMasterCmd(String[] rawArgs) throws Exception {
-        super(createCli(Args.class).parseArguments(rawArgs));
+        super(createCli(ArgsWithProjectAccess.class).parseArguments(rawArgs));
     }
 
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
         var projects = getProjectsIn(studGroup);
         var api = gitlab.getProtectedBranchesApi();
 
@@ -36,10 +34,5 @@ public class ProtectMasterCmd extends Cmd<ProtectMasterCmd.Args> {
                 e.printStackTrace(System.out);
             }
         }
-    }
-
-    public interface Args extends Cmd.Args {
-        @Option
-        String getGroupName();
     }
 }

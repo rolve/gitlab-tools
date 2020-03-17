@@ -1,20 +1,18 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
 
-import com.lexicalscope.jewel.cli.Option;
-
-public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
+public class AssignMembersCmd extends Cmd<ArgsWithProjectAccess> {
 
     public AssignMembersCmd(String[] rawArgs) throws Exception {
-        super(createCli(Args.class).parseArguments(rawArgs));
+        super(createCli(ArgsWithProjectAccess.class).parseArguments(rawArgs));
     }
 
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
         var projects = getProjectsIn(studGroup);
-        
+
         for (var project : projects) {
             var exists = gitlab.getProjectApi().getMembers(project.getId()).stream()
                     .anyMatch(m -> m.getUsername().equals(project.getName()));
@@ -34,10 +32,5 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
                 progress.advance("existing");
             }
         }
-    }
-
-    public interface Args extends Cmd.Args {
-        @Option
-        String getGroupName();
     }
 }

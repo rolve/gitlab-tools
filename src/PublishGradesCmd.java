@@ -23,7 +23,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studProjects = getProjectsIn(getSubGroup(mainGroup, "students"));
+        var studProjects = getProjectsIn(getSubGroup(mainGroup, args.getSubgroupName()));
 
         CSVParser parser = null;
         try {
@@ -88,10 +88,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
         }
     }
 
-    interface Args extends Cmd.Args {
-        @Option
-        String getGroupName();
-
+    interface Args extends ArgsWithProjectAccess {
         @Option
         String getProjectName();
 

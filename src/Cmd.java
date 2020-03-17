@@ -12,9 +12,7 @@ import java.util.stream.StreamSupport;
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.*;
 
-import com.lexicalscope.jewel.cli.Option;
-
-public abstract class Cmd<A extends Cmd.Args> {
+public abstract class Cmd<A extends Args> {
 
     private static final Cache<Group> groupCache = new Cache<>();
     private static final Cache<List<Project>> projectsCache = new Cache<>();
@@ -125,13 +123,5 @@ public abstract class Cmd<A extends Cmd.Args> {
      */
     protected static <T> Iterable<T> iterable(Stream<T> stream) {
         return () -> stream.iterator();
-    }
-
-    public interface Args {
-        @Option(defaultValue = "https://gitlab.inf.ethz.ch/")
-        String getGitlabUrl();
-
-        @Option(defaultValue = "token.txt")
-        String getTokenFile();
     }
 }

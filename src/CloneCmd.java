@@ -23,7 +23,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
 
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
@@ -62,10 +62,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
         }
     }
 
-    interface Args extends Cmd.Args {
-        @Option
-        String getGroupName();
-
+    interface Args extends ArgsWithProjectAccess {
         @Option
         String getDestinationDir();
     }

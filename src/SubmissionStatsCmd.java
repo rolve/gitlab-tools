@@ -27,7 +27,7 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
         var deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm")
                 .parse(args.getDate());
 
@@ -123,10 +123,7 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
                 .anyMatch(args.getTaskFiles()::contains);
     }
 
-    interface Args extends Cmd.Args {
-        @Option
-        String getGroupName();
-
+    interface Args extends ArgsWithProjectAccess {
         @Option
         String getProjectDir();
 

@@ -3,8 +3,6 @@ import static java.util.stream.Collectors.toSet;
 
 import org.gitlab4j.api.models.Project;
 
-import com.lexicalscope.jewel.cli.Option;
-
 public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args> {
 
     public CreateProjectsCmd(String[] rawArgs) throws Exception {
@@ -14,7 +12,7 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
     @Override
     protected void doExecute() throws Exception {
         var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, "students");
+        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
         var existingProjects = getProjectsIn(studGroup).stream()
                 .map(Project::getName).collect(toSet());
 
@@ -35,8 +33,5 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
         }
     }
 
-    public interface Args extends CmdWithCourseData.Args {
-        @Option
-        String getGroupName();
-    }
+    public interface Args extends ArgsWithCourseData, ArgsWithProjectAccess {}
 }
