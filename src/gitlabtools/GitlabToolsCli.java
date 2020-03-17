@@ -1,3 +1,5 @@
+package gitlabtools;
+
 import static java.util.Arrays.stream;
 import static java.util.Map.entry;
 import static java.util.regex.Pattern.compile;
@@ -6,6 +8,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ArrayUtils.*;
 
 import java.util.*;
+
+import gitlabtools.cmd.*;
 
 public class GitlabToolsCli {
 

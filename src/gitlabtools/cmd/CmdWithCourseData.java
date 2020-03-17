@@ -1,14 +1,14 @@
+package gitlabtools.cmd;
+
 import static org.apache.commons.csv.CSVFormat.TDF;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import csv.CsvReader;
+import gitlabtools.Student;
 
 public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cmd<A> {
 

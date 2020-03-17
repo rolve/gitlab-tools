@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
 import static java.util.Arrays.asList;
@@ -22,6 +24,8 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import com.lexicalscope.jewel.cli.Option;
 
 import csv.CsvReader;
+import gitlabtools.GroupStudent;
+import gitlabtools.ProgressTracker;
 
 public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
 

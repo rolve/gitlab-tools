@@ -1,3 +1,5 @@
+import gitlabtools.ProgressTracker;
+
 public class ProgressTrackerTest {
     public static void main(String[] args) throws InterruptedException {
         var tracker = new ProgressTracker()

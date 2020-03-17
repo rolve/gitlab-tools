@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static org.apache.commons.csv.CSVFormat.TDF;
 
@@ -6,6 +8,7 @@ import java.nio.file.Paths;
 import com.lexicalscope.jewel.cli.Option;
 
 import csv.CsvReader;
+import gitlabtools.GroupStudent;
 
 public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
 

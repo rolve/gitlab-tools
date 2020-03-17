@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
 

@@ -1,3 +1,5 @@
+package gitlabtools;
+
 import static java.util.stream.Collectors.joining;
 
 import java.io.PrintStream;

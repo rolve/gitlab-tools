@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import com.lexicalscope.jewel.cli.Option;
 
 public interface ArgsWithProjectAccess extends Args {

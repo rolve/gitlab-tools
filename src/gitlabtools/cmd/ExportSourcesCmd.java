@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.charset.StandardCharsets.*;
 import static java.nio.file.Files.*;
@@ -13,9 +15,7 @@ import static org.eclipse.jgit.api.Git.open;
 
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -28,9 +28,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import com.lexicalscope.jewel.cli.Option;
 
 import spoon.Launcher;
-import spoon.reflect.code.CtComment;
-import spoon.reflect.code.CtJavaDoc;
-import spoon.reflect.code.CtLiteral;
+import spoon.reflect.code.*;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
 import spoon.support.compiler.VirtualFile;

@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static java.nio.file.Files.readAllLines;
 import static java.util.Comparator.comparing;
 import static java.util.Spliterator.ORDERED;
@@ -11,6 +13,9 @@ import java.util.stream.StreamSupport;
 
 import org.gitlab4j.api.*;
 import org.gitlab4j.api.models.*;
+
+import gitlabtools.Cache;
+import gitlabtools.ProgressTracker;
 
 public abstract class Cmd<A extends Args> {
 

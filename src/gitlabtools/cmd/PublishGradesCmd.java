@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.lines;

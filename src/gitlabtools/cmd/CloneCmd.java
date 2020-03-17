@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
 import static org.eclipse.jgit.api.Git.cloneRepository;

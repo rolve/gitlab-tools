@@ -1,3 +1,5 @@
+package gitlabtools;
+
 import static java.util.Objects.requireNonNull;
 
 import java.util.*;

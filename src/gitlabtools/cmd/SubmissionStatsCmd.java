@@ -1,3 +1,5 @@
+package gitlabtools.cmd;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.util.function.Function.identity;
 import static java.util.function.Predicate.not;
@@ -13,6 +15,8 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.*;
 
 import com.lexicalscope.jewel.cli.Option;
+
+import gitlabtools.Cache;
 
 public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
 
