@@ -5,7 +5,6 @@ import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -140,14 +139,11 @@ public class PublishEclipseProjectCmd
         write(projectFile, List.of(newContent));
     }
 
-    private void copyDir(Path src, Path dest) throws IOException {
-        walk(src).forEach(source -> {
-            try {
-                copy(source, dest.resolve(src.relativize(source)));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
+    private static void copyDir(Path src, Path dest) throws IOException {
+        Iterable<Path> sources = walk(src)::iterator;
+        for (var source : sources) {
+            copy(source, dest.resolve(src.relativize(source)));
+        }
     }
 
     interface Args extends ArgsWithProjectAccess {
