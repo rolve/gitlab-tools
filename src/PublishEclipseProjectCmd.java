@@ -16,7 +16,7 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import com.lexicalscope.jewel.cli.Option;
 
 /**
- * Publishes an Eclipse project into an existing repository (GitLab "project").
+ * Publishes an Eclipse project into existing repositories (GitLab "projects").
  * This command assumes that a repository contains multiple Eclipse projects,
  * each in a directory with a name matching the Eclipse project name.
  */

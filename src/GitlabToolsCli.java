@@ -14,6 +14,7 @@ public class GitlabToolsCli {
         entry("create-projects", CreateProjectsCmd.class),
         entry("create-room-projects", CreateRoomProjectsCmd.class),
         entry("assign-members", AssignMembersCmd.class),
+        entry("publish-template", PublishTemplateCmd.class),
         entry("publish-eclipse-project", PublishEclipseProjectCmd.class),
         entry("publish-grades", PublishGradesCmd.class),
         entry("checkout-submissions", CheckoutSubmissionsCmd.class),
