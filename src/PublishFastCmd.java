@@ -1,11 +1,14 @@
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
+import static java.util.stream.Collectors.joining;
 import static org.eclipse.jgit.api.Git.cloneRepository;
+import static org.eclipse.jgit.api.Git.open;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -80,7 +83,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 }
 
                 copyDir(sourceDir, destDir);
-                if (!projectName.endsWith("-sol") && !projectName.endsWith(" Lösungen")) {
+                if (!projectName.endsWith("-sol") && !projectName.endsWith(" LÃ¶sungen")) {
                     renameProject(destDir, project.getName());
                 }
                 git.add()
@@ -127,7 +130,7 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         if (newContent.equals(content)) {
             throw new AssertionError("REPLACEME not found");
         }
-        write(projectFile, asList(newContent));
+        write(projectFile, List.of(newContent));
     }
 
     private void copyDir(Path src, Path dest) throws IOException {
