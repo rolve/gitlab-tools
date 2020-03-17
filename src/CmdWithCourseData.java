@@ -23,7 +23,8 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
 
     private void findUsername(Student student) {
         var mailParts = student.mail.split("@");
-        if (mailParts[0].matches("[a-z]+") && mailParts[1].matches("(student\\.)?ethz\\.ch")) {
+        if (mailParts[0].matches(args.getLocalPartPattern())
+                && mailParts[1].matches(args.getDomainPattern())) {
             // first, try to infer username from email address
             student.username = Optional.of(mailParts[0]);
         } else if (nameToUserMap().containsKey(student.name())) {
