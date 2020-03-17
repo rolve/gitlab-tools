@@ -11,11 +11,7 @@ public class AssignMembersCmd extends Cmd<ArgsWithProjectAccess> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-        var projects = getProjectsIn(studGroup);
-
-        for (var project : projects) {
+        for (var project : getProjects(args)) {
             var exists = gitlab.getProjectApi().getMembers(project.getId()).stream()
                     .anyMatch(m -> m.getUsername().equals(project.getName()));
             if (!exists) {

@@ -13,11 +13,9 @@ public class ProtectMasterCmd extends Cmd<ArgsWithProjectAccess> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-        var projects = getProjectsIn(studGroup);
         var api = gitlab.getProtectedBranchesApi();
 
+        var projects = getProjects(args);
         System.out.println("Protecting 'master' branch for " + projects.size() + " projects...");
         for (var project : projects) {
             try {

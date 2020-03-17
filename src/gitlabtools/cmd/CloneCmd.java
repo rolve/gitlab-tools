@@ -24,15 +24,12 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var destDir = Paths.get(args.getDestinationDir());
         createDirectories(destDir);
 
-        var projects = getProjectsIn(studGroup);
+        var projects = getProjects(args);
         System.out.println("Cloning " + projects.size() + " projects...");
         for (var project : projects) {
             var repoDir = destDir.resolve(project.getName());

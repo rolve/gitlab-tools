@@ -30,16 +30,13 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var templateDir = Paths.get(args.getTemplateDir());
         var workDir = createTempDirectory("gitlab-tools");
         workDir.toFile().deleteOnExit();
 
-        var projects = getProjectsIn(studGroup);
+        var projects = getProjects(args);
         System.out.println("Publishing template to " + projects.size()
                 + " repositories...");
         for (var project : projects) {

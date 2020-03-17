@@ -43,16 +43,12 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var destDir = Paths.get(args.getDestinationDir());
         createDirectories(destDir);
 
-        var projects = getProjectsIn(studGroup);
-
+        var projects = getProjects(args);
         var numbers = range(0, projects.size())
                 .mapToObj(Integer::toString).collect(toList());
         shuffle(numbers);

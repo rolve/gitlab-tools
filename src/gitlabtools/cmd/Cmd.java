@@ -93,7 +93,7 @@ public abstract class Cmd<A extends Args> {
                         .findFirst().get());
     }
 
-    protected Group getSubGroup(Group group, String subGroupName) throws GitLabApiException {
+    protected Group getSubgroup(Group group, String subGroupName) throws GitLabApiException {
         var key = new Cache.Key(args.getGitlabUrl(), group.getId() + "#" + subGroupName);
         return groupCache.update(key, () ->
                 stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
@@ -115,6 +115,13 @@ public abstract class Cmd<A extends Args> {
         return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))
                 .filter(p -> p.getName().equals(projectName))
                 .findFirst().get();
+    }
+
+    protected List<Project> getProjects(ArgsWithProjectAccess args)
+            throws GitLabApiException {
+        var group = getGroup(args.getGroupName());
+        var subgroup = getSubgroup(group, args.getSubgroupName());
+        return getProjectsIn(subgroup);
     }
 
     protected static <E> Stream<E> stream(Pager<E> pager) {

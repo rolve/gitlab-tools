@@ -33,9 +33,6 @@ public class PublishEclipseProjectCmd
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var sourceDir = Paths.get(args.getProjectDir());
@@ -44,7 +41,7 @@ public class PublishEclipseProjectCmd
 
         var eclipseProjectName = sourceDir.getFileName().toString();
 
-        var projects = getProjectsIn(studGroup);
+        var projects = getProjects(args);
         System.out.println("Publishing " + sourceDir.getFileName() + " to "
                 + projects.size() + " repositories...");
         for (var project : projects) {

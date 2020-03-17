@@ -30,17 +30,12 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
         var deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm")
                 .parse(args.getDate());
-
         System.out.println(deadline);
 
         var stats = new StringBuilder("\nName\tBefore\tAfter\n");
-
-        var projects = getProjectsIn(studGroup);
-        for (var project : projects) {
+        for (var project : getProjects(args)) {
             int id = project.getId();
 
             var key = new Cache.Key(args.getGitlabUrl(), id + "#" + PUSHED);

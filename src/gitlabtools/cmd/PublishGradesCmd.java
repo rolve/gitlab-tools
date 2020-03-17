@@ -24,9 +24,6 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studProjects = getProjectsIn(getSubGroup(mainGroup, args.getSubgroupName()));
-
         CSVParser parser = null;
         try {
             parser = TDF.withIgnoreSurroundingSpaces(false).withHeader()
@@ -63,8 +60,9 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
             }
 
             var name = record.get("NETHZ");
-            var project = studProjects.stream()
-                    .filter(p -> p.getName().equals(name)).findFirst();
+            var project = getProjects(args).stream()
+                    .filter(p -> p.getName().equals(name))
+                    .findFirst();
 
             if (project.isPresent()) {
                 var path = args.getProjectName() + "/grade.txt";

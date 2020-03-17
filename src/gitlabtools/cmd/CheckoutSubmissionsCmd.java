@@ -29,10 +29,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
         Date deadline = new SimpleDateFormat("yyyy-MM-dd-HH:mm").parse(args.getDate());
-
         System.out.println(deadline);
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
@@ -40,7 +37,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
         var workDir = Paths.get(args.getWorkDir());
         createDirectories(workDir);
 
-        var projects = getProjectsIn(studGroup);
+        var projects = getProjects(args);
         System.out.println("Checking out " + projects.size() + " projects...");
         for (var project : projects) {
             var repoDir = workDir.resolve(project.getName());

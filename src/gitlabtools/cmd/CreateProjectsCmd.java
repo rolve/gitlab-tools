@@ -13,10 +13,11 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-        var existingProjects = getProjectsIn(studGroup).stream()
-                .map(Project::getName).collect(toSet());
+        var group = getGroup(args.getGroupName());
+        var subgroup = getSubgroup(group, args.getSubgroupName());
+        var existingProjects = getProjectsIn(subgroup).stream()
+                .map(Project::getName)
+                .collect(toSet());
 
         System.out.println("Creating projects for " + students.size() + " students...");
         for (var student : students) {
@@ -24,7 +25,7 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
                 if (existingProjects.contains(student.username.get())) {
                     progress.advance("existing");
                 } else {
-                    gitlab.getProjectApi().createProject(studGroup.getId(), student.username.get());
+                    gitlab.getProjectApi().createProject(subgroup.getId(), student.username.get());
                     progress.advance();
                 }
             } else {

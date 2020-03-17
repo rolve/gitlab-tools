@@ -34,9 +34,8 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
     }
 
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var studGroup = getSubGroup(mainGroup, args.getSubgroupName());
-        var roomGroup = getSubGroup(mainGroup, "rooms");
+        var group = getGroup(args.getGroupName());
+        var roomsSubgroup = getSubgroup(group, args.getRoomsSubgroupName());
 
         var students = new CsvReader(TDF.withHeader())
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
@@ -47,14 +46,12 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
             }
         }
 
-        System.out.println("Fetching student projects...");
-        var studentProjects = getProjectsIn(studGroup);
-        System.out.println("Done.");
+        var projects = getProjects(args);
 
         System.out.print("Fetching commit hashes...");
         var fetchProgress = new ProgressTracker();
         for (var student : students) {
-            var project = studentProjects.stream()
+            var project = projects.stream()
                     .filter(p -> p.getName().equals(student.username))
                     .findFirst();
             if (project.isEmpty()) {
@@ -75,7 +72,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
                     .filter(s -> s.room.equals(room)).collect(toList());
 
             var safeRoom = room.replace(' ', '-');
-            var project = gitlab.getProjectApi().createProject(roomGroup.getId(), safeRoom);
+            var project = gitlab.getProjectApi().createProject(roomsSubgroup.getId(), safeRoom);
 
             var repoDir = createTempDirectory("gitlab-tools");
             try {
@@ -130,6 +127,9 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
     }
 
     public interface Args extends ArgsWithProjectAccess {
+        @Option(defaultValue = "rooms")
+        String getRoomsSubgroupName();
+
         @Option(defaultValue = "groups.txt") // tab-separated
         String getGroupsFile();
     }

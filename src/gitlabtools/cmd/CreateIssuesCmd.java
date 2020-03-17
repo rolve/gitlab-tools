@@ -18,9 +18,9 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var mainGroup = getGroup(args.getGroupName());
-        var matGroup = getSubGroup(mainGroup, "material");
-        var projectId = getProject(matGroup, "student-issues").getId();
+        var group = getGroup(args.getGroupName());
+        var subgroup = getSubgroup(group, args.getIssuesSubgroupName());
+        var projectId = getProject(subgroup, args.getIssuesProjectName()).getId();
 
         var groupStudents = new CsvReader(TDF.withHeader())
                 .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
@@ -49,6 +49,12 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
     public interface Args extends ArgsWithCourseData {
         @Option
         String getGroupName();
+
+        @Option(defaultValue = "material")
+        String getIssuesSubgroupName();
+
+        @Option(defaultValue = "student-issues")
+        String getIssuesProjectName();
 
         @Option(defaultValue = "groups.txt") // tab-separated
         String getGroupsFile();
