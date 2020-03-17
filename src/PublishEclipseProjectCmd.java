@@ -16,11 +16,17 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import com.lexicalscope.jewel.cli.Option;
 
-public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
+/**
+ * Publishes an Eclipse project into an existing repository (GitLab "project").
+ * This command assumes that a repository contains multiple Eclipse projects,
+ * each in a directory with a name matching the Eclipse project name.
+ */
+public class PublishEclipseProjectCmd
+        extends Cmd<PublishEclipseProjectCmd.Args> {
 
     private static final int ATTEMPTS = 3;
 
-    public PublishFastCmd(String[] rawArgs) throws Exception {
+    public PublishEclipseProjectCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 
@@ -35,15 +41,15 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
         var workDir = Paths.get(args.getWorkDir());
         createDirectories(workDir);
 
-        var projectName = sourceDir.getFileName().toString();
+        var eclipseProjectName = sourceDir.getFileName().toString();
 
         var projects = getProjectsIn(studGroup);
-        System.out.println("Publishing " + sourceDir.getFileName() + " to " +
-                projects.size() + " repositories...");
+        System.out.println("Publishing " + sourceDir.getFileName() + " to "
+                + projects.size() + " repositories...");
         for (var project : projects) {
             try {
                 var repoDir = workDir.resolve(project.getName());
-                var destDir = repoDir.resolve(projectName);
+                var destDir = repoDir.resolve(eclipseProjectName);
                 if (exists(destDir)) {
                     progress.advance("existing");
                     continue;
@@ -83,14 +89,15 @@ public class PublishFastCmd extends Cmd<PublishFastCmd.Args> {
                 }
 
                 copyDir(sourceDir, destDir);
-                if (!projectName.endsWith("-sol") && !projectName.endsWith(" Lösungen")) {
+                if (!eclipseProjectName.endsWith("-sol")
+                        && !eclipseProjectName.endsWith(" Lösungen")) {
                     renameProject(destDir, project.getName());
                 }
                 git.add()
                         .addFilepattern(".")
                         .call();
                 git.commit()
-                        .setMessage("Publish " + projectName)
+                        .setMessage("Publish " + eclipseProjectName)
                         .call();
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
