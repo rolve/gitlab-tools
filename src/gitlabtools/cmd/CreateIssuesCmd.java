@@ -3,7 +3,7 @@ package gitlabtools.cmd;
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static org.apache.commons.csv.CSVFormat.TDF;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import com.lexicalscope.jewel.cli.Option;
 
@@ -23,7 +23,7 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
         var projectId = getProject(subgroup, args.getIssuesProjectName()).getId();
 
         var groupStudents = new CsvReader(TDF.withHeader())
-                .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
+                .readAll(Path.of(args.getGroupsFile()), GroupStudent.class);
 
         System.out.println("Creating issues for " + students.size() + " students...");
         var issues = gitlab.getIssuesApi();

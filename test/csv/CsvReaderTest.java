@@ -1,5 +1,6 @@
 package csv;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.csv.CSVFormat.EXCEL;
 import static org.junit.Assert.assertEquals;
 
@@ -17,7 +18,8 @@ public class CsvReaderTest {
                 "Frieda Graf,graff@example.com\r\n";
 
         var reader = new CsvReader(EXCEL.withHeader());
-        var students = reader.read(new StringReader(data), Student.class);
+        var students = reader.read(new StringReader(data), Student.class)
+                .collect(toList());
 
         assertEquals(2, students.size());
         assertEquals("Hans-Peter Moll", students.get(0).name);

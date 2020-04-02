@@ -3,7 +3,7 @@ package gitlabtools.cmd;
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static org.apache.commons.csv.CSVFormat.TDF;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import com.lexicalscope.jewel.cli.Option;
 
@@ -19,7 +19,7 @@ public class TestStudentDataCmd extends CmdWithCourseData<TestStudentDataCmd.Arg
     @Override
     protected void doExecute() throws Exception {
         var groupStudents = new CsvReader(TDF.withHeader())
-                .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
+                .readAll(Path.of(args.getGroupsFile()), GroupStudent.class);
 
         var complete = students.stream().filter(s -> s.username.isPresent()).count();
         System.out.printf("%d/%d students in course have a username.\n",

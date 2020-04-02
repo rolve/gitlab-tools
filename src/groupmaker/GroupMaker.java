@@ -45,7 +45,7 @@ public class GroupMaker {
         var args = createCli(Args.class).parseArguments(rawArgs);
         var path = Path.of(args.getSurveyFile());
 
-        var students = new CsvReader(EXCEL.withHeader()).read(path, Student.class);
+        var students = new CsvReader(EXCEL.withHeader()).readAll(path, Student.class);
 
         checkValidLegis(students);
         checkDuplicateLegis(students);

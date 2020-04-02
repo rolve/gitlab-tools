@@ -13,7 +13,6 @@ import static org.eclipse.jgit.lib.ObjectId.fromString;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 
 import org.eclipse.jgit.api.Git;
@@ -38,7 +37,7 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         var roomsSubgroup = getSubgroup(group, args.getRoomsSubgroupName());
 
         var students = new CsvReader(TDF.withHeader())
-                .read(Paths.get(args.getGroupsFile()), GroupStudent.class);
+                .readAll(Path.of(args.getGroupsFile()), GroupStudent.class);
 
         for (var student : students) {
             if (student.username.isBlank()) {

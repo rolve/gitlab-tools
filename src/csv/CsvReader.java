@@ -2,12 +2,16 @@ package csv;
 
 import static java.lang.reflect.Modifier.isFinal;
 import static java.nio.file.Files.newBufferedReader;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -20,45 +24,61 @@ public class CsvReader {
         this.format = format;
     }
 
-    public <E> List<E> read(Path path, Class<E> clazz) throws IOException {
-        try (var reader = newBufferedReader(path)) {
-            return read(reader, clazz);
+    public <E> List<E> readAll(Path path, Class<E> clazz) throws IOException {
+        try (var stream = read(path, clazz)) {
+            return stream.collect(toList());
         }
     }
 
     /**
-     * Reads the records from the given {@link Reader}. Clients should close the
-     * given reader themselves.
+     * Reads the records from the given {@link Path}. Clients should close the
+     * returned stream.
      */
     @SuppressWarnings("resource")
-    public <E> List<E> read(Reader reader, Class<E> clazz) throws IOException {
+    public <E> Stream<E> read(Path path, Class<E> clazz) throws IOException {
+        return read(newBufferedReader(path), clazz);
+    }
+
+    /**
+     * Reads the records from the given {@link Reader}. Clients should close the
+     * given reader or the returned stream themselves.
+     */
+    @SuppressWarnings("resource")
+    public <E> Stream<E> read(Reader reader, Class<E> clazz) throws IOException {
+        var parser = format.parse(reader);
+
+        Constructor<E> constr;
         try {
-            var parser = format.parse(reader);
+            constr = clazz.getDeclaredConstructor();
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
+        constr.setAccessible(true);
 
-            var constructor = clazz.getDeclaredConstructor();
-            constructor.setAccessible(true);
+        var colsToFields = new HashMap<String, Set<Field>>();
+        for (var f : clazz.getDeclaredFields()) {
+            var name = colNameFor(f);
+            if (name != null) {
+                colsToFields.computeIfAbsent(name, k -> new HashSet<>()).add(f);
+                f.setAccessible(true);
+            }
+        }
 
-            var colsToFields = new HashMap<String, Set<Field>>();
-            for (var f : clazz.getDeclaredFields()) {
-                var name = colNameFor(f);
-                if (name != null) {
-                    colsToFields.computeIfAbsent(name, k -> new HashSet<>()).add(f);
-                    f.setAccessible(true);
+        return stream(parser.spliterator(), false)
+                .map(record -> create(constr, colsToFields, record));
+    }
+
+    private <E> E create(Constructor<E> constr,
+            Map<String, Set<Field>> colsToFields, CSVRecord record) {
+        try {
+            var object = constr.newInstance();
+            for (var entry : colsToFields.entrySet()) {
+                var name = entry.getKey();
+                for (var field : entry.getValue()) {
+                    field.set(object, record.get(name));
                 }
             }
-
-            var result = new ArrayList<E>();
-            for (CSVRecord record : parser) {
-                var object = constructor.newInstance();
-                for (var entry : colsToFields.entrySet()) {
-                    var name = entry.getKey();
-                    for (var field : entry.getValue()) {
-                        field.set(object, record.get(name));
-                    }
-                }
-                result.add(object);
-            }
-            return result;
+            return object;
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
         }

@@ -3,8 +3,7 @@ package gitlabtools.cmd;
 import static org.apache.commons.csv.CSVFormat.TDF;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 
 import csv.CsvReader;
@@ -17,7 +16,8 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
 
     public CmdWithCourseData(A args) throws IOException {
         super(args);
-        students = new CsvReader(TDF.withHeader()).read(Paths.get(args.getCourseFile()), Student.class);
+        students = new CsvReader(TDF.withHeader())
+                .readAll(Path.of(args.getCourseFile()), Student.class);
         students.forEach(this::findUsername);
     }
 
