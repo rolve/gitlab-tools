@@ -6,6 +6,7 @@ import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.toList;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
@@ -31,7 +32,7 @@ public abstract class Cmd<A extends Args> {
     private List<User> users = null;
     private Map<String, User> nameToUserMap = null;
 
-    public Cmd(A args) throws Exception {
+    public Cmd(A args) throws IOException {
         this.args = args;
 
         token = readAllLines(Paths.get(args.getTokenFile())).get(0);

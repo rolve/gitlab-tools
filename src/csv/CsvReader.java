@@ -3,14 +3,11 @@ package csv;
 import static java.lang.reflect.Modifier.isFinal;
 import static java.nio.file.Files.newBufferedReader;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
@@ -23,37 +20,48 @@ public class CsvReader {
         this.format = format;
     }
 
-    public <E> List<E> read(Path path, Class<E> clazz) throws Exception {
-        return read(newBufferedReader(path), clazz);
+    public <E> List<E> read(Path path, Class<E> clazz) throws IOException {
+        try (var reader = newBufferedReader(path)) {
+            return read(reader, clazz);
+        }
     }
 
-    public <E> List<E> read(Reader reader, Class<E> clazz) throws Exception {
-        var parser = format.parse(reader);
+    /**
+     * Reads the records from the given {@link Reader}. Clients should close the
+     * given reader themselves.
+     */
+    @SuppressWarnings("resource")
+    public <E> List<E> read(Reader reader, Class<E> clazz) throws IOException {
+        try {
+            var parser = format.parse(reader);
 
-        var constructor = clazz.getDeclaredConstructor();
-        constructor.setAccessible(true);
+            var constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
 
-        var colsToFields = new HashMap<String, Set<Field>>();
-        for (var f : clazz.getDeclaredFields()) {
-            var name = colNameFor(f);
-            if (name != null) {
-                colsToFields.computeIfAbsent(name, k -> new HashSet<>()).add(f);
-                f.setAccessible(true);
-            }
-        }
-
-        var result = new ArrayList<E>();
-        for (CSVRecord record : parser) {
-            var object = constructor.newInstance();
-            for (var entry : colsToFields.entrySet()) {
-                var name = entry.getKey();
-                for (var field : entry.getValue()) {
-                    field.set(object, record.get(name));
+            var colsToFields = new HashMap<String, Set<Field>>();
+            for (var f : clazz.getDeclaredFields()) {
+                var name = colNameFor(f);
+                if (name != null) {
+                    colsToFields.computeIfAbsent(name, k -> new HashSet<>()).add(f);
+                    f.setAccessible(true);
                 }
             }
-            result.add(object);
+
+            var result = new ArrayList<E>();
+            for (CSVRecord record : parser) {
+                var object = constructor.newInstance();
+                for (var entry : colsToFields.entrySet()) {
+                    var name = entry.getKey();
+                    for (var field : entry.getValue()) {
+                        field.set(object, record.get(name));
+                    }
+                }
+                result.add(object);
+            }
+            return result;
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
         }
-        return result;
     }
 
     private String colNameFor(Field f) {

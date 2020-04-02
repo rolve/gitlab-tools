@@ -15,7 +15,7 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
     protected final List<Student> students;
     private Map<String, String> specialUsernames = null;
 
-    public CmdWithCourseData(A args) throws Exception {
+    public CmdWithCourseData(A args) throws IOException {
         super(args);
         students = new CsvReader(TDF.withHeader()).read(Paths.get(args.getCourseFile()), Student.class);
         students.forEach(this::findUsername);
