@@ -36,8 +36,8 @@ public class CreateRoomProjectsCmd extends Cmd<CreateRoomProjectsCmd.Args> {
         var group = getGroup(args.getGroupName());
         var roomsSubgroup = getSubgroup(group, args.getRoomsSubgroupName());
 
-        var students = new CsvReader(TDF.withHeader())
-                .readAll(Path.of(args.getGroupsFile()), GroupStudent.class);
+        var students = new CsvReader<>(TDF.withHeader(), GroupStudent.class)
+                .readAll(Path.of(args.getGroupsFile()));
 
         for (var student : students) {
             if (student.username.isBlank()) {

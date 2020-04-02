@@ -2,6 +2,7 @@ package csv;
 
 import static java.lang.reflect.Modifier.isFinal;
 import static java.nio.file.Files.newBufferedReader;
+import static java.util.Optional.empty;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
@@ -16,16 +17,47 @@ import java.util.stream.Stream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
-public class CsvReader {
+public class CsvReader<E> {
 
-    private CSVFormat format;
+    private final CSVFormat format;
+    private final Constructor<E> constr;
+    private final Map<String, Field> colsToFields;
 
-    public CsvReader(CSVFormat format) {
+    public CsvReader(CSVFormat format, Class<E> clazz) {
         this.format = format;
+
+        try {
+            constr = clazz.getDeclaredConstructor();
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
+        constr.setAccessible(true);
+
+        colsToFields = new HashMap<>();
+        for (var field : clazz.getDeclaredFields()) {
+            columnFor(field).ifPresent(col -> {
+                field.setAccessible(true);
+                colsToFields.put(col, field);
+            });
+        }
     }
 
-    public <E> List<E> readAll(Path path, Class<E> clazz) throws IOException {
-        try (var stream = read(path, clazz)) {
+    private static Optional<String> columnFor(Field f) {
+        var col = f.getAnnotation(Column.class);
+        if (col == null) {
+            return empty();
+        } else {
+            if (isFinal(f.getModifiers())) {
+                throw new AssertionError("annotated field is final");
+            } else if (f.getType() != String.class) {
+                throw new AssertionError("unsupported field type " + f.getType().getName());
+            }
+            return Optional.of(col.value());
+        }
+    }
+
+    public List<E> readAll(Path path) throws IOException {
+        try (var stream = read(path)) {
             return stream.collect(toList());
         }
     }
@@ -35,8 +67,8 @@ public class CsvReader {
      * returned stream.
      */
     @SuppressWarnings("resource")
-    public <E> Stream<E> read(Path path, Class<E> clazz) throws IOException {
-        return read(newBufferedReader(path), clazz);
+    public Stream<E> read(Path path) throws IOException {
+        return read(newBufferedReader(path));
     }
 
     /**
@@ -44,57 +76,23 @@ public class CsvReader {
      * given reader or the returned stream themselves.
      */
     @SuppressWarnings("resource")
-    public <E> Stream<E> read(Reader reader, Class<E> clazz) throws IOException {
+    public Stream<E> read(Reader reader) throws IOException {
         var parser = format.parse(reader);
-
-        Constructor<E> constr;
-        try {
-            constr = clazz.getDeclaredConstructor();
-        } catch (ReflectiveOperationException e) {
-            throw new AssertionError(e);
-        }
-        constr.setAccessible(true);
-
-        var colsToFields = new HashMap<String, Set<Field>>();
-        for (var f : clazz.getDeclaredFields()) {
-            var name = colNameFor(f);
-            if (name != null) {
-                colsToFields.computeIfAbsent(name, k -> new HashSet<>()).add(f);
-                f.setAccessible(true);
-            }
-        }
-
         return stream(parser.spliterator(), false)
-                .map(record -> create(constr, colsToFields, record));
+                .map(this::create);
     }
 
-    private <E> E create(Constructor<E> constr,
-            Map<String, Set<Field>> colsToFields, CSVRecord record) {
+    private E create(CSVRecord record) {
         try {
             var object = constr.newInstance();
             for (var entry : colsToFields.entrySet()) {
-                var name = entry.getKey();
-                for (var field : entry.getValue()) {
-                    field.set(object, record.get(name));
-                }
+                var col = entry.getKey();
+                var field = entry.getValue();
+                field.set(object, record.get(col));
             }
             return object;
         } catch (ReflectiveOperationException e) {
             throw new AssertionError(e);
-        }
-    }
-
-    private String colNameFor(Field f) {
-        var col = f.getAnnotation(Column.class);
-        if (col == null) {
-            return null;
-        } else {
-            if (isFinal(f.getModifiers())) {
-                throw new AssertionError("annotated field is final");
-            } else if (f.getType() != String.class) {
-                throw new AssertionError("unsupported field type " + f.getType().getName());
-            }
-            return col.value();
         }
     }
 }

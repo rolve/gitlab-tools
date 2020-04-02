@@ -18,8 +18,8 @@ public class TestStudentDataCmd extends CmdWithCourseData<TestStudentDataCmd.Arg
 
     @Override
     protected void doExecute() throws Exception {
-        var groupStudents = new CsvReader(TDF.withHeader())
-                .readAll(Path.of(args.getGroupsFile()), GroupStudent.class);
+        var groupStudents = new CsvReader<>(TDF.withHeader(), GroupStudent.class)
+                .readAll(Path.of(args.getGroupsFile()));
 
         var complete = students.stream().filter(s -> s.username.isPresent()).count();
         System.out.printf("%d/%d students in course have a username.\n",

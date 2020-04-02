@@ -22,8 +22,8 @@ public class CreateIssuesCmd extends CmdWithCourseData<CreateIssuesCmd.Args> {
         var subgroup = getSubgroup(group, args.getIssuesSubgroupName());
         var projectId = getProject(subgroup, args.getIssuesProjectName()).getId();
 
-        var groupStudents = new CsvReader(TDF.withHeader())
-                .readAll(Path.of(args.getGroupsFile()), GroupStudent.class);
+        var groupStudents = new CsvReader<>(TDF.withHeader(), GroupStudent.class)
+                .readAll(Path.of(args.getGroupsFile()));
 
         System.out.println("Creating issues for " + students.size() + " students...");
         var issues = gitlab.getIssuesApi();

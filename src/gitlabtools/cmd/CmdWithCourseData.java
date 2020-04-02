@@ -16,8 +16,8 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
 
     public CmdWithCourseData(A args) throws IOException {
         super(args);
-        students = new CsvReader(TDF.withHeader())
-                .readAll(Path.of(args.getCourseFile()), Student.class);
+        students = new CsvReader<>(TDF.withHeader(), Student.class)
+                .readAll(Path.of(args.getCourseFile()));
         students.forEach(this::findUsername);
     }
 
