@@ -16,6 +16,7 @@ public class GitlabToolsCli {
     private static Map<String, Class<? extends Cmd<?>>> commands = Map.ofEntries(
         entry("create-issues", CreateIssuesCmd.class),
         entry("create-projects", CreateProjectsCmd.class),
+        entry("create-team-projects", CreateTeamProjectsCmd.class),
         entry("create-room-projects", CreateRoomProjectsCmd.class),
         entry("assign-members", AssignMembersCmd.class),
         entry("publish-template", PublishTemplateCmd.class),

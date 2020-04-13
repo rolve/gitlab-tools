@@ -3,32 +3,54 @@ package gitlabtools.cmd;
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
 
-public class AssignMembersCmd extends Cmd<ArgsWithProjectAccess> {
+import org.gitlab4j.api.models.Member;
+import org.gitlab4j.api.models.Project;
+
+import com.lexicalscope.jewel.cli.Option;
+
+public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
 
     public AssignMembersCmd(String[] rawArgs) throws Exception {
-        super(createCli(ArgsWithProjectAccess.class).parseArguments(rawArgs));
+        super(createCli(Args.class).parseArguments(rawArgs));
     }
 
     @Override
     protected void doExecute() throws Exception {
         for (var project : getProjects(args)) {
-            var exists = gitlab.getProjectApi().getMembers(project.getId()).stream()
-                    .anyMatch(m -> m.getUsername().equals(project.getName()));
-            if (!exists) {
-                var user = users().stream()
-                        .filter(u -> u.getUsername().equals(project.getName()))
-                        .findFirst();
-                if (user.isPresent()) {
-                    gitlab.getProjectApi().addMember(project.getId(), user.get().getId(), DEVELOPER);
-                    progress.advance();
-                } else {
-                    progress.advance("failed");
-                    progress.interrupt();
-                    System.out.printf("Error: user %s not among Gitlab users\n", project.getName());
+            var name = project.getName();
+            if (args.isTeamProjects()) {
+                for (var member : name.split("_")) {
+                    addMember(project, member);
                 }
             } else {
-                progress.advance("existing");
+                addMember(project, name);
             }
         }
+    }
+
+    private void addMember(Project project, String username) throws Exception {
+        var exists = gitlab.getProjectApi().getMembers(project.getId()).stream()
+                .map(Member::getUsername)
+                .anyMatch(username::equals);
+        if (!exists) {
+            var user = users().stream()
+                    .filter(u -> u.getUsername().equals(username))
+                    .findFirst();
+            if (user.isPresent()) {
+                gitlab.getProjectApi().addMember(project.getId(), user.get().getId(), DEVELOPER);
+                progress.advance();
+            } else {
+                progress.advance("failed");
+                progress.interrupt();
+                System.out.printf("Error: user %s not among Gitlab users\n", username);
+            }
+        } else {
+            progress.advance("existing");
+        }
+    }
+
+    interface Args extends ArgsWithProjectAccess {
+        @Option
+        boolean isTeamProjects();
     }
 }
