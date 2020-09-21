@@ -2,10 +2,12 @@ package gitlabtools.cmd;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
+import static java.util.Collections.reverseOrder;
 import static java.util.stream.Collectors.joining;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -87,6 +89,7 @@ public class PublishEclipseProjectCmd
                 }
 
                 copyDir(sourceDir, destDir);
+                removeBin(destDir);
                 if (!eclipseProjectName.endsWith("-sol")
                         && !eclipseProjectName.endsWith(" Lösungen")) {
                     renameProject(destDir, project.getName());
@@ -128,7 +131,13 @@ public class PublishEclipseProjectCmd
         }
     }
 
-    private void renameProject(Path projectDir, String username) throws IOException {
+    private static void removeBin(Path projectDir) throws IOException {
+        try (var walk = walk(projectDir.resolve("bin"))) {
+            walk.map(Path::toFile).sorted(reverseOrder()).forEach(File::delete);
+        }
+    }
+
+    private static void renameProject(Path projectDir, String username) throws IOException {
         var projectFile = projectDir.resolve(".project");
         var content = lines(projectFile).collect(joining("\n"));
         var newContent = content.replace("REPLACEME", username);
