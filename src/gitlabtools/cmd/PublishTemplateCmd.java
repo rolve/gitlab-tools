@@ -42,10 +42,6 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         for (var project : projects) {
             try {
                 var repoDir = workDir.resolve(project.getName());
-                if (exists(repoDir)) {
-                    progress.advance("existing");
-                    continue;
-                }
 
                 Git git = null;
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
@@ -64,6 +60,13 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                         if (attempts == 0) {
                             throw e;
                         }
+                    }
+                }
+
+                try (var contents = list(repoDir)) {
+                    if (contents.findAny().isPresent()) {
+                        progress.advance("existing");
+                        continue;
                     }
                 }
 
