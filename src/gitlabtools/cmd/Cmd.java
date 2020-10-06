@@ -20,7 +20,7 @@ import gitlabtools.ProgressTracker;
 
 public abstract class Cmd<A extends Args> {
 
-    private static final Cache<Group> groupCache = new Cache<>();
+    private static final Cache<Optional<Group>> groupCache = new Cache<>();
     private static final Cache<List<Project>> projectsCache = new Cache<>();
 
     protected final A args;
@@ -91,15 +91,31 @@ public abstract class Cmd<A extends Args> {
         return groupCache.update(key, () ->
                 stream(gitlab.getGroupApi().getGroups(100))
                         .filter(g -> g.getName().equals(groupName))
-                        .findFirst().get());
+                        .findFirst()).get();
     }
 
-    protected Group getSubgroup(Group group, String subGroupName) throws GitLabApiException {
-        var key = new Cache.Key(args.getGitlabUrl(), group.getId() + "#" + subGroupName);
-        return groupCache.update(key, () ->
+    protected Group getSubgroup(Group group, String subgroupName) throws GitLabApiException {
+        var key = new Cache.Key(args.getGitlabUrl(), group.getId() + "#" + subgroupName);
+        var subgroup = groupCache.update(key, () ->
                 stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
-                        .filter(g -> g.getName().equals(subGroupName))
-                        .findFirst().get());
+                        .filter(g -> g.getName().equals(subgroupName))
+                        .findFirst());
+        if (subgroup.isPresent()) {
+            return subgroup.get();
+        }
+
+        System.out.print("Subgroup " + subgroupName + " inside "
+                + group.getName() + " does not exist. Create it? [Y/n] ");
+        var reply = new Scanner(System.in).nextLine().strip().toLowerCase();
+        if (reply.isEmpty() || reply.charAt(0) != 'n') {
+            var newSubgroup = gitlab.getGroupApi().addGroup(subgroupName, subgroupName,
+                    null, group.getVisibility(), null, null, group.getId());
+            groupCache.update(key, () -> Optional.of(newSubgroup));
+            return newSubgroup;
+        } else {
+            System.exit(0);
+            return null;
+        }
     }
 
     protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
