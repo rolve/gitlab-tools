@@ -64,7 +64,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                 }
 
                 try (var contents = list(repoDir)) {
-                    if (contents.findAny().isPresent()) {
+                    if (contents.anyMatch(p -> !p.getFileName().toString().equals(".git"))) {
                         progress.advance("existing");
                         continue;
                     }
