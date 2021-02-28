@@ -18,6 +18,13 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
     protected void doExecute() throws Exception {
         for (var project : getProjects(args)) {
             var name = project.getName();
+            if (args.isWithProjectNamePrefix()) {
+                String[] parts = name.split("_", 2);
+                if (parts.length != 2) {
+                    throw new AssertionError("unexpected project name " + name + "; expected prefix and _");
+                }
+                name = parts[1];
+            }
             if (args.isTeamProjects()) {
                 for (var member : name.split("_")) {
                     addMember(project, member);
@@ -52,5 +59,7 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
     interface Args extends ArgsWithProjectAccess {
         @Option
         boolean isTeamProjects();
+        @Option
+        boolean isWithProjectNamePrefix();
     }
 }

@@ -23,6 +23,9 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
 
     private void findUsername(Student student) {
         var mailParts = student.mail.split("@");
+        if (mailParts.length != 2) {
+            throw new AssertionError("invalid email: " + student.mail);
+        }
         if (mailParts[0].matches(args.getLocalPartPattern())
                 && mailParts[1].matches(args.getDomainPattern())) {
             // first, try to infer username from email address

@@ -30,10 +30,17 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
         System.out.println("Creating projects for " + students.size() + " students...");
         for (var student : students) {
             if (student.username.isPresent()) {
-                if (existingProjects.contains(student.username.get())) {
+                var projectName = student.username.get();
+                if (args.getProjectNamePrefix() != null) {
+                    if (args.getProjectNamePrefix().contains("_")) {
+                        throw new AssertionError("illegal prefix; must not contain _");
+                    }
+                    projectName = args.getProjectNamePrefix() + "_" + projectName;
+                }
+                if (existingProjects.contains(projectName)) {
                     progress.advance("existing");
                 } else {
-                    var project = gitlab.getProjectApi().createProject(subgroup.getId(), student.username.get());
+                    var project = gitlab.getProjectApi().createProject(subgroup.getId(), projectName);
 
                     // remove all protected branches first
                     var branches = branchApi.getProtectedBranches(project.getId());
@@ -57,5 +64,8 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
     public interface Args extends ArgsWithCourseData, ArgsWithProjectAccess {
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
         String getMasterBranchAccess();
+
+        @Option(defaultToNull = true)
+        String getProjectNamePrefix();
     }
 }
