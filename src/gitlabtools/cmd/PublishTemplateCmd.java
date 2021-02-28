@@ -5,8 +5,7 @@ import static java.nio.file.Files.*;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -15,10 +14,8 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import com.lexicalscope.jewel.cli.Option;
 
 /**
- * Publishes the content in a given "template" directory into the root directory
- * of existing repositories. Assumes that a repository needs a single template,
- * unlike {@link PublishEclipseProjectCmd}, which publishes an Eclipse project
- * into a directory within a repository.
+ * Publishes the content in a given "template" directory into a directory of
+ * existing repositories.
  */
 public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
 
@@ -63,14 +60,25 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                     }
                 }
 
-                try (var contents = list(repoDir)) {
-                    if (contents.anyMatch(p -> !p.getFileName().toString().equals(".git"))) {
+                Path destDir;
+                if (args.getDestDir() == null) {
+                    try (var contents = list(repoDir)) {
+                        if (contents.anyMatch(p -> !p.getFileName().toString().equals(".git"))) {
+                            progress.advance("existing");
+                            continue;
+                        }
+                    }
+                    destDir = repoDir;
+                } else {
+                    destDir = repoDir.resolve(args.getDestDir());
+                    if (Files.exists(destDir)) {
                         progress.advance("existing");
                         continue;
                     }
+                    createDirectories(destDir);
                 }
 
-                copyDir(templateDir, repoDir);
+                copyDir(templateDir, destDir, args.getIgnorePattern());
                 git.add().addFilepattern(".").call();
                 git.commit().setMessage("Publish template").call();
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
@@ -103,15 +111,32 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         }
     }
 
-    private static void copyDir(Path src, Path dest) throws IOException {
+    private static void copyDir(Path src, Path dest, String ignorePattern) throws IOException {
+        PathMatcher matcher = null;
+        if (ignorePattern != null) {
+            matcher = FileSystems.getDefault().getPathMatcher("glob:" + ignorePattern);
+        }
         Iterable<Path> sources = walk(src).skip(1)::iterator;
         for (var source : sources) {
-            copy(source, dest.resolve(src.relativize(source)));
+            var rel = src.relativize(source);
+            if (matcher == null || !matcher.matches(rel)) {
+                copy(source, dest.resolve(rel));
+            }
         }
     }
 
     interface Args extends ArgsWithProjectAccess {
         @Option
         String getTemplateDir();
+
+        @Option(defaultToNull = true)
+        String getDestDir();
+
+        /**
+         * A GLOB pattern that is applied to the relative path of each file
+         * in the template directory.
+         */
+        @Option(defaultToNull = true)
+        String getIgnorePattern();
     }
 }
