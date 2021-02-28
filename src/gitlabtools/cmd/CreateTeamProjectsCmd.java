@@ -7,6 +7,7 @@ import static org.apache.commons.csv.CSVFormat.TDF;
 import java.nio.file.Path;
 import java.util.TreeSet;
 
+import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Project;
 
 import com.lexicalscope.jewel.cli.Option;
@@ -16,12 +17,17 @@ import csv.CsvReader;
 
 public class CreateTeamProjectsCmd extends Cmd<CreateTeamProjectsCmd.Args> {
 
+    private final AccessLevel access;
+
     public CreateTeamProjectsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
+        access = AccessLevel.valueOf(args.getMasterBranchAccess().toUpperCase());
     }
 
     @Override
     protected void doExecute() throws Exception {
+        var branchApi = gitlab.getProtectedBranchesApi();
+
         var group = getGroup(args.getGroupName());
         var subgroup = getSubgroup(group, args.getSubgroupName());
         var existingProjects = getProjectsIn(subgroup).stream()
@@ -41,7 +47,17 @@ public class CreateTeamProjectsCmd extends Cmd<CreateTeamProjectsCmd.Args> {
             if (existingProjects.contains(team)) {
                 progress.advance("existing");
             } else {
-                gitlab.getProjectApi().createProject(subgroup.getId(), team);
+                var project = gitlab.getProjectApi().createProject(subgroup.getId(), team);
+
+                // remove all protected branches first
+                var branches = branchApi.getProtectedBranches(project.getId());
+                for (var branch : branches) {
+                    branchApi.unprotectBranch(project.getId(), branch.getName());
+                }
+
+                // then protect 'master' from force-pushing
+                branchApi.protectBranch(project.getId(), "master", access, access);
+
                 progress.advance();
             }
         }
@@ -50,6 +66,9 @@ public class CreateTeamProjectsCmd extends Cmd<CreateTeamProjectsCmd.Args> {
     public interface Args extends ArgsWithProjectAccess {
         @Option(defaultValue = "teams.txt")
         String getTeamsFile();
+
+        @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
+        String getMasterBranchAccess();
     }
 
     static class TeamMember {
