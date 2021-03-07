@@ -80,7 +80,8 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
 
                 copyDir(templateDir, destDir, args.getIgnorePattern());
                 git.add().addFilepattern(".").call();
-                git.commit().setMessage("Publish template").call();
+                var message = "Publish " + (args.getDestDir() == null ? "template" : args.getDestDir());
+                git.commit().setMessage(message).call();
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
                         git.push().add("master")
