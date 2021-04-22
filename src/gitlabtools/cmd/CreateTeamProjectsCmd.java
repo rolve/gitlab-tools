@@ -39,11 +39,18 @@ public class CreateTeamProjectsCmd extends Cmd<CreateTeamProjectsCmd.Args> {
                 .collect(groupingBy(m -> m.team,
                         mapping(m -> m.username, toCollection(TreeSet::new))))
                 .values().stream()
-                .map(set -> set.stream().collect(joining("_")))
+                .map(set -> String.join("_", set))
                 .collect(toList());
 
         System.out.println("Creating projects for " + teams.size() + " teams...");
         for (var team : teams) {
+            if (args.getProjectNamePrefix() != null) {
+                if (args.getProjectNamePrefix().contains("_")) {
+                    throw new AssertionError("illegal prefix; must not contain _");
+                }
+                team = args.getProjectNamePrefix() + "_" + team;
+            }
+
             if (existingProjects.contains(team)) {
                 progress.advance("existing");
             } else {
@@ -69,6 +76,9 @@ public class CreateTeamProjectsCmd extends Cmd<CreateTeamProjectsCmd.Args> {
 
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
         String getMasterBranchAccess();
+
+        @Option(defaultToNull = true)
+        String getProjectNamePrefix();
     }
 
     static class TeamMember {

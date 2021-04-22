@@ -42,7 +42,7 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
         }
 
         // if we still haven't got anything, warn
-        if (!student.username.isPresent()) {
+        if (student.username.isEmpty()) {
             System.err.printf("Warning: no username for %s (%s)\n",
                     student.name(), student.legi);
         }
