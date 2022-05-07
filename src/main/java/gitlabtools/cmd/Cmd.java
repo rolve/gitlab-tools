@@ -134,7 +134,7 @@ public abstract class Cmd<A extends Args> {
                 .findFirst().get();
     }
 
-    protected List<Project> getProjects(ArgsWithProjectAccess args)
+    protected List<Project> getProjects(Args args)
             throws GitLabApiException {
         var group = getGroup(args.getGroupName());
         var subgroup = getSubgroup(group, args.getSubgroupName());

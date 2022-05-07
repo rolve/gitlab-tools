@@ -125,7 +125,7 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
                 .anyMatch(args.getTaskFiles()::contains);
     }
 
-    interface Args extends ArgsWithProjectAccess {
+    interface Args extends gitlabtools.cmd.Args {
         @Option
         String getProjectDir();
 

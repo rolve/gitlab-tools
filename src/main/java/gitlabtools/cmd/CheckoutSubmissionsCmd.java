@@ -118,7 +118,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
         }
     }
 
-    interface Args extends ArgsWithProjectAccess {
+    interface Args extends gitlabtools.cmd.Args {
         @Option
         String getWorkDir();
 

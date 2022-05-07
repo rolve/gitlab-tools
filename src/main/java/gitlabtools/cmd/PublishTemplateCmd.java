@@ -126,7 +126,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         }
     }
 
-    interface Args extends ArgsWithProjectAccess {
+    interface Args extends gitlabtools.cmd.Args {
         @Option
         String getTemplateDir();
 

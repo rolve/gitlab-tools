@@ -61,7 +61,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
         }
     }
 
-    interface Args extends ArgsWithProjectAccess {
+    interface Args extends gitlabtools.cmd.Args {
         @Option
         String getDestinationDir();
     }

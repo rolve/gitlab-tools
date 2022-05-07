@@ -1,5 +1,27 @@
 package gitlabtools.cmd;
 
+import com.lexicalscope.jewel.cli.Option;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import spoon.Launcher;
+import spoon.reflect.code.CtComment;
+import spoon.reflect.code.CtJavaDoc;
+import spoon.reflect.code.CtLiteral;
+import spoon.reflect.visitor.CtScanner;
+import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
+import spoon.support.compiler.VirtualFile;
+
+import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.regex.Pattern;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.charset.StandardCharsets.*;
 import static java.nio.file.Files.*;
@@ -7,31 +29,10 @@ import static java.util.Collections.reverseOrder;
 import static java.util.Collections.shuffle;
 import static java.util.regex.Pattern.compile;
 import static java.util.regex.Pattern.quote;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
-
-import java.io.IOException;
-import java.nio.charset.CharacterCodingException;
-import java.nio.file.*;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.transport.CredentialsProvider;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
-import com.lexicalscope.jewel.cli.Option;
-
-import spoon.Launcher;
-import spoon.reflect.code.*;
-import spoon.reflect.visitor.CtScanner;
-import spoon.reflect.visitor.DefaultJavaPrettyPrinter;
-import spoon.support.compiler.VirtualFile;
 
 public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
 
@@ -164,7 +165,7 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
             var dirs = paths.sorted(reverseOrder())
                     .filter(Files::isDirectory);
             for (var d : iterable(dirs)) {
-                if (!list(d).findAny().isPresent()) {
+                if (list(d).findAny().isEmpty()) {
                     delete(d);
                 }
             }
@@ -176,7 +177,7 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
             for (var f : iterable(files)) {
                 if (!linesWithName(f, tokens).isEmpty()) {
                     try {
-                        var code = readAllLinesRobust(f).stream().collect(joining("\n"));
+                        var code = String.join("\n", readAllLinesRobust(f));
                         var anonymized = anonymize(code, tokens);
                         write(f, List.of(anonymized), UTF_8);
                     } catch (RuntimeException e) {
@@ -188,7 +189,7 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
                 var lines = linesWithName(f, tokens);
                 if (!lines.isEmpty()) {
                     System.out.println(f + " contains one of " +
-                            tokens.stream().collect(joining(", ")));
+                            String.join(", ", tokens));
                     lines.stream().map(l -> "    " + l.trim()).forEach(System.out::println);
                 }
             }
@@ -277,7 +278,7 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
         throw new AssertionError("no matching encoding found for " + f);
     }
 
-    interface Args extends ArgsWithCourseData, ArgsWithProjectAccess {
+    interface Args extends ArgsWithCourseData {
         @Option
         String getDestinationDir();
     }

@@ -70,7 +70,7 @@ public class CreateTeamProjectsCmd extends Cmd<CreateTeamProjectsCmd.Args> {
         }
     }
 
-    public interface Args extends ArgsWithProjectAccess {
+    public interface Args extends gitlabtools.cmd.Args {
         @Option(defaultValue = "teams.txt")
         String getTeamsFile();
 

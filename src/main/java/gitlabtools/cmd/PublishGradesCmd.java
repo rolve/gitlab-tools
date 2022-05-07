@@ -88,7 +88,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
         }
     }
 
-    interface Args extends ArgsWithProjectAccess {
+    interface Args extends gitlabtools.cmd.Args {
         @Option
         String getProjectName();
 

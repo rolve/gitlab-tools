@@ -1,12 +1,11 @@
 package gitlabtools.cmd;
 
-import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.util.stream.Collectors.toSet;
-
+import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Project;
 
-import com.lexicalscope.jewel.cli.Option;
+import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static java.util.stream.Collectors.toSet;
 
 public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args> {
 
@@ -61,7 +60,7 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
         }
     }
 
-    public interface Args extends ArgsWithCourseData, ArgsWithProjectAccess {
+    public interface Args extends ArgsWithCourseData {
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
         String getMasterBranchAccess();
 

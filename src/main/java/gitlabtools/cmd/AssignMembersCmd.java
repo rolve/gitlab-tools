@@ -56,7 +56,7 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
         }
     }
 
-    interface Args extends ArgsWithProjectAccess {
+    interface Args extends gitlabtools.cmd.Args {
         @Option
         boolean isTeamProjects();
         @Option

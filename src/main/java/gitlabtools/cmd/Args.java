@@ -8,4 +8,10 @@ public interface Args {
 
     @Option(defaultValue = "token.txt")
     String getTokenFile();
+
+    @Option
+    String getGroupName();
+
+    @Option(defaultValue = "students")
+    String getSubgroupName();
 }
