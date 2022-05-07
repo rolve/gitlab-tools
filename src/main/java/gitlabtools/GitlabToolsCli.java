@@ -1,5 +1,12 @@
 package gitlabtools;
 
+import gitlabtools.cmd.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
 import static java.util.Arrays.stream;
 import static java.util.Map.entry;
 import static java.util.regex.Pattern.compile;
@@ -7,24 +14,17 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ArrayUtils.*;
 
-import java.util.*;
-
-import gitlabtools.cmd.*;
-
 public class GitlabToolsCli {
 
     private static Map<String, Class<? extends Cmd<?>>> commands = Map.ofEntries(
-        entry("create-issues", CreateIssuesCmd.class),
         entry("create-projects", CreateProjectsCmd.class),
         entry("create-team-projects", CreateTeamProjectsCmd.class),
-        entry("create-room-projects", CreateRoomProjectsCmd.class),
         entry("assign-members", AssignMembersCmd.class),
         entry("publish-template", PublishTemplateCmd.class),
         entry("publish-eclipse-project", PublishEclipseProjectCmd.class),
         entry("publish-grades", PublishGradesCmd.class),
         entry("checkout-submissions", CheckoutSubmissionsCmd.class),
         entry("export-sources", ExportSourcesCmd.class),
-        entry("test-student-data", TestStudentDataCmd.class),
         entry("protect-master", ProtectMasterCmd.class),
         entry("submission-stats", SubmissionStatsCmd.class),
         entry("clone", CloneCmd.class));
