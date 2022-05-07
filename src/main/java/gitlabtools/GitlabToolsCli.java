@@ -10,13 +10,12 @@ import java.util.Scanner;
 import static java.util.Arrays.stream;
 import static java.util.Map.entry;
 import static java.util.regex.Pattern.compile;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ArrayUtils.*;
 
 public class GitlabToolsCli {
 
-    private static Map<String, Class<? extends Cmd<?>>> commands = Map.ofEntries(
+    private static final Map<String, Class<? extends Cmd<?>>> commands = Map.ofEntries(
         entry("create-projects", CreateProjectsCmd.class),
         entry("create-team-projects", CreateTeamProjectsCmd.class),
         entry("assign-members", AssignMembersCmd.class),
@@ -65,14 +64,13 @@ public class GitlabToolsCli {
      * disastrous consequences), require confirmation.
      */
     @SuppressWarnings("resource")
-    private static boolean confirm(String cmd, List<String[]> argsList) {
+    private static void confirm(String cmd, List<String[]> argsList) {
         System.out.print("About to execute" + (argsList.size() == 1 ? " " : "\n"));
         for (var args : argsList) {
-            System.out.println(cmd + " " + stream(args).collect(joining(" ")));
+            System.out.println(cmd + " " + String.join(" ", args));
         }
         System.out.print("Press Enter to continue.");
         new Scanner(System.in).nextLine();
-        return true;
     }
 
     private static String[] split(String args) {

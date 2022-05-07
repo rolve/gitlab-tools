@@ -1,5 +1,18 @@
 package gitlabtools.cmd;
 
+import com.lexicalscope.jewel.cli.Option;
+import gitlabtools.Cache;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.Commit;
+import org.gitlab4j.api.models.Diff;
+import org.gitlab4j.api.models.Event;
+import org.gitlab4j.api.models.Project;
+
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.util.function.Function.identity;
 import static java.util.function.Predicate.not;
@@ -7,16 +20,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
 import static org.gitlab4j.api.Constants.SortOrder.DESC;
-
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.*;
-
-import com.lexicalscope.jewel.cli.Option;
-
-import gitlabtools.Cache;
 
 public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
 
@@ -69,13 +72,13 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
                     .collect(toList());
             var beforeCount = before.stream()
                     .map(commit -> getDiff(project, commit))
-                    .filter(diff -> modifiesProjectDir(diff))
+                    .filter(this::modifiesProjectDir)
                     .skip(1) // drop first commit, which published the template
-                    .filter(diff -> modifiesTaskFiles(diff))
+                    .filter(this::modifiesTaskFiles)
                     .count();
             var afterCount = after.stream()
                     .map(commit -> getDiff(project, commit))
-                    .filter(diff -> modifiesTaskFiles(diff))
+                    .filter(this::modifiesTaskFiles)
                     .count();
 
             stats.append(project.getName()).append("\t").append(beforeCount)

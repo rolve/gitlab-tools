@@ -1,5 +1,15 @@
 package gitlabtools.cmd;
 
+import com.lexicalscope.jewel.cli.Option;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
+import org.gitlab4j.api.models.Event;
+
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.exists;
@@ -8,19 +18,6 @@ import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
 import static org.gitlab4j.api.Constants.SortOrder.DESC;
-
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Optional;
-
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-
-import com.lexicalscope.jewel.cli.Option;
-import org.gitlab4j.api.models.Event;
 
 public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
