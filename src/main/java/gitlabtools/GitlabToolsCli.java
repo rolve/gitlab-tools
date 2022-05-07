@@ -20,11 +20,9 @@ public class GitlabToolsCli {
         entry("create-team-projects", CreateTeamProjectsCmd.class),
         entry("assign-members", AssignMembersCmd.class),
         entry("publish-template", PublishTemplateCmd.class),
-        entry("publish-eclipse-project", PublishEclipseProjectCmd.class),
         entry("publish-grades", PublishGradesCmd.class),
         entry("checkout-submissions", CheckoutSubmissionsCmd.class),
         entry("export-sources", ExportSourcesCmd.class),
-        entry("protect-master", ProtectMasterCmd.class),
         entry("submission-stats", SubmissionStatsCmd.class),
         entry("clone", CloneCmd.class));
 
