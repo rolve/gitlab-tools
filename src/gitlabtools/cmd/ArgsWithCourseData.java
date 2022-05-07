@@ -14,9 +14,9 @@ public interface ArgsWithCourseData extends Args {
      * can be used to determine the GitLab username.
      */
 
-    @Option(defaultValue = "[a-z]+")
+    @Option(defaultValue = ".*")
     String getLocalPartPattern();
 
-    @Option(defaultValue = "(student\\.)?ethz\\.ch")
+    @Option(defaultValue = ".*")
     String getDomainPattern();
 }
