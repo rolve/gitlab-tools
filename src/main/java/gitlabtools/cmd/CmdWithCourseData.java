@@ -12,7 +12,7 @@ import gitlabtools.Student;
 public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cmd<A> {
 
     protected final List<Student> students;
-    private Map<String, String> specialUsernames = null;
+    private Map<String, String> specialUsers = null;
 
     public CmdWithCourseData(A args) throws IOException {
         super(args);
@@ -34,31 +34,31 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
             // then, try to find a matching Gitlab user and take the username from there
             student.username = Optional.of(nameToUserMap().get(student.name()).getUsername());
         } else {
-            // finally, look them up in the special username file
-            if (specialUsernames == null) {
-                loadSpecialUsernames();
+            // finally, look them up in the special users file
+            if (specialUsers == null) {
+                loadSpecialUsers();
             }
-            student.username = Optional.ofNullable(specialUsernames.get(student.legi));
+            student.username = Optional.ofNullable(specialUsers.get(student.mail));
         }
 
         // if we still haven't got anything, warn
         if (student.username.isEmpty()) {
             System.err.printf("Warning: no username for %s (%s)\n",
-                    student.name(), student.legi);
+                    student.name(), student.mail);
         }
     }
 
-    private void loadSpecialUsernames() {
-        specialUsernames = new HashMap<>();
-        try (var lines = Files.lines(Paths.get(args.getSpecialUsernameFile()))) {
+    private void loadSpecialUsers() {
+        specialUsers = new HashMap<>();
+        try (var lines = Files.lines(Paths.get(args.getSpecialUsersFile()))) {
             for (var pair : iterable(lines.map(l -> l.split("\t")))) {
                 if (pair.length != 2) {
                     throw new AssertionError("invalid file format");
                 }
-                specialUsernames.put(pair[0], pair[1]);
+                specialUsers.put(pair[0], pair[1]);
             }
         } catch (IOException e) {
-            throw new RuntimeException("could not load " + args.getSpecialUsernameFile(), e);
+            throw new RuntimeException("could not load " + args.getSpecialUsersFile(), e);
         }
     }
 }

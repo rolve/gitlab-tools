@@ -3,11 +3,11 @@ package gitlabtools.cmd;
 import com.lexicalscope.jewel.cli.Option;
 
 public interface ArgsWithCourseData extends Args {
-    @Option(defaultValue = "edoz.txt") // tab-separated
+    @Option(defaultValue = "course.txt") // tab-separated
     String getCourseFile();
 
-    @Option(defaultValue = "specialnethz.txt") // tab-separated file with legi & username
-    String getSpecialUsernameFile();
+    @Option(defaultValue = "specialusers.txt") // tab-separated file with email & username
+    String getSpecialUsersFile();
 
     /*
      * The following two patterns are used to decide whether an email address

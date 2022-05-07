@@ -26,7 +26,8 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
                 .map(Project::getName)
                 .collect(toSet());
 
-        System.out.println("Creating projects for " + students.size() + " students...");
+        System.out.println("Creating projects for " + students.size() + " "
+                + (students.size() > 1 ? "people" : "person") + "...");
         for (var student : students) {
             if (student.username.isPresent()) {
                 var projectName = student.username.get();

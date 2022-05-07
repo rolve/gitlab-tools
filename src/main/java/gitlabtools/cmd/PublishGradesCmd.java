@@ -1,20 +1,19 @@
 package gitlabtools.cmd;
 
-import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.Files.lines;
-import static java.util.stream.Collectors.joining;
-import static org.apache.commons.csv.CSVFormat.TDF;
+import com.lexicalscope.jewel.cli.Option;
+import org.apache.commons.csv.CSVParser;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.RepositoryFile;
 
 import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Paths;
 
-import org.apache.commons.csv.CSVParser;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.RepositoryFile;
-
-import com.lexicalscope.jewel.cli.Option;
+import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.lines;
+import static java.util.stream.Collectors.joining;
+import static org.apache.commons.csv.CSVFormat.TDF;
 
 public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
 
@@ -59,7 +58,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 continue;
             }
 
-            var name = record.get("NETHZ");
+            var name = record.get("Name");
             var project = getProjects(args).stream()
                     .filter(p -> p.getName().equals(name))
                     .findFirst();
@@ -93,7 +92,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
         String getProjectName();
 
         @Option
-        File getGradesFile(); // tsv, with "NETHZ" column, plus arbitrary other columns. UTF-8!
+        File getGradesFile(); // tsv, with "Name" column, plus arbitrary other columns. UTF-8!
 
         @Option
         String getAppendixFile();

@@ -3,7 +3,7 @@ package gitlabtools.cmd;
 import com.lexicalscope.jewel.cli.Option;
 
 public interface Args {
-    @Option(defaultValue = "https://gitlab.inf.ethz.ch/")
+    @Option(defaultValue = "https://gitlab.fhnw.ch/")
     String getGitlabUrl();
 
     @Option(defaultValue = "token.txt")
@@ -12,6 +12,6 @@ public interface Args {
     @Option
     String getGroupName();
 
-    @Option(defaultValue = "students")
+    @Option(defaultValue = "exercises")
     String getSubgroupName();
 }

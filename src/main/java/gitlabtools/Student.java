@@ -1,18 +1,16 @@
 package gitlabtools;
 
-import static java.lang.String.format;
-import static java.util.Optional.empty;
+import csv.Column;
 
 import java.util.Optional;
 
-import csv.Column;
+import static java.lang.String.format;
+import static java.util.Optional.empty;
 
 public class Student {
-    @Column("Nummer")
-    public String legi;
-    @Column("Rufname")
+    @Column("Vorname")
     public String firstName;
-    @Column("Familienname")
+    @Column("Nachname")
     public String lastName;
     @Column("E-Mail")
     public String mail;
