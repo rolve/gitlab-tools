@@ -13,7 +13,7 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
 
     public CreateProjectsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
-        access = AccessLevel.valueOf(args.getMasterBranchAccess().toUpperCase());
+        access = AccessLevel.valueOf(args.getDefaultBranchAccess().toUpperCase());
     }
 
     @Override
@@ -48,8 +48,9 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
                         branchApi.unprotectBranch(project.getId(), branch.getName());
                     }
 
-                    // then protect 'master' from force-pushing
-                    branchApi.protectBranch(project.getId(), "master", access, access);
+                    // then configure default branch so that users with configured role
+                    // ('developer' by default) can push & merge, but not force-push
+                    branchApi.protectBranch(project.getId(), args.getDefaultBranch(), access, access);
 
                     progress.advance();
                 }
@@ -63,7 +64,7 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
 
     public interface Args extends ArgsWithCourseData {
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
-        String getMasterBranchAccess();
+        String getDefaultBranchAccess();
 
         @Option(defaultToNull = true)
         String getProjectNamePrefix();

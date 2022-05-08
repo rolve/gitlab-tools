@@ -58,7 +58,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
                 lastPush = stream(pager)
                         .filter(e -> e.getCreatedAt().before(deadline))
-                        .filter(e -> e.getPushData().getRef().equals("master"))
+                        .filter(e -> e.getPushData().getRef().equals(args.getDefaultBranch()))
                         .findFirst().orElse(null);
 
                 if (lastPush == null) {
@@ -74,10 +74,10 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                 try {
                     if (exists(repoDir)) {
                         git = open(repoDir.toFile());
-                        // need to switch to master, in case we are in "detached head"
+                        // need to switch to default branch, in case we are in "detached head"
                         // state (from previous checkout)
                         git.checkout()
-                                .setName("master")
+                                .setName(args.getDefaultBranch())
                                 .call();
                         git.pull()
                                 .setCredentialsProvider(credentials)

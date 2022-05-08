@@ -48,7 +48,7 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
 
             var lastPush = events.stream()
                     .filter(e -> e.getCreatedAt().before(deadline))
-                    .filter(e -> e.getPushData().getRef().equals("master"))
+                    .filter(e -> e.getPushData().getRef().equals(args.getDefaultBranch()))
                     .findFirst();
 
             if (lastPush.isEmpty()) {

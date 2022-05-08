@@ -69,7 +69,7 @@ public class PublishGradesCmd extends Cmd<PublishGradesCmd.Args> {
                 file.setContent(builder.toString());
                 file.setFilePath(path);
                 try {
-                    fileApi.createFile(file, project.get().getId(), "master",
+                    fileApi.createFile(file, project.get().getId(), args.getDefaultBranch(),
                             "publish grades for " + args.getProjectName());
                     progress.advance();
                 } catch (GitLabApiException e) {

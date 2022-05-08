@@ -1,17 +1,16 @@
 package gitlabtools.cmd;
 
-import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.nio.file.Files.*;
-import static org.eclipse.jgit.api.Git.cloneRepository;
-
-import java.io.IOException;
-import java.nio.file.*;
-
+import com.lexicalscope.jewel.cli.Option;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
-import com.lexicalscope.jewel.cli.Option;
+import java.io.IOException;
+import java.nio.file.*;
+
+import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static java.nio.file.Files.*;
+import static org.eclipse.jgit.api.Git.cloneRepository;
 
 /**
  * Publishes the content in a given "template" directory into a directory of
@@ -84,7 +83,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                 git.commit().setMessage(message).call();
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
-                        git.push().add("master")
+                        git.push().add(args.getDefaultBranch())
                                 .setCredentialsProvider(credentials).call();
                         // done
                         attempts = 0;
