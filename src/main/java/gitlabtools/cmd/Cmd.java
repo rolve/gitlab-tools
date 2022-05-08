@@ -139,6 +139,6 @@ public abstract class Cmd<A extends Args> {
      * useful if the body throws a checked exception.
      */
     protected static <T> Iterable<T> iterable(Stream<T> stream) {
-        return () -> stream.iterator();
+        return stream::iterator;
     }
 }
