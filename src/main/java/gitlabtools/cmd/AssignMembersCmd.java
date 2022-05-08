@@ -3,6 +3,7 @@ package gitlabtools.cmd;
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
 
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
 
@@ -44,8 +45,15 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
                     .filter(u -> u.getUsername().equals(username))
                     .findFirst();
             if (user.isPresent()) {
-                gitlab.getProjectApi().addMember(project.getId(), user.get().getId(), DEVELOPER);
-                progress.advance();
+                try {
+                    gitlab.getProjectApi().addMember(project.getId(), user.get().getId(), DEVELOPER);
+                    progress.advance();
+                } catch (GitLabApiException e) {
+                    progress.advance("failed");
+                    progress.interrupt();
+                    System.out.printf("Error: could not add %s as a member. Are they member of the containing group?\n", username);
+                    e.printStackTrace();
+                }
             } else {
                 progress.advance("failed");
                 progress.interrupt();
