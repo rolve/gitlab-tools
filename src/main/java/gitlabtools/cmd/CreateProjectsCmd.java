@@ -1,18 +1,30 @@
 package gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
+import csv.CsvReader;
+import gitlabtools.Student;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Project;
 
+import java.nio.file.Path;
+import java.util.List;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.csv.CSVFormat.TDF;
 
-public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args> {
+public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
+    private final List<Student> students;
     private final AccessLevel access;
 
     public CreateProjectsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
+        students = new CsvReader<>(TDF.withHeader(), Student.class)
+                .readAll(Path.of(args.getCourseFile()));
+        for (var student : students) {
+            student.normalizeUsername();
+        }
         access = AccessLevel.valueOf(args.getDefaultBranchAccess().toUpperCase());
     }
 
@@ -56,7 +68,10 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
         }
     }
 
-    public interface Args extends ArgsWithCourseData {
+    public interface Args extends gitlabtools.cmd.Args {
+        @Option(defaultValue = "course.txt") // tab-separated
+        String getCourseFile();
+
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
         String getDefaultBranchAccess();
 

@@ -1,6 +1,8 @@
 package gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
+import csv.CsvReader;
+import gitlabtools.Student;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -31,15 +33,22 @@ import static java.util.regex.Pattern.compile;
 import static java.util.regex.Pattern.quote;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
+import static org.apache.commons.csv.CSVFormat.TDF;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 
-public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
+public class ExportSourcesCmd extends Cmd<ExportSourcesCmd.Args> {
 
+    private final List<Student> students;
     private CredentialsProvider credentials;
 
     public ExportSourcesCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
+        students = new CsvReader<>(TDF.withHeader(), Student.class)
+                .readAll(Path.of(args.getCourseFile()));
+        for (var student : students) {
+            student.normalizeUsername();
+        }
     }
 
     @Override
@@ -278,7 +287,10 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
         throw new AssertionError("no matching encoding found for " + f);
     }
 
-    interface Args extends ArgsWithCourseData {
+    interface Args extends gitlabtools.cmd.Args {
+        @Option(defaultValue = "course.txt") // tab-separated
+        String getCourseFile();
+
         @Option
         String getDestinationDir();
     }
