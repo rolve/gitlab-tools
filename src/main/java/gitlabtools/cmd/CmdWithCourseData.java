@@ -18,17 +18,7 @@ public abstract class CmdWithCourseData<A extends ArgsWithCourseData> extends Cm
         students = new CsvReader<>(TDF.withHeader(), Student.class)
                 .readAll(Path.of(args.getCourseFile()));
         for (var student : students) {
-            normalizeUsername(student);
-        }
-    }
-
-    private void normalizeUsername(Student student) throws IOException {
-        var parts = student.username.split("@");
-        if (parts.length == 2) {
-            // username is an email address; use only first part
-            student.username = parts[0];
-        } else if (parts.length > 2) {
-            throw new IOException("invalid username in course file: " + student.username);
+            student.normalizeUsername();
         }
     }
 }
