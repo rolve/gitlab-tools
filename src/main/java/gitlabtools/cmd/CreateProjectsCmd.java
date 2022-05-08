@@ -29,35 +29,29 @@ public class CreateProjectsCmd extends CmdWithCourseData<CreateProjectsCmd.Args>
         System.out.println("Creating projects for " + students.size() + " "
                 + (students.size() > 1 ? "people" : "person") + "...");
         for (var student : students) {
-            if (student.username.isPresent()) {
-                var projectName = student.username.get();
-                if (args.getProjectNamePrefix() != null) {
-                    if (args.getProjectNamePrefix().contains("_")) {
-                        throw new AssertionError("illegal prefix; must not contain _");
-                    }
-                    projectName = args.getProjectNamePrefix() + "_" + projectName;
+            var projectName = student.username;
+            if (args.getProjectNamePrefix() != null) {
+                if (args.getProjectNamePrefix().contains("_")) {
+                    throw new AssertionError("illegal prefix; must not contain _");
                 }
-                if (existingProjects.contains(projectName)) {
-                    progress.advance("existing");
-                } else {
-                    var project = gitlab.getProjectApi().createProject(subgroup.getId(), projectName);
-
-                    // remove all protected branches first
-                    var branches = branchApi.getProtectedBranches(project.getId());
-                    for (var branch : branches) {
-                        branchApi.unprotectBranch(project.getId(), branch.getName());
-                    }
-
-                    // then configure default branch so that users with configured role
-                    // ('developer' by default) can push & merge, but not force-push
-                    branchApi.protectBranch(project.getId(), args.getDefaultBranch(), access, access);
-
-                    progress.advance();
-                }
+                projectName = args.getProjectNamePrefix() + "_" + projectName;
+            }
+            if (existingProjects.contains(projectName)) {
+                progress.advance("existing");
             } else {
-                progress.advance("failed");
-                progress.interrupt();
-                System.out.printf("Warning: no project created for %s\n", student.name());
+                var project = gitlab.getProjectApi().createProject(subgroup.getId(), projectName);
+
+                // remove all protected branches first
+                var branches = branchApi.getProtectedBranches(project.getId());
+                for (var branch : branches) {
+                    branchApi.unprotectBranch(project.getId(), branch.getName());
+                }
+
+                // then configure default branch so that users with configured role
+                // ('developer' by default) can push & merge, but not force-push
+                branchApi.protectBranch(project.getId(), args.getDefaultBranch(), access, access);
+
+                progress.advance();
             }
         }
     }

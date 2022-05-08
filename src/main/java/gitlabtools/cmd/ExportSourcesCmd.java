@@ -66,11 +66,11 @@ public class ExportSourcesCmd extends CmdWithCourseData<ExportSourcesCmd.Args> {
             removeEmptyDirs(repoDir);
 
             var student = students.stream()
-                    .filter(s -> s.username.get().equals(project.getName()))
+                    .filter(s -> s.username.equals(project.getName()))
                     .findFirst();
             if (student.isPresent()) {
                 var stud = student.get();
-                var tokens = List.of(stud.username.get(), stud.firstName, stud.lastName);
+                var tokens = List.of(stud.username, stud.firstName, stud.lastName);
                 anonymizeSources(repoDir, tokens);
             } else {
                 progress.additionalInfo("not anonymized");

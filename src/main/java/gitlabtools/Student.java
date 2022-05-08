@@ -12,16 +12,14 @@ public class Student {
     public String firstName;
     @Column("Nachname")
     public String lastName;
-    @Column("E-Mail")
-    public String mail;
-
-    public Optional<String> username = empty();
+    @Column("Username")
+    public String username;
 
     public String name() {
         return firstName + " " + lastName;
     }
 
     public String toString() {
-        return format("%s (%s)", name(), username.orElse("???"));
+        return format("%s (%s)", name(), username);
     }
 }

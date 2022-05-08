@@ -1,22 +1,27 @@
 package gitlabtools.cmd;
 
+import gitlabtools.Cache;
+import gitlabtools.ProgressTracker;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.User;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 import static java.nio.file.Files.readAllLines;
 import static java.util.Comparator.comparing;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.toList;
-
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
-import org.gitlab4j.api.*;
-import org.gitlab4j.api.models.*;
-
-import gitlabtools.Cache;
-import gitlabtools.ProgressTracker;
 
 public abstract class Cmd<A extends Args> {
 
@@ -30,7 +35,6 @@ public abstract class Cmd<A extends Args> {
     protected ProgressTracker progress;
 
     private List<User> users = null;
-    private Map<String, User> nameToUserMap = null;
 
     public Cmd(A args) throws IOException {
         this.args = args;
@@ -55,34 +59,18 @@ public abstract class Cmd<A extends Args> {
         return users;
     }
 
-    protected Map<String, User> nameToUserMap() {
-        if (users == null) {
-            fetchUsers();
-        }
-        return nameToUserMap;
-    }
-
     private void fetchUsers() {
         if (progress != null) {
             progress.interrupt();
         }
         System.out.println("Fetching users from Gitlab...");
 
-        users = new ArrayList<>();
-        nameToUserMap = new HashMap<>();
-
-        var duplicateNames = new HashSet<String>();
         try {
-            stream(gitlab.getUserApi().getUsers(100)).forEach(user -> {
-                users.add(user);
-                if (nameToUserMap.put(user.getName(), user) != null) {
-                    duplicateNames.add(user.getName());
-                }
-            });
+            users = stream(gitlab.getUserApi().getUsers(100))
+                    .collect(toList());
         } catch (GitLabApiException e) {
             throw new RuntimeException(e);
         }
-        nameToUserMap.keySet().removeAll(duplicateNames);
         System.out.printf("%d users fetched\n", users.size());
     }
 
