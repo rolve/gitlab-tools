@@ -17,4 +17,7 @@ public interface Args {
 
     @Option(defaultValue = "main")
     String getDefaultBranch();
+
+    @Option(helpRequest = true)
+    boolean getHelp();
 }

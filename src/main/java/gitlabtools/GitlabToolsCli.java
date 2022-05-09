@@ -1,11 +1,11 @@
 package gitlabtools;
 
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import gitlabtools.cmd.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.lang.management.ManagementFactory;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
 
 import static java.util.Arrays.stream;
 import static java.util.Map.entry;
@@ -29,12 +29,16 @@ public class GitlabToolsCli {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
 
         if (args.length == 0) {
-            System.err.println("no command specified");
+            System.err.println("No command specified. Available commands: ");
+            commands.keySet().stream()
+                    .sorted()
+                    .map("  "::concat)
+                    .forEach(System.err::println);
             return;
         }
         var cmdName = args[0];
         if (!commands.containsKey(cmdName)) {
-            System.err.println("unknown command " + cmdName);
+            System.err.println("Unknown command " + cmdName);
             return;
         }
 
@@ -57,17 +61,29 @@ public class GitlabToolsCli {
     }
 
     /**
-     * To prevent accidental execution of a command within Eclipse (and possibly
+     * To prevent accidental execution of a command within an IDE (and possibly
      * disastrous consequences), require confirmation.
      */
     @SuppressWarnings("resource")
     private static void confirm(String cmd, List<String[]> argsList) {
-        System.out.print("About to execute" + (argsList.size() == 1 ? " " : "\n"));
-        for (var args : argsList) {
-            System.out.println(cmd + " " + String.join(" ", args));
+        if (runFromIde()) {
+            System.out.print("About to execute" + (argsList.size() == 1 ? " " : "\n"));
+            for (var args : argsList) {
+                System.out.println(cmd + " " + String.join(" ", args));
+            }
+            System.out.print("Press Enter to continue.");
+            try {
+                new Scanner(System.in).nextLine();
+            } catch (NoSuchElementException e) {
+                System.exit(0);
+            }
         }
-        System.out.print("Press Enter to continue.");
-        new Scanner(System.in).nextLine();
+    }
+
+    private static boolean runFromIde() {
+        // assuming IDE attaches a Java agent (IntelliJJ does...)
+        var args = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        return args.stream().anyMatch(a -> a.startsWith("-javaagent:"));
     }
 
     private static String[] split(String args) {
@@ -90,8 +106,16 @@ public class GitlabToolsCli {
     }
 
     private static void execute(String name, String[] args) throws Exception {
-        var cmd = commands.get(name).getConstructor(String[].class)
-                .newInstance(new Object[] { args });
-        cmd.execute();
+        try {
+            var cmd = commands.get(name).getConstructor(String[].class)
+                    .newInstance(new Object[]{args});
+            cmd.execute();
+        } catch (InvocationTargetException e) {
+            if (e.getCause() instanceof ArgumentValidationException) {
+                System.err.println(e.getCause().getMessage());
+            } else {
+                throw e;
+            }
+        }
     }
 }
