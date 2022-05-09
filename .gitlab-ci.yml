@@ -12,5 +12,4 @@ test:
     - mvn package -B -Dmaven.repo.local=$MVN_REPO
   artifacts:
     paths:
-      - "target/*.jar"
-    expire_in: 1 day
+      - "target/gitlab-tools.jar"
