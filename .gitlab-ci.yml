@@ -1,0 +1,17 @@
+image: maven:3-openjdk-11
+
+variables:
+  MVN_REPO: $CI_PROJECT_DIR/maven-repo
+
+cache:
+  paths:
+    - $MVN_REPO/
+
+test:
+  script:
+    - mvn install -B -Dmaven.repo.local=$MVN_REPO
+  artifacts:
+    paths:
+      - "*/target/dependency/*.jar"
+      - "*/target/*.jar"
+    expire_in: 1 day
