@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.TreeSet;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
@@ -32,11 +32,15 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                 .map(Project::getName)
                 .collect(toSet());
 
-        var students = readCourseFile();
+        List<String> projects;
+        if (args.isTeamProjects()) {
+            projects = readTeamsCourseFile();
+        } else {
+            projects = readSimpleCourseFile();
+        }
 
-        System.out.println("Creating projects for " + students.size() + " "
-                + (students.size() > 1 ? "people" : "person") + "...");
-        for (var projectName : students) {
+        System.out.println("Creating " + projects.size() + " project(s)...");
+        for (var projectName : projects) {
             if (args.getProjectNamePrefix() != null) {
                 if (args.getProjectNamePrefix().contains("_")) {
                     throw new AssertionError("illegal prefix; must not contain _");
@@ -63,10 +67,23 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
         }
     }
 
-    private List<String> readCourseFile() throws IOException {
+    private List<String> readSimpleCourseFile() throws IOException {
         try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
             return lines
                     .map(this::normalizeUsername)
+                    .collect(toList());
+        }
+    }
+
+    private List<String> readTeamsCourseFile() throws IOException {
+        try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
+            return lines
+                    .map(s -> s.split("\t"))
+                    .peek(parts -> parts[0] = normalizeUsername(parts[0]))
+                    .collect(groupingBy(parts -> parts[1],
+                            mapping(parts -> parts[0], toCollection(TreeSet::new))))
+                    .values().stream()
+                    .map(set -> String.join("_", set))
                     .collect(toList());
         }
     }
@@ -85,6 +102,9 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
     }
 
     public interface Args extends gitlabtools.cmd.Args {
+        @Option
+        boolean isTeamProjects();
+
         @Option(defaultValue = "course.txt") // one username or email address per line
         String getCourseFile();
 
