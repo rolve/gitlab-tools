@@ -1,6 +1,7 @@
 # GitLab Tools (for the Classroom)
 
-Command line tools for managing large numbers of GitLab projects.
+Command line tools for managing large numbers of GitLab projects, e.g., for 
+teaching.
 
 ## What this does
 
@@ -25,7 +26,7 @@ Download the latest version:
 
 ## How to use this
 
-Fist, download the jar file above and make sure you have a JRE installed 
+First, download the jar file above and make sure you have a JRE installed 
 (Java 11 or greater). For authentication, the tools require a 'token.txt' 
 file that contains a
 [GitLab access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
