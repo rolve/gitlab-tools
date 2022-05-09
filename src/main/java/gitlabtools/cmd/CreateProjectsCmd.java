@@ -78,14 +78,21 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
     private List<String> readTeamsCourseFile() throws IOException {
         try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
             return lines
-                    .map(s -> s.split("\t"))
-                    .peek(parts -> parts[0] = normalizeUsername(parts[0]))
-                    .collect(groupingBy(parts -> parts[1],
-                            mapping(parts -> parts[0], toCollection(TreeSet::new))))
+                    .map(this::parseTeamsCourseLine)
+                    .collect(groupingBy(m -> m.team,
+                            mapping(m -> m.username, toCollection(TreeSet::new))))
                     .values().stream()
                     .map(set -> String.join("_", set))
                     .collect(toList());
         }
+    }
+
+    private TeamMember parseTeamsCourseLine(String line) {
+        var parts = line.split("\t");
+        if (parts.length != 2) {
+            throw new RuntimeException("illegal line in course file: '" + line + "'");
+        }
+        return new TeamMember(normalizeUsername(parts[0]), parts[1]);
     }
 
     private String normalizeUsername(String raw) {
@@ -98,6 +105,16 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
             return parts[0];
         } else {
             throw new RuntimeException("invalid username in course file: " + raw);
+        }
+    }
+
+    private static class TeamMember {
+        String username;
+        String team;
+
+        public TeamMember(String username, String team) {
+            this.username = username;
+            this.team = team;
         }
     }
 
