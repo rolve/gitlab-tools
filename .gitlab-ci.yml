@@ -9,9 +9,8 @@ cache:
 
 test:
   script:
-    - mvn install -B -Dmaven.repo.local=$MVN_REPO
+    - mvn package -B -Dmaven.repo.local=$MVN_REPO
   artifacts:
     paths:
-      - "*/target/dependency/*.jar"
-      - "*/target/*.jar"
+      - "target/*.jar"
     expire_in: 1 day
