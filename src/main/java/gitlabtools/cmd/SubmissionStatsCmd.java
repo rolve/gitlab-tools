@@ -39,7 +39,7 @@ public class SubmissionStatsCmd extends Cmd<SubmissionStatsCmd.Args> {
 
         var stats = new StringBuilder("\nName\tBefore\tAfter\n");
         for (var project : getProjects(args)) {
-            int id = project.getId();
+            var id = project.getId();
 
             var key = new Cache.Key(args.getGitlabUrl(), id + "#" + PUSHED);
             var events = eventCache.update(key, () ->
