@@ -1,3 +1,5 @@
+package gitlabtools;
+
 import gitlabtools.ProgressTracker;
 
 public class ProgressTrackerTest {
