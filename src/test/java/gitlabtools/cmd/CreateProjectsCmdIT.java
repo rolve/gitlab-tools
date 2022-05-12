@@ -18,7 +18,6 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
                 "michael",
                 "sarah");
         var args = withTestDefaults(
-                "--groupName", GROUP,
                 "--courseFile", courseFile.toString());
 
         new CreateProjectsCmd(args).execute();
@@ -36,7 +35,6 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
                 "michael",
                 "sarah");
         var args = withTestDefaults(
-                "--groupName", GROUP,
                 "--courseFile", courseFile.toString(),
                 "--projectNamePrefix", "exercises");
 
@@ -45,6 +43,84 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
         var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
                 .map(Project::getName)
                 .collect(toSet());
-        assertEquals(Set.of("exercises_lisa", "exercises_michael", "exercises_sarah"), projects);
+        var expected = Set.of(
+                "exercises_lisa",
+                "exercises_michael",
+                "exercises_sarah");
+        assertEquals(expected, projects);
+    }
+
+    @Test
+    public void testTeamProjects() throws Exception {
+        var courseFile = writeTempTextFile("course",
+                "lisa\t1",
+                "michael\t1",
+                "sarah\t2",
+                "peter\t2",
+                "tom\t3",
+                "kathrine\t3",
+                "paul\t3",
+                "mark\t4");
+        var args = withTestDefaults(
+                "--courseFile", courseFile.toString(),
+                "--teamProjects");
+
+        new CreateProjectsCmd(args).execute();
+
+        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+                .map(Project::getName)
+                .collect(toSet());
+        var expected = Set.of(
+                "lisa_michael",
+                "peter_sarah",
+                "kathrine_paul_tom",
+                "mark");
+        assertEquals(expected, projects);
+    }
+
+    @Test
+    public void testTeamProjectsPrefix() throws Exception {
+        var courseFile = writeTempTextFile("course",
+                "lisa\t1",
+                "michael\t1",
+                "sarah\t2",
+                "peter\t2",
+                "tom\t3",
+                "kathrine\t3",
+                "paul\t3",
+                "mark\t4");
+        var args = withTestDefaults(
+                "--courseFile", courseFile.toString(),
+                "--projectNamePrefix", "exercises",
+                "--teamProjects");
+
+        new CreateProjectsCmd(args).execute();
+
+        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+                .map(Project::getName)
+                .collect(toSet());
+        var expected = Set.of(
+                "exercises_lisa_michael",
+                "exercises_peter_sarah",
+                "exercises_kathrine_paul_tom",
+                "exercises_mark");
+        assertEquals(expected, projects);
+    }
+
+    @Test
+    public void testEmailAddresses() throws Exception {
+        var courseFile = writeTempTextFile("course",
+                "lisa@fhnw.ch",
+                "michael@example.com",
+                "sarah@sarah.example.com");
+        var args = withTestDefaults(
+                "--courseFile", courseFile.toString());
+
+        new CreateProjectsCmd(args).execute();
+
+        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+                .map(Project::getName)
+                .collect(toSet());
+        assertEquals(Set.of("lisa", "michael", "sarah"), projects);
     }
 }
