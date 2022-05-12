@@ -22,6 +22,7 @@ integration-test:
     GITLAB_TOOLS_IT_USER: root
     GITLAB_TOOLS_IT_PASSWORD: $GITLAB_ROOT_PASSWORD
   script:
+    - sleep 30
     - mvn verify -B -DskipUnitTests -Dmaven.repo.local=$MVN_REPO
   artifacts:
     paths:
