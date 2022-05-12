@@ -1,4 +1,4 @@
-# GitLab Tools (for the Classroom)
+# GitLab Tools (for the Classroom) [![pipeline status](https://gitlab.com/rolve/gitlab-tools/badges/main/pipeline.svg)](https://gitlab.com/rolve/gitlab-tools/-/commits/main)
 
 Command line tools for managing large numbers of GitLab projects, e.g., for 
 teaching.
