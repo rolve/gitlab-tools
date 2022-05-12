@@ -4,6 +4,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Creates a personal access token that can be used to authenticate
  * with the GitLab REST API. It uses GitLab's web interface, which
@@ -11,6 +14,11 @@ import org.openqa.selenium.htmlunit.HtmlUnitDriver;
  * authentication.
  */
 public class TokenCreator {
+
+    static {
+        // turn off annoying warnings
+        Logger.getLogger("com.gargoylesoftware.htmlunit").setLevel(Level.SEVERE);
+    }
 
     private final String gitLabUrl;
 
