@@ -22,7 +22,7 @@ integration-test:
     GITLAB_TOOLS_IT_USER: root
     GITLAB_TOOLS_IT_PASSWORD: $GITLAB_ROOT_PASSWORD
   script:
-    - mvn verify -B -DskipTests -Dmaven.repo.local=$MVN_REPO
+    - mvn verify -B -DskipUnitTests -Dmaven.repo.local=$MVN_REPO
   artifacts:
     paths:
       - "target/gitlab-tools.jar"
