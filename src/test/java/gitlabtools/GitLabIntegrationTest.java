@@ -20,12 +20,11 @@ import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
 import static java.net.http.HttpClient.Redirect.ALWAYS;
 import static java.net.http.HttpResponse.BodyHandlers.discarding;
-import static java.net.http.HttpResponse.BodyHandlers.ofString;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 public abstract class GitLabIntegrationTest {
 
-    private static final long MAX_WAIT = 300_000; // ms
+    private static final long MAX_WAIT = 20 * 60 * 1000; // 20 minutes!..
 
     protected static String url = System.getenv("GITLAB_TOOLS_IT_URL");
     protected static String user = System.getenv("GITLAB_TOOLS_IT_USER");
