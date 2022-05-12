@@ -9,7 +9,20 @@ cache:
 
 test:
   script:
-    - mvn package -B -Dmaven.repo.local=$MVN_REPO
+    - mvn test -B -Dmaven.repo.local=$MVN_REPO
+
+integration-test:
+  services:
+    - name: gitlab/gitlab-ce:latest
+      alias: gitlab
+  variables:
+    GITLAB_HTTPS: "false"
+    GITLAB_ROOT_PASSWORD: "password"
+    GITLAB_TOOLS_IT_URL: http://gitlab
+    GITLAB_TOOLS_IT_USER: root
+    GITLAB_TOOLS_IT_PASSWORD: $GITLAB_ROOT_PASSWORD
+  script:
+    - mvn verify -B -DskipTests -Dmaven.repo.local=$MVN_REPO
   artifacts:
     paths:
       - "target/gitlab-tools.jar"
