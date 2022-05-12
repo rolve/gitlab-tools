@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -18,6 +19,7 @@ import java.time.Duration;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
 import static java.net.http.HttpClient.Redirect.ALWAYS;
+import static java.net.http.HttpResponse.BodyHandlers.discarding;
 import static java.net.http.HttpResponse.BodyHandlers.ofString;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
@@ -72,16 +74,16 @@ public abstract class GitLabIntegrationTest {
     @BeforeAll
     public static void waitForGitLabInstance() throws Exception {
         var start = currentTimeMillis();
-        HttpResponse<String> response = null;
+        var client = HttpClient.newBuilder()
+                .followRedirects(ALWAYS)
+                .build();
+        var request = HttpRequest.newBuilder(new URI(url))
+                .timeout(Duration.of(5, SECONDS)).build();
+        HttpResponse<Void> response = null;
         do {
-            var client = HttpClient.newBuilder()
-                    .followRedirects(ALWAYS)
-                    .build();
-            var request = HttpRequest.newBuilder(new URI(url))
-                    .timeout(Duration.of(5, SECONDS)).build();
             try {
-                response = client.send(request, ofString());
-            } catch (HttpTimeoutException e) { /* ignore */ }
+                response = client.send(request, discarding());
+            } catch (HttpTimeoutException | ConnectException e) { /* ignore */ }
         } while ((response == null || response.statusCode() != 200)
                 && currentTimeMillis() - start < MAX_WAIT);
 
