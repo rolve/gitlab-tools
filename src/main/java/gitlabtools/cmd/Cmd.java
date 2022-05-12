@@ -116,12 +116,6 @@ public abstract class Cmd<A extends Args> {
         });
     }
 
-    protected Project getProject(Group group, String projectName) throws GitLabApiException {
-        return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))
-                .filter(p -> p.getName().equals(projectName))
-                .findFirst().get();
-    }
-
     protected List<Project> getProjects(Args args)
             throws GitLabApiException {
         var group = getGroup(args.getGroupName());

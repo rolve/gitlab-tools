@@ -1,16 +1,13 @@
 package gitlabtools.auth;
 
+import gitlabtools.GitLabIntegrationTest;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class TokenCreatorIT {
-
-    String url = System.getenv("GITLAB_TOOLS_IT_URL");
-    String user = System.getenv("GITLAB_TOOLS_IT_USER");
-    String password = System.getenv("GITLAB_TOOLS_IT_PASSWORD");
+public class TokenCreatorIT extends GitLabIntegrationTest {
 
     @Test
     public void testCreateAccessToken() throws GitLabApiException {
@@ -20,7 +17,6 @@ public class TokenCreatorIT {
 
         // test that access actually works
         var api = new GitLabApi(url, token);
-        var user = api.getUserApi().getUser(this.user);
-        assertNotNull(user);
+        assertNotNull(api.getUserApi().getUser(user));
     }
 }
