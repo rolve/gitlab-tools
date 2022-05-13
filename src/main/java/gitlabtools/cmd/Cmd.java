@@ -2,6 +2,8 @@ package gitlabtools.cmd;
 
 import gitlabtools.Cache;
 import gitlabtools.ProgressTracker;
+import gitlabtools.auth.AuthenticationException;
+import gitlabtools.auth.TokenCreator;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
@@ -10,7 +12,8 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -39,8 +42,54 @@ public abstract class Cmd<A extends Args> {
     public Cmd(A args) throws IOException {
         this.args = args;
 
-        token = readAllLines(Paths.get(args.getTokenFile())).get(0);
+        var tokenFile = Path.of(args.getTokenFile());
+        if (Files.notExists(tokenFile)) {
+            promptCreateToken();
+        }
+        token = readAllLines(tokenFile).get(0);
         gitlab = new GitLabApi(args.getGitlabUrl(), token);
+    }
+
+    private void promptCreateToken() throws IOException {
+        var shortUrl = args.getGitlabUrl()
+                .replaceAll("^https?://", "")
+                .replaceAll("/$", "");
+        System.out.print("Token file '" + args.getTokenFile() + "' does not exist. " +
+                "Create a new access token on " + shortUrl + "? [Y/n] ");
+        var reply = new Scanner(System.in).nextLine().strip().toLowerCase();
+        if (reply.isEmpty() || reply.charAt(0) != 'n') {
+            createToken();
+        } else {
+            System.exit(0);
+        }
+    }
+
+    private void createToken() throws IOException {
+        var creator = new TokenCreator(args.getGitlabUrl());
+        var scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print("GitLab username? ");
+            var username = scanner.nextLine();
+            System.out.print("GitLab password? ");
+            String password;
+            if (System.console() != null) {
+                password = new String(System.console().readPassword()); // no echo
+            } else {
+                password = scanner.nextLine();
+            }
+            try {
+                var token = creator.createAccessToken(username, password, "gitlab-tools");
+                Files.writeString(Path.of(args.getTokenFile()), token);
+                break;
+            } catch (AuthenticationException e) {
+                System.out.print("Invalid login or password. Retry? [Y/n] ");
+                var reply = scanner.nextLine().strip().toLowerCase();
+                if (!reply.isEmpty() && reply.charAt(0) == 'n') {
+                    System.exit(0);
+                }
+                // else: try again
+            }
+        }
     }
 
     public void execute() throws Exception {

@@ -46,6 +46,10 @@ public class TokenCreator {
         driver.navigate().to(gitLabUrl);
         driver.findElement(By.id("user_login")).sendKeys(username);
         driver.findElement(By.id("user_password")).sendKeys(password);
-        driver.findElement(By.cssSelector("button[type=submit]")).click();
+        driver.findElement(By.cssSelector("#new_user [type=submit]")).click();
+
+        if (driver.getCurrentUrl().contains("sign_in")) {
+            throw new AuthenticationException();
+        }
     }
 }
