@@ -79,7 +79,9 @@ public abstract class Cmd<A extends Args> {
             }
             try {
                 var token = creator.createAccessToken(username, password, "gitlab-tools");
-                Files.writeString(Path.of(args.getTokenFile()), token);
+                var tokenFile = Path.of(args.getTokenFile());
+                Files.writeString(tokenFile, token);
+                System.out.println("Access token stored in " + tokenFile.toAbsolutePath());
                 break;
             } catch (AuthenticationException e) {
                 System.out.print("Invalid login or password. Retry? [Y/n] ");

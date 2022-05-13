@@ -27,22 +27,23 @@ Download the latest version:
 ## How to use this
 
 First, download the jar file above and make sure you have a JRE installed 
-(Java 11 or greater). For authentication, the tools require a 'token.txt' 
-file that contains a
+(Java 11 or greater). For authentication, the tools work with a 'token.txt' 
+file, which must contain a
 [GitLab access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
-with `api` scope. For ease of use, place that file next to the 'gitlab-tools.
-jar' file.
+with `api` scope. If no such file is found, the program can create a
+suitable access token for you. You'll need to provide your GitLab username 
+and password for this one time.
 
 Note that all commands can be executed repeatedly without changing 
 previously created or published things (they are [idempotent](https://en.wikipedia.org/wiki/Idempotence)).
 This is handy if students join later; in that case, just add them to the 
 course file (see below) and run previously executed commands again. The 
 commands detect existing projects, members, and published templates and skip 
-them.
+these.
 
 ### Create individual projects
 
-To create a project for each student separately, prepare a text file 
+To create a project for each individual student, prepare a text file 
 (the "course file") that contains all GitLab usernames of the students, one
 per line. Then, execute the following command:
 
