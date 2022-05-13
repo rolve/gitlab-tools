@@ -21,7 +21,7 @@ group (and subgroup).
 ## Download
 
 Download the latest version:
-[gitlab-tools.jar](https://gitlab.com/rolve/gitlab-tools/-/jobs/artifacts/main/raw/target/gitlab-tools.jar?job=test)
+[gitlab-tools.jar](https://gitlab.com/rolve/gitlab-tools/-/jobs/artifacts/main/raw/target/gitlab-tools.jar?job=integration-test)
 
 
 ## How to use this
