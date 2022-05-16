@@ -62,11 +62,12 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
     }
 
     protected GitLabApi api = new GitLabApi(url, token());
+    protected Group subgroup;
 
     @BeforeEach
     public void createGroups() throws GitLabApiException {
         try {
-            api.getGroupApi().getGroup(GROUP + "/" + SUBGROUP);
+            subgroup = api.getGroupApi().getGroup(GROUP + "/" + SUBGROUP);
         } catch (GitLabApiException e1) {
             Group group;
             try {
@@ -74,7 +75,7 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
             } catch (GitLabApiException e2) {
                 group = api.getGroupApi().addGroup(GROUP, GROUP);
             }
-            api.getGroupApi().addGroup(SUBGROUP, SUBGROUP, null,
+            subgroup = api.getGroupApi().addGroup(SUBGROUP, SUBGROUP, null,
                     group.getVisibility(), null, null, group.getId());
         }
     }

@@ -22,7 +22,7 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
 
         new CreateProjectsCmd(args).execute();
 
-        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+        var projects = api.getGroupApi().getProjects(subgroup).stream()
                 .map(Project::getName)
                 .collect(toSet());
         assertEquals(Set.of("lisa", "michael", "sarah"), projects);
@@ -40,7 +40,7 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
 
         new CreateProjectsCmd(args).execute();
 
-        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+        var projects = api.getGroupApi().getProjects(subgroup).stream()
                 .map(Project::getName)
                 .collect(toSet());
         var expected = Set.of(
@@ -67,7 +67,7 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
 
         new CreateProjectsCmd(args).execute();
 
-        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+        var projects = api.getGroupApi().getProjects(subgroup).stream()
                 .map(Project::getName)
                 .collect(toSet());
         var expected = Set.of(
@@ -96,7 +96,7 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
 
         new CreateProjectsCmd(args).execute();
 
-        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+        var projects = api.getGroupApi().getProjects(subgroup).stream()
                 .map(Project::getName)
                 .collect(toSet());
         var expected = Set.of(
@@ -118,7 +118,7 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
 
         new CreateProjectsCmd(args).execute();
 
-        var projects = api.getGroupApi().getProjects(GROUP + "/" + SUBGROUP).stream()
+        var projects = api.getGroupApi().getProjects(subgroup).stream()
                 .map(Project::getName)
                 .collect(toSet());
         assertEquals(Set.of("lisa", "michael", "sarah"), projects);
