@@ -28,7 +28,7 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
         var group = getGroup(args.getGroupName());
         var subgroup = getSubgroup(group, args.getSubgroupName());
-        var existingProjects = getProjectsIn(subgroup).stream()
+        var existingProjects = gitlab.getGroupApi().getProjects(subgroup).stream()
                 .map(Project::getName)
                 .collect(toSet());
 

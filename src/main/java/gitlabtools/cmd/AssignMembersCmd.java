@@ -37,7 +37,7 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
     }
 
     private void addMember(Project project, String username) throws Exception {
-        var exists = gitlab.getProjectApi().getMembers(project.getId()).stream()
+        var exists = gitlab.getProjectApi().getMembers(project).stream()
                 .map(Member::getUsername)
                 .anyMatch(username::equals);
         if (!exists) {

@@ -82,10 +82,8 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
 
     @AfterEach
     public void deleteProjects() throws GitLabApiException {
-        for (var project : api.getProjectApi().getProjects()) {
-            if (project.getPathWithNamespace().startsWith(GROUP)) {
-                api.getProjectApi().deleteProject(project);
-            }
+        for (var project : api.getGroupApi().getProjects(subgroup)) {
+            api.getProjectApi().deleteProject(project);
         }
     }
 }

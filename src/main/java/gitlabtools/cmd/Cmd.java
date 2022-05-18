@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static java.nio.file.Files.readAllLines;
-import static java.util.Comparator.comparing;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.toList;
@@ -29,7 +28,6 @@ import static java.util.stream.Collectors.toList;
 public abstract class Cmd<A extends Args> {
 
     private static final Cache<Optional<Group>> groupCache = new Cache<>();
-    private static final Cache<List<Project>> projectsCache = new Cache<>();
 
     protected final A args;
     protected final String token;
@@ -157,21 +155,11 @@ public abstract class Cmd<A extends Args> {
         }
     }
 
-    protected List<Project> getProjectsIn(Group group) throws GitLabApiException {
-        var key = new Cache.Key(args.getGitlabUrl(), group.getId());
-        return projectsCache.update(key, () -> {
-            System.out.println("Fetching projects from group " + group.getName() + "...");
-            return stream(gitlab.getGroupApi().getProjects(group.getId(), 100))
-                    .sorted(comparing(Project::getName))
-                    .collect(toList());
-        });
-    }
-
     protected List<Project> getProjects(Args args)
             throws GitLabApiException {
         var group = getGroup(args.getGroupName());
         var subgroup = getSubgroup(group, args.getSubgroupName());
-        return getProjectsIn(subgroup);
+        return gitlab.getGroupApi().getProjects(subgroup);
     }
 
     protected static <E> Stream<E> stream(Pager<E> pager) {
