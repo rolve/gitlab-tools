@@ -2,12 +2,11 @@ package gitlabtools;
 
 import org.junit.jupiter.api.BeforeAll;
 
-import java.net.ConnectException;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 
 import static java.lang.System.currentTimeMillis;
@@ -35,13 +34,19 @@ public abstract class GitLabIntegrationTest {
         do {
             try {
                 response = client.send(request, discarding());
-            } catch (HttpTimeoutException | ConnectException e) { /* ignore */ }
+            } catch (IOException e) { /* ignore for now */ }
         } while ((response == null || response.statusCode() != 200)
                 && currentTimeMillis() - start < MAX_WAIT);
 
         if (response == null) {
-            throw new RuntimeException("could not connect to GitLab instance");
-        } else if (response.statusCode() != 200) {
+            // try one last time, without ignoring exceptions
+            try {
+                response = client.send(request, discarding());
+            } catch (IOException e) {
+                throw new RuntimeException("could not connect to GitLab instance", e);
+            }
+        }
+        if (response.statusCode() != 200) {
             throw new RuntimeException("could not connect to GitLab instance (status: " + response.statusCode() + ")");
         }
     }
