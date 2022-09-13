@@ -90,8 +90,9 @@ public abstract class Cmd<A extends Args> {
                 }
                 // else: try again
             } catch (TokenCreationException e) {
-                System.out.println("Could not create token. Create the token manually here:\n" +
-                        args.getGitlabUrl() + "/-/profile/personal_access_tokens\n" +
+                var slash = args.getGitlabUrl().endsWith("/") ? "" : "/";
+                System.out.println("\nCould not create token. Create the token manually here:\n" +
+                        args.getGitlabUrl() + slash + "-/profile/personal_access_tokens\n" +
                         "and store it in the file " + args.getTokenFile());
                 System.exit(1);
             }
