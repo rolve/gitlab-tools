@@ -11,7 +11,8 @@ import java.util.logging.Logger;
  * Creates a personal access token that can be used to authenticate
  * with the GitLab REST API. It uses GitLab's web interface, which
  * (in contrast to the REST API) supports username/password
- * authentication.
+ * authentication. Of course, this web scraping may break with
+ * future GitLab releases, in which case an exception is thrown.
  */
 public class TokenCreator {
 
@@ -26,7 +27,7 @@ public class TokenCreator {
         this.gitLabUrl = gitLabUrl;
     }
 
-    public String createAccessToken(String username, String password, String tokenName) {
+    public String createAccessToken(String username, String password, String tokenName) throws TokenCreationException, AuthenticationException {
         var driver = new HtmlUnitDriver();
         try {
             login(driver, username, password);
@@ -37,12 +38,14 @@ public class TokenCreator {
             driver.findElement(By.cssSelector("input[type=submit]")).click();
 
             return driver.findElement(By.id("created-personal-access-token")).getAttribute("value");
+        } catch (RuntimeException e) {
+            throw new TokenCreationException(e);
         } finally {
             driver.close();
         }
     }
 
-    private void login(WebDriver driver, String username, String password) {
+    private void login(WebDriver driver, String username, String password) throws AuthenticationException {
         driver.navigate().to(gitLabUrl);
         driver.findElement(By.id("user_login")).sendKeys(username);
         driver.findElement(By.id("user_password")).sendKeys(password);

@@ -1,5 +1,7 @@
 package gitlabtools;
 
+import gitlabtools.auth.AuthenticationException;
+import gitlabtools.auth.TokenCreationException;
 import gitlabtools.auth.TokenCreator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.gitlab4j.api.GitLabApi;
@@ -45,9 +47,13 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
     }
 
     private static void createToken() {
-        var creator = new TokenCreator(url);
-        token = creator.createAccessToken(user, password, "gitlab-tools-it");
-        tokenFile = writeTempTextFile("token", token);
+        try {
+            var creator = new TokenCreator(url);
+            token = creator.createAccessToken(user, password, "gitlab-tools-it");
+            tokenFile = writeTempTextFile("token", token);
+        } catch (TokenCreationException | AuthenticationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected static Path writeTempTextFile(String prefix, String... lines) {

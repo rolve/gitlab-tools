@@ -3,6 +3,7 @@ package gitlabtools.cmd;
 import gitlabtools.Cache;
 import gitlabtools.ProgressTracker;
 import gitlabtools.auth.AuthenticationException;
+import gitlabtools.auth.TokenCreationException;
 import gitlabtools.auth.TokenCreator;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -82,12 +83,17 @@ public abstract class Cmd<A extends Args> {
                 System.out.println("Access token stored in " + tokenFile.toAbsolutePath());
                 break;
             } catch (AuthenticationException e) {
-                System.out.print("Invalid login or password. Retry? [Y/n] ");
+                System.out.print("Authentication failed, likely due to invalid credentials. Retry? [Y/n] ");
                 var reply = scanner.nextLine().strip().toLowerCase();
                 if (!reply.isEmpty() && reply.charAt(0) == 'n') {
                     System.exit(0);
                 }
                 // else: try again
+            } catch (TokenCreationException e) {
+                System.out.println("Could not create token. Create the token manually here:\n" +
+                        args.getGitlabUrl() + "/-/profile/personal_access_tokens\n" +
+                        "and store it in the file " + args.getTokenFile());
+                System.exit(1);
             }
         }
     }
