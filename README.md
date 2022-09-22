@@ -1,4 +1,4 @@
-# GitLab Tools (for the Classroom) [![pipeline status](https://gitlab.com/rolve/gitlab-tools/badges/main/pipeline.svg)](https://gitlab.com/rolve/gitlab-tools/-/commits/main)
+# GitLab Tools (for the Classroom) [![pipeline status](https://gitlab.fhnw.ch/michael.faes/gitlab-tools/badges/main/pipeline.svg)](https://gitlab.fhnw.ch/michael.faes/gitlab-tools/-/commits/main)
 
 Command line tools for managing large numbers of GitLab projects, e.g., for 
 teaching.
@@ -21,7 +21,7 @@ group (and subgroup).
 ## Download
 
 Download the latest version:
-[gitlab-tools.jar](https://gitlab.com/rolve/gitlab-tools/-/jobs/artifacts/main/raw/target/gitlab-tools.jar?job=integration-test)
+[gitlab-tools.jar](https://gitlab.fhnw.ch/michael.faes/gitlab-tools/-/jobs/artifacts/main/raw/target/gitlab-tools.jar?job=integration-test)
 
 
 ## How to use this
