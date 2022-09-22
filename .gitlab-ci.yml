@@ -7,22 +7,26 @@ cache:
   paths:
     - $MVN_REPO/
 
+stages:
+  - test
+  - integration-test
+
 test:
+  stage: test
   script:
     - mvn test -B -Dmaven.repo.local=$MVN_REPO
 
 integration-test:
+  stage: integration-test
   services:
-    - name: gitlab/gitlab-ce:14.10.5-ce.0
-      alias: gitlab
+    - name: docker:dind
+      command: ["--tls=false"]
   variables:
-    GITLAB_HTTPS: "false"
-    GITLAB_ROOT_PASSWORD: "password"
-    GITLAB_TOOLS_IT_URL: http://gitlab
-    GITLAB_TOOLS_IT_USER: root
-    GITLAB_TOOLS_IT_PASSWORD: $GITLAB_ROOT_PASSWORD
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
   script:
     - mvn verify -B -DskipUnitTests -Dmaven.repo.local=$MVN_REPO
   artifacts:
     paths:
-      - "target/gitlab-tools.jar"
+      - target/gitlab-tools.jar
