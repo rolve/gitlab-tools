@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
 
 public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
@@ -70,6 +71,9 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
     private List<String> readSimpleCourseFile() throws IOException {
         try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
             return lines
+                    .map(this::stripComment)
+                    .map(String::strip)
+                    .filter(not(String::isEmpty))
                     .map(this::normalizeUsername)
                     .collect(toList());
         }
@@ -78,6 +82,9 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
     private List<String> readTeamsCourseFile() throws IOException {
         try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
             return lines
+                    .map(this::stripComment)
+                    .map(String::strip)
+                    .filter(not(String::isEmpty))
                     .map(this::parseTeamsCourseLine)
                     .collect(groupingBy(m -> m.team,
                             mapping(m -> m.username, toCollection(TreeSet::new))))
@@ -93,6 +100,10 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
             throw new RuntimeException("illegal line in course file: '" + line + "'");
         }
         return new TeamMember(normalizeUsername(parts[0]), parts[1]);
+    }
+
+    private String stripComment(String line) {
+        return line.split("//")[0];
     }
 
     private String normalizeUsername(String raw) {

@@ -123,4 +123,40 @@ public class CreateProjectsCmdIT extends GitLabApiIntegrationTest {
                 .collect(toSet());
         assertEquals(Set.of("lisa", "michael", "sarah"), projects);
     }
+
+    @Test
+    public void testComment() throws Exception {
+        var courseFile = writeTempTextFile("course",
+                "lisa // repeat customer",
+                "michael",
+                "sarah@sarah.example.com//has no school account yet");
+        var args = withTestDefaults(
+                "--courseFile", courseFile.toString());
+
+        new CreateProjectsCmd(args).execute();
+
+        var projects = api.getGroupApi().getProjects(subgroup).stream()
+                .map(Project::getName)
+                .collect(toSet());
+        assertEquals(Set.of("lisa", "michael", "sarah"), projects);
+    }
+
+    @Test
+    public void testBlankLines() throws Exception {
+        var courseFile = writeTempTextFile("course",
+                "lisa",
+                "",
+                "michael",
+                "    ",
+                "sarah");
+        var args = withTestDefaults(
+                "--courseFile", courseFile.toString());
+
+        new CreateProjectsCmd(args).execute();
+
+        var projects = api.getGroupApi().getProjects(subgroup).stream()
+                .map(Project::getName)
+                .collect(toSet());
+        assertEquals(Set.of("lisa", "michael", "sarah"), projects);
+    }
 }
