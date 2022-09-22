@@ -87,9 +87,13 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
     }
 
     @AfterEach
-    public void deleteProjects() throws GitLabApiException {
+    public void deleteProjects() throws GitLabApiException, InterruptedException {
         for (var project : api.getGroupApi().getProjects(subgroup)) {
             api.getProjectApi().deleteProject(project);
         }
+        // apparently, deletion is somehow delayed, causing subsequent
+        // tests to fail sporadically if they create projects with the
+        // same name. hence, wait a couple of seconds here...
+        Thread.sleep(10_000);
     }
 }
