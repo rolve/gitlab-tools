@@ -5,7 +5,6 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.User;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.joining;
@@ -149,13 +147,6 @@ public class AssignMembersCmdIT extends GitLabApiIntegrationTest {
                 expected.add(users.get(u).getId());
             }
             assertEquals(expected, userIds);
-        }
-    }
-
-    @AfterEach
-    public void deleteUsers() throws GitLabApiException {
-        for (var user : users) {
-            api.getUserApi().deleteUser(user, true);
         }
     }
 }

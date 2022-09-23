@@ -7,30 +7,22 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Group;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Random;
 
 import static java.lang.String.join;
 
 public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
 
-    protected static final String GROUP = "gitlab-tools-test";
-    protected static final String SUBGROUP = "exercises";
+    private static final String GROUP = "gitlab-tools-test";
 
     private static String token = null;
     private static Path tokenFile = null;
-
-    protected static String[] withTestDefaults(String... args) {
-        return ArrayUtils.addAll(args,
-                "--gitlabUrl", url,
-                "--tokenFile", tokenFile(),
-                "--groupName", GROUP);
-    }
 
     protected static String token() {
         if (token == null) {
@@ -72,28 +64,22 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
 
     @BeforeEach
     public void createGroups() throws GitLabApiException {
+        var subgroupName = "group" + new Random().nextLong();
+        Group group;
         try {
-            subgroup = api.getGroupApi().getGroup(GROUP + "/" + SUBGROUP);
-        } catch (GitLabApiException e1) {
-            Group group;
-            try {
-                group = api.getGroupApi().getGroup(GROUP);
-            } catch (GitLabApiException e2) {
-                group = api.getGroupApi().addGroup(GROUP, GROUP);
-            }
-            subgroup = api.getGroupApi().addGroup(SUBGROUP, SUBGROUP, null,
-                    group.getVisibility(), null, null, group.getId());
+            group = api.getGroupApi().getGroup(GROUP);
+        } catch (GitLabApiException e2) {
+            group = api.getGroupApi().addGroup(GROUP, GROUP);
         }
+        subgroup = api.getGroupApi().addGroup(subgroupName, subgroupName, null,
+                group.getVisibility(), null, null, group.getId());
     }
 
-    @AfterEach
-    public void deleteProjects() throws GitLabApiException, InterruptedException {
-        for (var project : api.getGroupApi().getProjects(subgroup)) {
-            api.getProjectApi().deleteProject(project);
-        }
-        // apparently, deletion is somehow delayed, causing subsequent
-        // tests to fail sporadically if they create projects with the
-        // same name. hence, wait a couple of seconds here...
-        Thread.sleep(10_000);
+    protected String[] withTestDefaults(String... args) {
+        return ArrayUtils.addAll(args,
+                "--gitlabUrl", url,
+                "--tokenFile", tokenFile(),
+                "--groupName", GROUP,
+                "--subgroupName", subgroup.getName());
     }
 }
