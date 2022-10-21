@@ -28,6 +28,10 @@ import static java.util.stream.Collectors.toList;
 
 public abstract class Cmd<A extends Args> {
 
+    public interface Constructor {
+        Cmd<?> construct(String[] args) throws Exception;
+    }
+
     private static final Cache<Optional<Group>> groupCache = new Cache<>();
 
     protected final A args;

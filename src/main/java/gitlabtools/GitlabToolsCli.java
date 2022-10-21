@@ -8,23 +8,22 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static java.util.Arrays.stream;
-import static java.util.Map.entry;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ArrayUtils.*;
 
 public class GitlabToolsCli {
 
-    private static final Map<String, Class<? extends Cmd<?>>> commands = Map.ofEntries(
-        entry("create-projects", CreateProjectsCmd.class),
-        entry("protect-branch", ProtectBranchCmd.class),
-        entry("assign-members", AssignMembersCmd.class),
-        entry("publish-template", PublishTemplateCmd.class),
-        entry("publish-grades", PublishGradesCmd.class),
-        entry("checkout-submissions", CheckoutSubmissionsCmd.class),
-        entry("export-sources", ExportSourcesCmd.class),
-        entry("submission-stats", SubmissionStatsCmd.class),
-        entry("clone", CloneCmd.class));
+    private static final Map<String, Cmd.Constructor> commands = Map.of(
+        "create-projects", CreateProjectsCmd::new,
+        "protect-branch", ProtectBranchCmd::new,
+        "assign-members", AssignMembersCmd::new,
+        "publish-template", PublishTemplateCmd::new,
+        "publish-grades", PublishGradesCmd::new,
+        "checkout-submissions", CheckoutSubmissionsCmd::new,
+        "export-sources", ExportSourcesCmd::new,
+        "submission-stats", SubmissionStatsCmd::new,
+        "clone", CloneCmd::new);
 
     public static void main(String[] args) throws Exception {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
@@ -108,15 +107,9 @@ public class GitlabToolsCli {
 
     private static void execute(String name, String[] args) throws Exception {
         try {
-            var cmd = commands.get(name).getConstructor(String[].class)
-                    .newInstance(new Object[]{args});
-            cmd.execute();
-        } catch (InvocationTargetException e) {
-            if (e.getCause() instanceof ArgumentValidationException) {
-                System.err.println(e.getCause().getMessage());
-            } else {
-                throw e;
-            }
+            commands.get(name).construct(args).execute();
+        } catch (ArgumentValidationException e) {
+            System.err.println(e.getMessage());
         }
     }
 }
