@@ -7,13 +7,14 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.models.Event;
 
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Date;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
 import static java.nio.file.Files.exists;
-import static java.util.Calendar.DAY_OF_MONTH;
+import static java.time.LocalDateTime.parse;
+import static java.time.ZoneId.systemDefault;
+import static java.time.temporal.ChronoUnit.DAYS;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
@@ -29,15 +30,17 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        var deadline = args.getDate() == null ? null :
-                new SimpleDateFormat("yyyy-MM-dd-HH:mm").parse(args.getDate());
+        var localDeadline = args.getDate() == null ? null
+                : parse(args.getDate());
+        var deadline = localDeadline == null ? null
+                : localDeadline.atZone(systemDefault()).toInstant();
         if (deadline != null) {
-            System.out.println(deadline);
+            System.out.println("Using local deadline " + localDeadline + " (UTC: " + deadline + ")");
         }
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var workDir = Paths.get(args.getWorkDir());
+        var workDir = Paths.get(args.getDir());
         createDirectories(workDir);
 
         var projects = getProjects(args);
@@ -47,18 +50,15 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
             Event lastPush = null;
             if (deadline != null) {
-                // add 1 day to deadline since gitlab ignores time of day
-                var tempCal = Calendar.getInstance();
-                tempCal.setTime(deadline);
-                tempCal.add(DAY_OF_MONTH, 1);
-
-                // fetch all push-events the day of the deadline (and before)
+                // fetch all push-events on the day of the deadline and earlier
+                // (actually, add 1 day to deadline since GitLab ignores time of day)
                 var pager = gitlab.getEventsApi().getProjectEvents(project.getId(),
-                        PUSHED, null, tempCal.getTime(), null, DESC, 100);
+                        PUSHED, null, Date.from(deadline.plus(1, DAYS)), null, DESC, 100);
 
+                // filter precisely here:
                 lastPush = stream(pager)
-                        .filter(e -> e.getCreatedAt().before(deadline))
                         .filter(e -> e.getPushData().getRef().equals(args.getDefaultBranch()))
+                        .filter(e -> e.getCreatedAt().before(Date.from(deadline)))
                         .findFirst().orElse(null);
 
                 if (lastPush == null) {
@@ -120,9 +120,9 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
     interface Args extends gitlabtools.cmd.Args {
         @Option
-        String getWorkDir();
+        String getDir();
 
         @Option(defaultToNull = true)
-        String getDate(); // yyyy-MM-dd-HH:mm
+        String getDate();
     }
 }
