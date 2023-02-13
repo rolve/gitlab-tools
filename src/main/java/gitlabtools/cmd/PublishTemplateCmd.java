@@ -6,19 +6,27 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
+import static java.util.Objects.requireNonNullElse;
 import static org.eclipse.jgit.api.Git.cloneRepository;
+import static org.eclipse.jgit.api.Git.open;
 
 /**
  * Publishes the content in a given "template" directory into a directory of
- * existing repositories.
+ * existing repositories (or the root directory). If this command is used
+ * repeatedly to publish multiple templates, the 'workDir' option can be
+ * used to reduce execution time by avoiding subsequent clone operations.
  */
 public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
 
     private static final int ATTEMPTS = 3;
+    private static final int SLEEP_TIME = 200;
 
     public PublishTemplateCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -29,8 +37,18 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var templateDir = Paths.get(args.getTemplateDir());
-        var workDir = createTempDirectory("gitlab-tools");
-        workDir.toFile().deleteOnExit();
+
+        Path workDir;
+        if (args.getWorkDir() == null || args.getDestDir() == null) {
+            if (args.getWorkDir() != null) {
+                System.out.println("Ignoring workDir option when publishing to repository root");
+            }
+            workDir = createTempDirectory("gitlab-tools");
+            workDir.toFile().deleteOnExit();
+        } else {
+            workDir = Path.of(args.getWorkDir());
+            createDirectories(workDir);
+        }
 
         var projects = getProjects(args);
         System.out.println("Publishing template to " + projects.size()
@@ -38,15 +56,28 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         for (var project : projects) {
             try {
                 var repoDir = workDir.resolve(project.getName());
+                if (alreadyPublished(repoDir)) {
+                    progress.advance("existing");
+                    continue;
+                }
 
                 Git git = null;
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
-                        git = cloneRepository().setURI(project.getWebUrl())
-                                .setDirectory(repoDir.toFile())
-                                .setCredentialsProvider(credentials).call();
-                        // done
-                        attempts = 0;
+                        if (exists(repoDir)) {
+                            git = open(repoDir.toFile());
+                            git.pull()
+                                    .setCredentialsProvider(credentials)
+                                    .call();
+                        } else {
+                            git = cloneRepository()
+                                    .setURI(project.getWebUrl())
+                                    .setDirectory(repoDir.toFile())
+                                    .setCredentialsProvider(credentials)
+                                    .call();
+                            progress.additionalInfo("newly cloned");
+                        }
+                        break;
                     } catch (TransportException e) {
                         progress.interrupt();
                         e.printStackTrace(System.out);
@@ -58,35 +89,30 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                         }
                     }
                 }
+                if (alreadyPublished(repoDir)) {
+                    progress.advance("existing");
+                    continue;
+                }
 
                 Path destDir;
                 if (args.getDestDir() == null) {
-                    try (var contents = list(repoDir)) {
-                        if (contents.anyMatch(p -> !p.getFileName().toString().equals(".git"))) {
-                            progress.advance("existing");
-                            continue;
-                        }
-                    }
                     destDir = repoDir;
                 } else {
                     destDir = repoDir.resolve(args.getDestDir());
-                    if (Files.exists(destDir)) {
-                        progress.advance("existing");
-                        continue;
-                    }
                     createDirectories(destDir);
                 }
 
                 copyDir(templateDir, destDir, args.getIgnorePattern());
                 git.add().addFilepattern(".").call();
-                var message = "Publish " + (args.getDestDir() == null ? "template" : args.getDestDir());
+                var message = "Publish " + requireNonNullElse(args.getDestDir(), "template");
                 git.commit().setMessage(message).call();
+
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
-                        git.push().add(args.getDefaultBranch())
-                                .setCredentialsProvider(credentials).call();
-                        // done
-                        attempts = 0;
+                        git.push()
+                                .setCredentialsProvider(credentials)
+                                .call();
+                        break;
                     } catch (TransportException e) {
                         progress.interrupt();
                         e.printStackTrace(System.out);
@@ -101,7 +127,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                 git.close();
                 progress.advance();
 
-                Thread.sleep(500);
+                Thread.sleep(SLEEP_TIME);
             } catch (Exception e) {
                 progress.advance("failed");
                 progress.interrupt();
@@ -111,16 +137,32 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         }
     }
 
+    private boolean alreadyPublished(Path repoDir) throws IOException {
+        if (args.getDestDir() == null) {
+            if (exists(repoDir)) {
+                try (var contents = list(repoDir)) {
+                    if (contents.anyMatch(p -> !p.getFileName().toString().equals(".git"))) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } else {
+            return exists(repoDir.resolve(args.getDestDir()));
+        }
+    }
+
     private static void copyDir(Path src, Path dest, String ignorePattern) throws IOException {
         PathMatcher matcher = null;
         if (ignorePattern != null) {
             matcher = FileSystems.getDefault().getPathMatcher("glob:" + ignorePattern);
         }
-        Iterable<Path> sources = walk(src).skip(1)::iterator;
-        for (var source : sources) {
-            var rel = src.relativize(source);
-            if (matcher == null || !matcher.matches(rel)) {
-                copy(source, dest.resolve(rel));
+        try (var walk = walk(src).skip(1)) {
+            for (var source : (Iterable<Path>) walk::iterator) {
+                var rel = src.relativize(source);
+                if (matcher == null || !matcher.matches(rel)) {
+                    copy(source, dest.resolve(rel));
+                }
             }
         }
     }
@@ -131,6 +173,9 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
 
         @Option(defaultToNull = true)
         String getDestDir();
+
+        @Option(defaultToNull = true)
+        String getWorkDir();
 
         /**
          * A GLOB pattern that is applied to the relative path of each file
