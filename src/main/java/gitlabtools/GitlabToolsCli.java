@@ -19,10 +19,8 @@ public class GitlabToolsCli {
         "protect-branch", ProtectBranchCmd::new,
         "assign-members", AssignMembersCmd::new,
         "publish-template", PublishTemplateCmd::new,
-        "publish-grades", PublishGradesCmd::new,
         "checkout-submissions", CheckoutSubmissionsCmd::new,
         "export-sources", ExportSourcesCmd::new,
-        "submission-stats", SubmissionStatsCmd::new,
         "clone", CloneCmd::new);
 
     public static void main(String[] args) throws Exception {
