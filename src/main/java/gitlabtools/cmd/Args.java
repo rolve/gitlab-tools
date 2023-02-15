@@ -15,9 +15,6 @@ public interface Args {
     @Option(defaultValue = "exercises")
     String getSubgroupName();
 
-    @Option(defaultValue = "main")
-    String getDefaultBranch();
-
     @Option(helpRequest = true)
     boolean getHelp();
 }

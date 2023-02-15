@@ -136,6 +136,9 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
         @Option(defaultValue = "course.txt") // one username or email address per line
         String getCourseFile();
 
+        @Option(defaultValue = "main")
+        String getDefaultBranch();
+
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
         String getDefaultBranchAccess();
 

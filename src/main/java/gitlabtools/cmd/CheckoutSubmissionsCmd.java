@@ -15,6 +15,7 @@ import static java.nio.file.Files.exists;
 import static java.time.LocalDateTime.parse;
 import static java.time.ZoneId.systemDefault;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.util.Objects.requireNonNullElse;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
@@ -47,6 +48,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
         System.out.println("Checking out " + projects.size() + " projects...");
         for (var project : projects) {
             var repoDir = workDir.resolve(project.getName());
+            var branch = requireNonNullElse(args.getBranch(), project.getDefaultBranch());
 
             Event lastPush = null;
             if (deadline != null) {
@@ -57,7 +59,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
                 // filter precisely here:
                 lastPush = stream(pager)
-                        .filter(e -> e.getPushData().getRef().equals(args.getDefaultBranch()))
+                        .filter(e -> e.getPushData().getRef().equals(branch))
                         .filter(e -> e.getCreatedAt().before(Date.from(deadline)))
                         .findFirst().orElse(null);
 
@@ -77,7 +79,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                         // need to switch to default branch, in case we are in "detached head"
                         // state (from previous checkout)
                         git.checkout()
-                                .setName(args.getDefaultBranch())
+                                .setName(branch)
                                 .call();
                         git.pull()
                                 .setCredentialsProvider(credentials)
@@ -110,8 +112,9 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
                         throw e;
                     }
                 } finally {
-                    if (git != null)
+                    if (git != null) {
                         git.close();
+                    }
                 }
             }
             progress.advance();
@@ -124,5 +127,8 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
 
         @Option(defaultToNull = true)
         String getDate();
+
+        @Option(defaultToNull = true)
+        String getBranch();
     }
 }
