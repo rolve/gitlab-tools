@@ -11,12 +11,14 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.util.List;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
 import static java.util.Objects.requireNonNullElse;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
+import static org.eclipse.jgit.api.MergeCommand.FastForwardMode.FF;
 
 /**
  * Publishes the content in a given "template" directory into a directory of
@@ -117,14 +119,39 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                 copyDir(templateDir, destDir, args.getIgnorePattern());
                 git.add().addFilepattern(".").call();
                 var message = "Publish " + requireNonNullElse(args.getDestDir(), "template");
-                git.commit().setMessage(message).call();
+                var commitId = git.commit()
+                        .setMessage(message)
+                        .call().getId();
+
+                for (var extra : args.getExtraBranches()) {
+                    var create = git.branchList().call().stream()
+                            .map(Ref::getName)
+                            .noneMatch(("refs/heads/" + extra)::equals);
+                    git.checkout()
+                            .setName(extra)
+                            .setCreateBranch(create)
+                            .call();
+                    // first, merge remote changes
+                    git.merge()
+                            .include(git.getRepository().resolve("origin/" + extra))
+                            .setFastForward(FF)
+                            .call();
+                    // then merge commit with template
+                    git.merge()
+                            .include(commitId)
+                            .setMessage(message)
+                            .call();
+                }
 
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
-                        git.push()
+                        var push = git.push()
                                 .add(branch)
-                                .setCredentialsProvider(credentials)
-                                .call();
+                                .setCredentialsProvider(credentials);
+                        for (var extra : args.getExtraBranches()) {
+                            push.add(extra);
+                        }
+                        push.call();
                         break;
                     } catch (TransportException e) {
                         progress.interrupt();
@@ -137,6 +164,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                         }
                     }
                 }
+
                 git.close();
                 progress.advance();
 
@@ -203,5 +231,12 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
          */
         @Option(defaultToNull = true)
         String getBranch();
+
+        /**
+         * A list of extra branches into which the branch with the published
+         * template is merged. Must all exist in the GitLab repo.
+         */
+        @Option(defaultValue = {})
+        List<String> getExtraBranches();
     }
 }
