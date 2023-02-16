@@ -72,6 +72,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                         } else {
                             git = cloneRepository()
                                     .setURI(project.getWebUrl())
+                                    .setBranch(project.getDefaultBranch())
                                     .setDirectory(repoDir.toFile())
                                     .setCredentialsProvider(credentials)
                                     .call();
