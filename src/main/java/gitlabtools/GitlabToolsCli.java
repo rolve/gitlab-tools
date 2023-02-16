@@ -4,7 +4,6 @@ import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import gitlabtools.cmd.*;
 
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static java.util.Arrays.stream;
@@ -14,8 +13,9 @@ import static org.apache.commons.lang3.ArrayUtils.*;
 
 public class GitlabToolsCli {
 
-    private static final Map<String, Cmd.Constructor> commands = Map.of(
+    private static final Map<String, Cmd.Constructor> COMMANDS = Map.of(
         "create-projects", CreateProjectsCmd::new,
+        "create-branch", CreateBranchCmd::new,
         "protect-branch", ProtectBranchCmd::new,
         "assign-members", AssignMembersCmd::new,
         "publish-template", PublishTemplateCmd::new,
@@ -28,14 +28,14 @@ public class GitlabToolsCli {
 
         if (args.length == 0) {
             System.err.println("No command specified. Available commands: ");
-            commands.keySet().stream()
+            COMMANDS.keySet().stream()
                     .sorted()
                     .map("  "::concat)
                     .forEach(System.err::println);
             return;
         }
         var cmdName = args[0];
-        if (!commands.containsKey(cmdName)) {
+        if (!COMMANDS.containsKey(cmdName)) {
             System.err.println("Unknown command " + cmdName);
             return;
         }
@@ -105,7 +105,7 @@ public class GitlabToolsCli {
 
     private static void execute(String name, String[] args) throws Exception {
         try {
-            commands.get(name).construct(args).execute();
+            COMMANDS.get(name).construct(args).execute();
         } catch (ArgumentValidationException e) {
             System.err.println(e.getMessage());
         }

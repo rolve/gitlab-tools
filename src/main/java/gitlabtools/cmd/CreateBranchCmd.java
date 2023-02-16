@@ -5,23 +5,20 @@ import org.gitlab4j.api.models.AccessLevel;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 
-public class ProtectBranchCmd extends Cmd<ProtectBranchCmd.Args> {
+public class CreateBranchCmd extends Cmd<CreateBranchCmd.Args> {
 
-    public ProtectBranchCmd(String[] rawArgs) throws Exception {
+    public CreateBranchCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 
     @Override
     protected void doExecute() throws Exception {
         var branchApi = gitlab.getProtectedBranchesApi();
-        var branch = args.getBranch();
-        var access = AccessLevel.valueOf(args.getBranchAccess().toUpperCase());
         for (var project : getProjects(args)) {
-            // remove protected branch first, in case it already exists
-            if (branchApi.getOptionalProtectedBranch(project, branch).isPresent()) {
-                branchApi.unprotectBranch(project, branch);
-            }
-            branchApi.protectBranch(project, branch, access, access);
+            gitlab.getRepositoryApi().createBranch(project, args.getBranch(), args.getRef());
+
+            var access = AccessLevel.valueOf(args.getBranchAccess().toUpperCase());
+            branchApi.protectBranch(project, args.getBranch(), access, access);
             progress.advance();
         }
     }
@@ -31,5 +28,7 @@ public class ProtectBranchCmd extends Cmd<ProtectBranchCmd.Args> {
         String getBranch();
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")
         String getBranchAccess();
+        @Option(defaultValue = "HEAD")
+        String getRef();
     }
 }
