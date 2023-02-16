@@ -3,6 +3,7 @@ package gitlabtools.cmd;
 import com.lexicalscope.jewel.cli.Option;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
@@ -61,18 +62,28 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                     continue;
                 }
 
+                var branch = requireNonNullElse(args.getBranch(), project.getDefaultBranch());
+
                 Git git = null;
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
                         if (exists(repoDir)) {
                             git = open(repoDir.toFile());
-                            git.pull()
+                            git.fetch()
                                     .setCredentialsProvider(credentials)
+                                    .call();
+
+                            var create = git.branchList().call().stream()
+                                    .map(Ref::getName)
+                                    .noneMatch(("refs/heads/" + branch)::equals);
+                            git.checkout()
+                                    .setName(branch)
+                                    .setCreateBranch(create)
                                     .call();
                         } else {
                             git = cloneRepository()
                                     .setURI(project.getWebUrl())
-                                    .setBranch(project.getDefaultBranch())
+                                    .setBranch(branch)
                                     .setDirectory(repoDir.toFile())
                                     .setCredentialsProvider(credentials)
                                     .call();
@@ -111,6 +122,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                 for (int attempts = ATTEMPTS; attempts-- > 0;) {
                     try {
                         git.push()
+                                .add(branch)
                                 .setCredentialsProvider(credentials)
                                 .call();
                         break;
@@ -184,5 +196,12 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
          */
         @Option(defaultToNull = true)
         String getIgnorePattern();
+
+        /**
+         * Must already exist in the GitLab repo. If not set, the default
+         * branch configured in GitLab is used.
+         */
+        @Option(defaultToNull = true)
+        String getBranch();
     }
 }
