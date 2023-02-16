@@ -2,17 +2,21 @@ package gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.CommitPayload;
 import org.gitlab4j.api.models.Project;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
+import static org.gitlab4j.api.models.CommitAction.Action.CREATE;
 
 public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
@@ -33,15 +37,13 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                 .map(Project::getName)
                 .collect(toSet());
 
-        List<String> projects;
-        if (args.isTeamProjects()) {
-            projects = readTeamsCourseFile();
-        } else {
-            projects = readSimpleCourseFile();
-        }
+        var teams = args.isTeamProjects()
+                ? readTeamsCourseFile()
+                : readSimpleCourseFile(); // teams are single people
 
-        System.out.println("Creating " + projects.size() + " project(s)...");
-        for (var projectName : projects) {
+        System.out.println("Creating " + teams.size() + " project(s)...");
+        for (var team : teams) {
+            var projectName = String.join("_", team);
             if (args.getProjectNamePrefix() != null) {
                 if (args.getProjectNamePrefix().contains("_")) {
                     throw new AssertionError("illegal prefix; must not contain _");
@@ -53,33 +55,41 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
             } else {
                 var project = gitlab.getProjectApi().createProject(subgroup.getId(), projectName);
 
+                // create initial commit in order to set default branch
+                var text = args.getReadmeText() + String.join(", ", team);
+                gitlab.getCommitsApi().createCommit(project, new CommitPayload()
+                        .withCommitMessage("Initialize")
+                        .withBranch(args.getDefaultBranch())
+                        .withAction(CREATE, text, "README.md"));
+
                 // remove all protected branches first
-                var branches = branchApi.getProtectedBranches(project.getId());
+                var branches = branchApi.getProtectedBranches(project);
                 for (var branch : branches) {
-                    branchApi.unprotectBranch(project.getId(), branch.getName());
+                    branchApi.unprotectBranch(project, branch.getName());
                 }
 
                 // then configure default branch so that users with configured role
                 // ('developer' by default) can push & merge, but not force-push
-                branchApi.protectBranch(project.getId(), args.getDefaultBranch(), access, access);
+                branchApi.protectBranch(project, args.getDefaultBranch(), access, access);
 
                 progress.advance();
             }
         }
     }
 
-    private List<String> readSimpleCourseFile() throws IOException {
+    private List<Set<String>> readSimpleCourseFile() throws IOException {
         try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
             return lines
                     .map(this::stripComment)
                     .map(String::strip)
                     .filter(not(String::isEmpty))
                     .map(this::normalizeUsername)
+                    .map(Set::of)
                     .collect(toList());
         }
     }
 
-    private List<String> readTeamsCourseFile() throws IOException {
+    private Collection<? extends Set<String>> readTeamsCourseFile() throws IOException {
         try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
             return lines
                     .map(this::stripComment)
@@ -88,9 +98,7 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                     .map(this::parseTeamsCourseLine)
                     .collect(groupingBy(m -> m.team,
                             mapping(m -> m.username, toCollection(TreeSet::new))))
-                    .values().stream()
-                    .map(set -> String.join("_", set))
-                    .collect(toList());
+                    .values();
         }
     }
 
@@ -144,5 +152,8 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
         @Option(defaultToNull = true)
         String getProjectNamePrefix();
+
+        @Option(defaultValue = "Privates Repository von ")
+        String getReadmeText();
     }
 }
