@@ -52,28 +52,29 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
             }
             if (existingProjects.contains(projectName)) {
                 progress.advance("existing");
-            } else {
-                var project = gitlab.getProjectApi().createProject(subgroup.getId(), projectName);
-
-                // create initial commit in order to set default branch
-                var text = args.getReadmeText() + String.join(", ", team);
-                gitlab.getCommitsApi().createCommit(project, new CommitPayload()
-                        .withCommitMessage("Initialize")
-                        .withBranch(args.getDefaultBranch())
-                        .withAction(CREATE, text, "README.md"));
-
-                // remove all protected branches first
-                var branches = branchApi.getProtectedBranches(project);
-                for (var branch : branches) {
-                    branchApi.unprotectBranch(project, branch.getName());
-                }
-
-                // then configure default branch so that users with configured role
-                // ('developer' by default) can push & merge, but not force-push
-                branchApi.protectBranch(project, args.getDefaultBranch(), access, access);
-
-                progress.advance();
+                continue;
             }
+
+            var project = gitlab.getProjectApi().createProject(subgroup.getId(), projectName);
+
+            // remove all protected branches first
+            var branches = branchApi.getProtectedBranches(project);
+            for (var branch : branches) {
+                branchApi.unprotectBranch(project, branch.getName());
+            }
+
+            // then configure default branch so that users with configured role
+            // ('developer' by default) can push & merge, but not force-push
+            branchApi.protectBranch(project, args.getDefaultBranch(), access, access);
+
+            // create initial commit in order to set default branch
+            var text = args.getReadmeText() + String.join(", ", team);
+            gitlab.getCommitsApi().createCommit(project, new CommitPayload()
+                    .withCommitMessage("Initialize")
+                    .withBranch(args.getDefaultBranch())
+                    .withAction(CREATE, text, "README.md"));
+
+            progress.advance();
         }
     }
 
