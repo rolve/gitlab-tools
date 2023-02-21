@@ -50,11 +50,11 @@ public abstract class Cmd<A extends Args> {
             promptCreateToken();
         }
         token = readAllLines(tokenFile).get(0);
-        gitlab = new GitLabApi(args.getGitlabUrl(), token);
+        gitlab = new GitLabApi(args.getGitLabUrl(), token);
     }
 
     private void promptCreateToken() throws IOException {
-        var shortUrl = args.getGitlabUrl()
+        var shortUrl = args.getGitLabUrl()
                 .replaceAll("^https?://", "")
                 .replaceAll("/$", "");
         System.out.print("Token file '" + args.getTokenFile() + "' does not exist. " +
@@ -68,7 +68,7 @@ public abstract class Cmd<A extends Args> {
     }
 
     private void createToken() throws IOException {
-        var creator = new TokenCreator(args.getGitlabUrl());
+        var creator = new TokenCreator(args.getGitLabUrl());
         var scanner = new Scanner(System.in);
         while (true) {
             System.out.print("GitLab username? ");
@@ -94,9 +94,9 @@ public abstract class Cmd<A extends Args> {
                 }
                 // else: try again
             } catch (TokenCreationException e) {
-                var slash = args.getGitlabUrl().endsWith("/") ? "" : "/";
+                var slash = args.getGitLabUrl().endsWith("/") ? "" : "/";
                 System.out.println("\nCould not create token. Create the token manually here:\n" +
-                        args.getGitlabUrl() + slash + "-/profile/personal_access_tokens\n" +
+                        args.getGitLabUrl() + slash + "-/profile/personal_access_tokens\n" +
                         "and store it in the file " + args.getTokenFile());
                 System.exit(1);
             }
@@ -123,7 +123,7 @@ public abstract class Cmd<A extends Args> {
         if (progress != null) {
             progress.interrupt();
         }
-        System.out.println("Fetching users from Gitlab...");
+        System.out.println("Fetching users from GitLab...");
 
         try {
             users = stream(gitlab.getUserApi().getUsers(100))
@@ -135,7 +135,7 @@ public abstract class Cmd<A extends Args> {
     }
 
     protected Group getGroup(String groupName) throws GitLabApiException {
-        var key = new Cache.Key(args.getGitlabUrl(), groupName);
+        var key = new Cache.Key(args.getGitLabUrl(), groupName);
         return groupCache.update(key, () ->
                 stream(gitlab.getGroupApi().getGroups(100))
                         .filter(g -> g.getName().equals(groupName))
@@ -143,7 +143,7 @@ public abstract class Cmd<A extends Args> {
     }
 
     protected Group getSubgroup(Group group, String subgroupName) throws GitLabApiException {
-        var key = new Cache.Key(args.getGitlabUrl(), group.getId() + "#" + subgroupName);
+        var key = new Cache.Key(args.getGitLabUrl(), group.getId() + "#" + subgroupName);
         var subgroup = groupCache.update(key, () ->
                 stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
                         .filter(g -> g.getName().equals(subgroupName))

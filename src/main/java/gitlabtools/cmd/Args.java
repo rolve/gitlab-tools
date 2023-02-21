@@ -4,7 +4,7 @@ import com.lexicalscope.jewel.cli.Option;
 
 public interface Args {
     @Option(defaultValue = "https://gitlab.fhnw.ch/")
-    String getGitlabUrl();
+    String getGitLabUrl();
 
     @Option(defaultValue = "token.txt")
     String getTokenFile();

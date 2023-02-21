@@ -57,7 +57,7 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
             } else {
                 progress.advance("failed");
                 progress.interrupt();
-                System.out.printf("Error: user %s not among Gitlab users\n", username);
+                System.out.printf("Error: user %s not among GitLab users\n", username);
             }
         } else {
             progress.advance("existing");

@@ -11,7 +11,7 @@ import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ArrayUtils.*;
 
-public class GitlabToolsCli {
+public class GitLabToolsCli {
 
     private static final Map<String, Cmd.Constructor> COMMANDS = Map.of(
         "create-projects", CreateProjectsCmd::new,

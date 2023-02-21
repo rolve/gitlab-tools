@@ -41,6 +41,9 @@ public class Cache<V> {
 
         @Override
         public boolean equals(Object obj) {
+            if (!(obj instanceof Key)) {
+                return false;
+            }
             var other = (Key) obj;
             return url.equals(other.url) && Objects.equals(aux, other.aux);
         }

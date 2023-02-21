@@ -79,7 +79,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>gitlabtools.GitlabToolsCli</mainClass>
+                            <mainClass>gitlabtools.GitLabToolsCli</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
