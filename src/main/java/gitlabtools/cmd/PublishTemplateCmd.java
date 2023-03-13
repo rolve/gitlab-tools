@@ -82,6 +82,10 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
                                     .setName(branch)
                                     .setCreateBranch(create)
                                     .call();
+                            git.merge()
+                                    .include(git.getRepository().resolve("origin/" + branch))
+                                    .setFastForward(FF)
+                                    .call();
                         } else {
                             git = cloneRepository()
                                     .setURI(project.getWebUrl())
