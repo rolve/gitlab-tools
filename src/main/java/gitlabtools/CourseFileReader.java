@@ -10,18 +10,16 @@ import java.util.TreeSet;
 
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.*;
-import static java.util.stream.Collectors.toCollection;
 
 public class CourseFileReader {
 
-    public static List<Set<String>> readSimpleCourseFile(Path path) throws IOException {
+    public static List<String> readSimpleCourseFile(Path path) throws IOException {
         try (var lines = Files.lines(path)) {
             return lines
                     .map(line -> stripComment(line))
                     .map(String::strip)
                     .filter(not(String::isEmpty))
                     .map(raw -> normalizeUsername(raw))
-                    .map(Set::of)
                     .collect(toList());
         }
     }

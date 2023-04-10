@@ -6,10 +6,12 @@ import org.gitlab4j.api.models.CommitPayload;
 import org.gitlab4j.api.models.Project;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static gitlabtools.CourseFileReader.readSimpleCourseFile;
 import static gitlabtools.CourseFileReader.readTeamsCourseFile;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.gitlab4j.api.models.CommitAction.Action.CREATE;
 
@@ -34,7 +36,9 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
         var teams = args.isTeamProjects()
                 ? readTeamsCourseFile(Path.of(args.getCourseFile()))
-                : readSimpleCourseFile(Path.of(args.getCourseFile())); // teams are single people
+                : readSimpleCourseFile(Path.of(args.getCourseFile())).stream()
+                        .map(Set::of)
+                        .collect(toList());
 
         System.out.println("Creating " + teams.size() + " project(s)...");
         for (var team : teams) {
