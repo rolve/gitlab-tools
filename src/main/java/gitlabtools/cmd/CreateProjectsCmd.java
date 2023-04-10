@@ -5,17 +5,12 @@ import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.CommitPayload;
 import org.gitlab4j.api.models.Project;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.*;
+import static gitlabtools.CourseFileReader.readSimpleCourseFile;
+import static gitlabtools.CourseFileReader.readTeamsCourseFile;
+import static java.util.stream.Collectors.toSet;
 import static org.gitlab4j.api.models.CommitAction.Action.CREATE;
 
 public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
@@ -38,8 +33,8 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                 .collect(toSet());
 
         var teams = args.isTeamProjects()
-                ? readTeamsCourseFile()
-                : readSimpleCourseFile(); // teams are single people
+                ? readTeamsCourseFile(Path.of(args.getCourseFile()))
+                : readSimpleCourseFile(Path.of(args.getCourseFile())); // teams are single people
 
         System.out.println("Creating " + teams.size() + " project(s)...");
         for (var team : teams) {
@@ -75,66 +70,6 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                     .withAction(CREATE, text, "README.md"));
 
             progress.advance();
-        }
-    }
-
-    private List<Set<String>> readSimpleCourseFile() throws IOException {
-        try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
-            return lines
-                    .map(this::stripComment)
-                    .map(String::strip)
-                    .filter(not(String::isEmpty))
-                    .map(this::normalizeUsername)
-                    .map(Set::of)
-                    .collect(toList());
-        }
-    }
-
-    private Collection<? extends Set<String>> readTeamsCourseFile() throws IOException {
-        try (var lines = Files.lines(Path.of(args.getCourseFile()))) {
-            return lines
-                    .map(this::stripComment)
-                    .map(String::strip)
-                    .filter(not(String::isEmpty))
-                    .map(this::parseTeamsCourseLine)
-                    .collect(groupingBy(m -> m.team,
-                            mapping(m -> m.username, toCollection(TreeSet::new))))
-                    .values();
-        }
-    }
-
-    private TeamMember parseTeamsCourseLine(String line) {
-        var parts = line.split("\t");
-        if (parts.length != 2) {
-            throw new RuntimeException("illegal line in course file: '" + line + "'");
-        }
-        return new TeamMember(normalizeUsername(parts[0]), parts[1]);
-    }
-
-    private String stripComment(String line) {
-        return line.split("//")[0];
-    }
-
-    private String normalizeUsername(String raw) {
-        var parts = raw.split("@");
-        if (parts.length == 1) {
-            return raw;
-        }
-        if (parts.length == 2) {
-            // username is an email address; use only first part
-            return parts[0];
-        } else {
-            throw new RuntimeException("invalid username in course file: " + raw);
-        }
-    }
-
-    private static class TeamMember {
-        String username;
-        String team;
-
-        public TeamMember(String username, String team) {
-            this.username = username;
-            this.team = team;
         }
     }
 
