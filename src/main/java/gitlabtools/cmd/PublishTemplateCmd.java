@@ -48,10 +48,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         var templateDir = Paths.get(args.getTemplateDir());
 
         Path workDir;
-        if (args.getWorkDir() == null || args.getDestDir() == null) {
-            if (args.getWorkDir() != null) {
-                System.out.println("Ignoring workDir option when publishing to repository root");
-            }
+        if (args.getWorkDir() == null) {
             workDir = createTempDirectory("gitlab-tools");
             workDir.toFile().deleteOnExit();
         } else {
