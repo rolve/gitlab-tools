@@ -35,6 +35,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
 
     private static final int ATTEMPTS = 3;
     private static final int SLEEP_TIME = 200;
+    private static final Set<String> PRIMORDIAL_FILES = Set.of(".git", "README.md");
 
     public PublishTemplateCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -203,7 +204,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         if (args.getDestDir() == null) {
             if (exists(repoDir)) {
                 try (var contents = list(repoDir)) {
-                    if (contents.anyMatch(p -> !p.getFileName().toString().equals(".git"))) {
+                    if (contents.anyMatch(p -> !PRIMORDIAL_FILES.contains(p.getFileName().toString()))) {
                         return true;
                     }
                 }
