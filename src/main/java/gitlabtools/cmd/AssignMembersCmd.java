@@ -1,6 +1,7 @@
 package gitlabtools.cmd;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static java.util.stream.Collectors.toList;
 import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
 
 import org.gitlab4j.api.GitLabApiException;
@@ -8,8 +9,13 @@ import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
 
 import com.lexicalscope.jewel.cli.Option;
+import org.gitlab4j.api.models.User;
+
+import java.util.List;
 
 public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
+
+    private List<User> users = null;
 
     public AssignMembersCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -20,7 +26,7 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
         for (var project : getProjects(args)) {
             var name = project.getName();
             if (args.isWithProjectNamePrefix()) {
-                String[] parts = name.split("_", 2);
+                var parts = name.split("_", 2);
                 if (parts.length != 2) {
                     throw new AssertionError("unexpected project name " + name + "; expected prefix and _");
                 }
@@ -62,6 +68,28 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
         } else {
             progress.advance("existing");
         }
+    }
+
+    private List<User> users() {
+        if (users == null) {
+            fetchUsers();
+        }
+        return users;
+    }
+
+    private void fetchUsers() {
+        if (progress != null) {
+            progress.interrupt();
+        }
+        System.out.println("Fetching users from GitLab...");
+
+        try {
+            users = stream(gitlab.getUserApi().getUsers(100))
+                    .collect(toList());
+        } catch (GitLabApiException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.printf("%d users fetched\n", users.size());
     }
 
     interface Args extends gitlabtools.cmd.Args {

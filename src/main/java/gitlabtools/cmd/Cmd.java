@@ -10,7 +10,6 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
-import org.gitlab4j.api.models.User;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +23,6 @@ import java.util.stream.StreamSupport;
 import static java.nio.file.Files.readAllLines;
 import static java.util.Spliterator.ORDERED;
 import static java.util.Spliterators.spliteratorUnknownSize;
-import static java.util.stream.Collectors.toList;
 
 public abstract class Cmd<A extends Args> {
 
@@ -39,8 +37,6 @@ public abstract class Cmd<A extends Args> {
     protected final GitLabApi gitlab;
 
     protected ProgressTracker progress;
-
-    private List<User> users = null;
 
     public Cmd(A args) throws IOException {
         this.args = args;
@@ -111,28 +107,6 @@ public abstract class Cmd<A extends Args> {
     }
 
     protected abstract void doExecute() throws Exception;
-
-    protected List<User> users() {
-        if (users == null) {
-            fetchUsers();
-        }
-        return users;
-    }
-
-    private void fetchUsers() {
-        if (progress != null) {
-            progress.interrupt();
-        }
-        System.out.println("Fetching users from GitLab...");
-
-        try {
-            users = stream(gitlab.getUserApi().getUsers(100))
-                    .collect(toList());
-        } catch (GitLabApiException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.printf("%d users fetched\n", users.size());
-    }
 
     protected Group getGroup(String groupName) throws GitLabApiException {
         var key = new Cache.Key(args.getGitLabUrl(), groupName);
