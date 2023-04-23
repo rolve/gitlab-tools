@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
@@ -146,6 +147,14 @@ public class ExportSourcesCmd extends CmdForProjects<ExportSourcesCmd.Args> {
                 }
             }
         }
+    }
+
+    /**
+     * Helper method to be able to iterate over a stream in a for loop, which is
+     * useful if the body throws a checked exception.
+     */
+    private static <T> Iterable<T> iterable(Stream<T> stream) {
+        return stream::iterator;
     }
 
     interface Args extends CmdForProjects.Args {

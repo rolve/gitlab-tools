@@ -143,12 +143,4 @@ public abstract class Cmd<A extends Args> {
         var pages = StreamSupport.stream(spliteratorUnknownSize(pager, ORDERED), false);
         return pages.flatMap(List::stream);
     }
-
-    /**
-     * Helper method to be able to iterate over a stream in a for loop, which is
-     * useful if the body throws a checked exception.
-     */
-    protected static <T> Iterable<T> iterable(Stream<T> stream) {
-        return stream::iterator;
-    }
 }
