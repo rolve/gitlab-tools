@@ -25,7 +25,7 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
     protected void doExecute() throws Exception {
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var destDir = Paths.get(args.getDestinationDir());
+        var destDir = Paths.get(args.getDestDir());
         createDirectories(destDir);
 
         var projects = getProjects();
@@ -62,6 +62,6 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
 
     interface Args extends CmdForProjects.Args {
         @Option
-        String getDestinationDir();
+        String getDestDir();
     }
 }

@@ -41,7 +41,7 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var workDir = Paths.get(args.getDir());
+        var workDir = Paths.get(args.getDestDir());
         createDirectories(workDir);
 
         var projects = getProjects();
@@ -123,7 +123,7 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
 
     interface Args extends CmdForProjects.Args {
         @Option
-        String getDir();
+        String getDestDir();
 
         @Option(defaultToNull = true)
         String getDate();
