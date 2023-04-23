@@ -77,7 +77,7 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
 
     protected String[] withTestDefaults(String... args) {
         return ArrayUtils.addAll(args,
-                "--gitlabUrl", url,
+                "--gitLabUrl", url,
                 "--tokenFile", tokenFile(),
                 "--groupName", GROUP,
                 "--subgroupName", subgroup.getName());
