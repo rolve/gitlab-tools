@@ -5,7 +5,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import org.gitlab4j.api.models.Project;
 
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -14,13 +13,10 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static gitlabtools.CourseFileReader.readSimpleCourseFile;
 import static java.nio.file.Files.*;
 import static java.util.Objects.requireNonNullElse;
-import static java.util.stream.Collectors.toList;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 import static org.eclipse.jgit.api.MergeCommand.FastForwardMode.FF;
@@ -31,7 +27,7 @@ import static org.eclipse.jgit.api.MergeCommand.FastForwardMode.FF;
  * repeatedly to publish multiple templates, the 'workDir' option can be
  * used to reduce execution time by avoiding subsequent clone operations.
  */
-public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
+public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> {
 
     private static final int ATTEMPTS = 3;
     private static final int SLEEP_TIME = 200;
@@ -56,10 +52,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
             createDirectories(workDir);
         }
 
-        var projects = getProjects(args);
-        if (args.getCourseFile() != null) {
-            projects = filterProjects(projects);
-        }
+        var projects = getProjects();
         System.out.println("Publishing template to " + projects.size() + " repositories...");
         for (var project : projects) {
             try {
@@ -187,16 +180,6 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         }
     }
 
-    private List<Project> filterProjects(List<Project> projects) throws IOException {
-        var names = Set.copyOf(readSimpleCourseFile(Path.of(args.getCourseFile())));
-        Predicate<Project> filter = args.isWithProjectNamePrefix()
-                ? p -> names.contains(p.getName().split("_", 2)[1])
-                : p -> names.contains(p.getName());
-        return projects.stream()
-                .filter(filter)
-                .collect(toList());
-    }
-
     private boolean alreadyPublished(Path repoDir) throws IOException {
         if (args.getDestDir() == null) {
             if (exists(repoDir)) {
@@ -227,7 +210,7 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
         }
     }
 
-    interface Args extends gitlabtools.cmd.Args {
+    interface Args extends CmdForProjects.Args {
         @Option
         String getTemplateDir();
 
@@ -257,18 +240,5 @@ public class PublishTemplateCmd extends Cmd<PublishTemplateCmd.Args> {
          */
         @Option(defaultValue = {})
         List<String> getExtraBranches();
-
-        /**
-         * When specified, the template will be published only to the
-         * projects belonging to the students in the file. Note that
-         * is the projects have been created with a project name prefix,
-         * the {@link #isWithProjectNamePrefix()} option is required
-         * for this to work.
-         */
-        @Option(defaultToNull = true)
-        String getCourseFile();
-
-        @Option
-        boolean isWithProjectNamePrefix();
     }
 }

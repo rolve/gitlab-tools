@@ -21,7 +21,7 @@ import static org.eclipse.jgit.api.Git.open;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
 import static org.gitlab4j.api.Constants.SortOrder.DESC;
 
-public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
+public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCmd.Args> {
 
     private static final int ATTEMPTS = 3;
 
@@ -44,7 +44,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
         var workDir = Paths.get(args.getDir());
         createDirectories(workDir);
 
-        var projects = getProjects(args);
+        var projects = getProjects();
         System.out.println("Checking out " + projects.size() + " projects...");
         for (var project : projects) {
             var repoDir = workDir.resolve(project.getName());
@@ -121,7 +121,7 @@ public class CheckoutSubmissionsCmd extends Cmd<CheckoutSubmissionsCmd.Args> {
         }
     }
 
-    interface Args extends gitlabtools.cmd.Args {
+    interface Args extends CmdForProjects.Args {
         @Option
         String getDir();
 

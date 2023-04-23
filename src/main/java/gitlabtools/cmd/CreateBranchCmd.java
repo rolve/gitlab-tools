@@ -1,12 +1,11 @@
 package gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
-import org.gitlab4j.api.RepositoryApi;
 import org.gitlab4j.api.models.AccessLevel;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 
-public class CreateBranchCmd extends Cmd<CreateBranchCmd.Args> {
+public class CreateBranchCmd extends CmdForProjects<CreateBranchCmd.Args> {
 
     public CreateBranchCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -15,7 +14,7 @@ public class CreateBranchCmd extends Cmd<CreateBranchCmd.Args> {
     @Override
     protected void doExecute() throws Exception {
         var repoApi = gitlab.getRepositoryApi();
-        for (var project : getProjects(args)) {
+        for (var project : getProjects()) {
             if (repoApi.getOptionalBranch(project, args.getBranch()).isPresent()) {
                 progress.advance("existing");
                 continue;
@@ -29,7 +28,7 @@ public class CreateBranchCmd extends Cmd<CreateBranchCmd.Args> {
         }
     }
 
-    public interface Args extends gitlabtools.cmd.Args {
+    public interface Args extends CmdForProjects.Args {
         @Option
         String getBranch();
         @Option(defaultValue = "developer", pattern = "developer|maintainer|admin")

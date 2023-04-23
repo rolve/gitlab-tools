@@ -1,20 +1,19 @@
 package gitlabtools.cmd;
 
-import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.nio.file.Files.createDirectories;
-import static org.eclipse.jgit.api.Git.cloneRepository;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import com.lexicalscope.jewel.cli.Option;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
-import com.lexicalscope.jewel.cli.Option;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
-public class CloneCmd extends Cmd<CloneCmd.Args> {
+import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static java.nio.file.Files.createDirectories;
+import static org.eclipse.jgit.api.Git.cloneRepository;
+
+public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
 
     private CredentialsProvider credentials;
 
@@ -29,7 +28,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
         var destDir = Paths.get(args.getDestinationDir());
         createDirectories(destDir);
 
-        var projects = getProjects(args);
+        var projects = getProjects();
         System.out.println("Cloning " + projects.size() + " projects...");
         for (var project : projects) {
             var repoDir = destDir.resolve(project.getName());
@@ -61,7 +60,7 @@ public class CloneCmd extends Cmd<CloneCmd.Args> {
         }
     }
 
-    interface Args extends gitlabtools.cmd.Args {
+    interface Args extends CmdForProjects.Args {
         @Option
         String getDestinationDir();
     }

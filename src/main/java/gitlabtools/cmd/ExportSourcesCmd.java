@@ -21,7 +21,7 @@ import static java.util.stream.IntStream.range;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 
-public class ExportSourcesCmd extends Cmd<ExportSourcesCmd.Args> {
+public class ExportSourcesCmd extends CmdForProjects<ExportSourcesCmd.Args> {
 
     private CredentialsProvider credentials;
 
@@ -36,7 +36,7 @@ public class ExportSourcesCmd extends Cmd<ExportSourcesCmd.Args> {
         var destDir = Paths.get(args.getDestinationDir());
         createDirectories(destDir);
 
-        var projects = getProjects(args);
+        var projects = getProjects();
         var numbers = range(0, projects.size())
                 .mapToObj(Integer::toString).collect(toList());
         shuffle(numbers);
@@ -139,14 +139,16 @@ public class ExportSourcesCmd extends Cmd<ExportSourcesCmd.Args> {
             var dirs = paths.sorted(reverseOrder())
                     .filter(Files::isDirectory);
             for (var d : iterable(dirs)) {
-                if (list(d).findAny().isEmpty()) {
-                    delete(d);
+                try (var list = list(d)) {
+                    if (list.findAny().isEmpty()) {
+                        delete(d);
+                    }
                 }
             }
         }
     }
 
-    interface Args extends gitlabtools.cmd.Args {
+    interface Args extends CmdForProjects.Args {
         @Option
         String getDestinationDir();
     }

@@ -13,7 +13,7 @@ import org.gitlab4j.api.models.User;
 
 import java.util.List;
 
-public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
+public class AssignMembersCmd extends CmdForProjects<AssignMembersCmd.Args> {
 
     private List<User> users = null;
 
@@ -23,7 +23,7 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
 
     @Override
     protected void doExecute() throws Exception {
-        for (var project : getProjects(args)) {
+        for (var project : getProjects()) {
             var name = project.getName();
             if (args.isWithProjectNamePrefix()) {
                 var parts = name.split("_", 2);
@@ -92,10 +92,8 @@ public class AssignMembersCmd extends Cmd<AssignMembersCmd.Args> {
         System.out.printf("%d users fetched\n", users.size());
     }
 
-    interface Args extends gitlabtools.cmd.Args {
+    interface Args extends CmdForProjects.Args {
         @Option
         boolean isTeamProjects();
-        @Option
-        boolean isWithProjectNamePrefix();
     }
 }

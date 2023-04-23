@@ -9,7 +9,6 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Group;
-import org.gitlab4j.api.models.Project;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -138,13 +137,6 @@ public abstract class Cmd<A extends Args> {
             System.exit(0);
             return null;
         }
-    }
-
-    protected List<Project> getProjects(Args args)
-            throws GitLabApiException {
-        var group = getGroup(args.getGroupName());
-        var subgroup = getSubgroup(group, args.getSubgroupName());
-        return gitlab.getGroupApi().getProjects(subgroup);
     }
 
     protected static <E> Stream<E> stream(Pager<E> pager) {
