@@ -15,7 +15,7 @@ To use these tools, you need a GitLab instance and a user with the
 permissions to create projects and groups. The command line tools use the
 [GitLab REST API](https://docs.gitlab.com/ee/api/) and possibly
 [JGit](https://www.eclipse.org/jgit/) to set up projects inside a GitLab 
-group (and subgroup).
+group.
 
 
 ## Download
@@ -49,8 +49,7 @@ per line. Then, execute the following command:
 
     java -jar gitlab-tools.jar create-projects \
         --gitlabUrl https://your-gitlab-instance.org \
-        --groupName "Your GitLab Group" \
-        --subgroupName "Your Subgroup" \
+        --group path/of/gitlab/group \
         --courseFile your-course-file.txt
 
 This creates one project for each user in the course file, with a name 
@@ -65,7 +64,6 @@ This would create project names like `programming-exercises_john.doe`.
 
 Note that some options have default values:
 * `--gitlabUrl`: `https://gitlab.fhnw.ch` (I'm lazy)
-* `--subgroupName`: `exercises`
 * `--courseFile`: `course.txt`
 
 ### Create team projects
@@ -102,8 +100,8 @@ command:
 
     java -jar gitlab-tools.jar assign-members \
         --gitlabUrl https://your-gitlab-instance.org \
-        --groupName "Your GitLab Group" \
-        --subgroupName "Your Subgroup" \
+        --group path/of/gitlab/group
+
 
 Note that this command does not require a course file. Instead, it 
 determines the users to add as members based on the names of the existing 
@@ -129,8 +127,7 @@ pushes the changes back to GitLab.
 
     java -jar gitlab-tools.jar publish-template \
         --gitlabUrl https://your-gitlab-instance.org \
-        --groupName "Your GitLab Group" \
-        --subgroupName "Your Subgroup" \
+        --group path/of/gitlab/group \
         --templateDir path-to-template-dir
         --destDir dir-within-repo
 
@@ -158,7 +155,6 @@ produces something like the following:
         [--defaultBranch value]
         --destinationDir value
         [--gitlabUrl value]
-        --groupName value
+        --group value
         [--help]
-        [--subgroupName value]
         [--tokenFile value]
