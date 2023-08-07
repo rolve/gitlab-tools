@@ -7,18 +7,18 @@ import java.time.Duration;
 
 public abstract class GitLabIntegrationTest {
 
-    protected static String url;
-    protected static final String user = "root";
-    protected static final String password = "password";
+    protected static final String URL;
+    protected static final String USER = "root";
+    protected static final String PASSWORD = "password";
 
     static {
         var gitlab = new GenericContainer<>("gitlab/gitlab-ce:14.10.5-ce.0")
                 .withEnv("GITLAB_HTTPS", "false")
-                .withEnv("GITLAB_ROOT_PASSWORD", password)
+                .withEnv("GITLAB_ROOT_PASSWORD", PASSWORD)
                 .withExposedPorts(80)
                 .waitingFor(Wait.forHttp("/"))
                 .withStartupTimeout(Duration.ofMinutes(5));
         gitlab.start();
-        url = "http://" + gitlab.getHost() + ":" + gitlab.getMappedPort(80);
+        URL = "http://" + gitlab.getHost() + ":" + gitlab.getMappedPort(80);
     }
 }

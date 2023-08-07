@@ -28,9 +28,7 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
     protected void doExecute() throws Exception {
         var branchApi = gitlab.getProtectedBranchesApi();
 
-        var group = getGroup(args.getGroupName());
-        var subgroup = getSubgroup(group, args.getSubgroupName());
-        var existingProjects = gitlab.getGroupApi().getProjects(subgroup).stream()
+        var existingProjects = gitlab.getGroupApi().getProjects(args.getGroup()).stream()
                 .map(Project::getName)
                 .collect(toSet());
 
@@ -54,7 +52,7 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                 continue;
             }
 
-            var project = gitlab.getProjectApi().createProject(subgroup.getId(), projectName);
+            var project = gitlab.getProjectApi().createProject(getGroup().getId(), projectName);
 
             // remove all protected branches first
             var branches = branchApi.getProtectedBranches(project);

@@ -40,8 +40,8 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
 
     private static void createToken() {
         try {
-            var creator = new TokenCreator(url);
-            token = creator.createAccessToken(user, password, "gitlab-tools-it");
+            var creator = new TokenCreator(URL);
+            token = creator.createAccessToken(USER, PASSWORD, "gitlab-tools-it");
             tokenFile = writeTempTextFile("token", token);
         } catch (TokenCreationException | AuthenticationException e) {
             throw new RuntimeException(e);
@@ -59,7 +59,7 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
         }
     }
 
-    protected GitLabApi api = new GitLabApi(url, token());
+    protected GitLabApi api = new GitLabApi(URL, token());
     protected Group subgroup;
 
     @BeforeEach
@@ -77,9 +77,8 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
 
     protected String[] withTestDefaults(String... args) {
         return ArrayUtils.addAll(args,
-                "--gitLabUrl", url,
+                "--gitLabUrl", URL,
                 "--tokenFile", tokenFile(),
-                "--groupName", GROUP,
-                "--subgroupName", subgroup.getName());
+                "--group", GROUP + "/" + subgroup.getName());
     }
 }

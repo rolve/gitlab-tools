@@ -11,12 +11,12 @@ public class TokenCreatorIT extends GitLabIntegrationTest {
 
     @Test
     public void testCreateAccessToken() throws GitLabApiException, AuthenticationException, TokenCreationException {
-        var creator = new TokenCreator(url);
-        var token = creator.createAccessToken(user, password, "gitlab-tools-it");
+        var creator = new TokenCreator(URL);
+        var token = creator.createAccessToken(USER, PASSWORD, "gitlab-tools-it");
         assertNotNull(token);
 
         // test that access actually works
-        var api = new GitLabApi(url, token);
-        assertNotNull(api.getUserApi().getUser(user));
+        var api = new GitLabApi(URL, token);
+        assertNotNull(api.getUserApi().getUser(USER));
     }
 }

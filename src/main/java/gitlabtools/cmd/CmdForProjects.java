@@ -20,9 +20,7 @@ public abstract class CmdForProjects<A extends CmdForProjects.Args> extends Cmd<
     }
 
     protected List<Project> getProjects() throws GitLabApiException, IOException {
-        var group = getGroup(args.getGroupName());
-        var subgroup = getSubgroup(group, args.getSubgroupName());
-        var projects = gitlab.getGroupApi().getProjects(subgroup);
+        var projects = gitlab.getGroupApi().getProjects(args.getGroup());
         if (args.getCourseFile() != null) {
             projects = filter(projects);
         }

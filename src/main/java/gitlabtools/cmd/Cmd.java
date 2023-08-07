@@ -1,6 +1,5 @@
 package gitlabtools.cmd;
 
-import gitlabtools.Cache;
 import gitlabtools.ProgressTracker;
 import gitlabtools.auth.AuthenticationException;
 import gitlabtools.auth.TokenCreationException;
@@ -14,7 +13,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -28,8 +26,6 @@ public abstract class Cmd<A extends Args> {
     public interface Constructor {
         Cmd<?> construct(String[] args) throws Exception;
     }
-
-    private static final Cache<Optional<Group>> groupCache = new Cache<>();
 
     protected final A args;
     protected final String token;
@@ -107,36 +103,8 @@ public abstract class Cmd<A extends Args> {
 
     protected abstract void doExecute() throws Exception;
 
-    protected Group getGroup(String groupName) throws GitLabApiException {
-        var key = new Cache.Key(args.getGitLabUrl(), groupName);
-        return groupCache.update(key, () ->
-                stream(gitlab.getGroupApi().getGroups(100))
-                        .filter(g -> g.getName().equals(groupName))
-                        .findFirst()).get();
-    }
-
-    protected Group getSubgroup(Group group, String subgroupName) throws GitLabApiException {
-        var key = new Cache.Key(args.getGitLabUrl(), group.getId() + "#" + subgroupName);
-        var subgroup = groupCache.update(key, () ->
-                stream(gitlab.getGroupApi().getSubGroups(group.getId(), 100))
-                        .filter(g -> g.getName().equals(subgroupName))
-                        .findFirst());
-        if (subgroup.isPresent()) {
-            return subgroup.get();
-        }
-
-        System.out.print("Subgroup " + subgroupName + " inside "
-                + group.getName() + " does not exist. Create it? [Y/n] ");
-        var reply = new Scanner(System.in).nextLine().strip().toLowerCase();
-        if (reply.isEmpty() || reply.charAt(0) != 'n') {
-            var newSubgroup = gitlab.getGroupApi().addGroup(subgroupName, subgroupName,
-                    null, group.getVisibility(), null, null, group.getId());
-            groupCache.update(key, () -> Optional.of(newSubgroup));
-            return newSubgroup;
-        } else {
-            System.exit(0);
-            return null;
-        }
+    protected Group getGroup() throws GitLabApiException {
+        return gitlab.getGroupApi().getGroup(args.getGroup());
     }
 
     protected static <E> Stream<E> stream(Pager<E> pager) {

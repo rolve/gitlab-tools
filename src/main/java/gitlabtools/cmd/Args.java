@@ -10,10 +10,7 @@ public interface Args {
     String getTokenFile();
 
     @Option
-    String getGroupName();
-
-    @Option(defaultValue = "exercises")
-    String getSubgroupName();
+    String getGroup();
 
     @Option(helpRequest = true)
     boolean getHelp();
