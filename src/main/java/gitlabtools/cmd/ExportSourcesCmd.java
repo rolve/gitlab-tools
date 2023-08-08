@@ -10,7 +10,6 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
@@ -34,7 +33,7 @@ public class ExportSourcesCmd extends CmdForProjects<ExportSourcesCmd.Args> {
     protected void doExecute() throws Exception {
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var destDir = Paths.get(args.getDestinationDir());
+        var destDir = Path.of(args.getDestinationDir());
         createDirectories(destDir);
 
         var projects = getProjects();

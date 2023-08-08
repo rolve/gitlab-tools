@@ -7,7 +7,6 @@ import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
@@ -25,7 +24,7 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
     protected void doExecute() throws Exception {
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var destDir = Paths.get(args.getDestDir());
+        var destDir = Path.of(args.getDestDir());
         createDirectories(destDir);
 
         var projects = getProjects();

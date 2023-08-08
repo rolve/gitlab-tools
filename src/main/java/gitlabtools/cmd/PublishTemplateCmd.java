@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +40,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
     protected void doExecute() throws Exception {
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var templateDir = Paths.get(args.getTemplateDir());
+        var templateDir = Path.of(args.getTemplateDir());
 
         Path workDir;
         if (args.getWorkDir() == null) {

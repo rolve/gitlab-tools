@@ -6,7 +6,7 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.gitlab4j.api.models.Event;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Date;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
@@ -41,7 +41,7 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
 
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var workDir = Paths.get(args.getDestDir());
+        var workDir = Path.of(args.getDestDir());
         createDirectories(workDir);
 
         var projects = getProjects();
