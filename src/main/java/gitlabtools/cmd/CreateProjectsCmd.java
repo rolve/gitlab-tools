@@ -1,6 +1,7 @@
 package gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.CommitPayload;
 import org.gitlab4j.api.models.Project;
@@ -78,7 +79,12 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                         .withMergeRequestsAuthorApproval(false)
                         .withMergeRequestsDisableCommittersApproval(true)
                         .withDisableOverridingApproversPerMergeRequest(true);
-                gitlab.getProjectApi().setApprovalsConfiguration(project, approvals);
+                try {
+                    gitlab.getProjectApi().setApprovalsConfiguration(project, approvals);
+                } catch (GitLabApiException e) {
+                    progress.advance("successful (settings not supported)");
+                    continue;
+                }
             }
 
             progress.advance();
