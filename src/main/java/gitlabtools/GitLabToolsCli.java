@@ -14,15 +14,15 @@ import static org.apache.commons.lang3.ArrayUtils.*;
 public class GitLabToolsCli {
 
     private static final Map<String, Cmd.Constructor> COMMANDS = Map.of(
-        "create-projects", CreateProjectsCmd::new,
-        "create-branch", CreateBranchCmd::new,
-        "protect-branch", ProtectBranchCmd::new,
-        "assign-members", AssignMembersCmd::new,
-        "publish-template", PublishTemplateCmd::new,
-        "create-merge-request", CreateMergeRequestCmd::new,
-        "checkout-submissions", CheckoutSubmissionsCmd::new,
-        "export-sources", ExportSourcesCmd::new,
-        "clone", CloneCmd::new);
+            "create-projects", CreateProjectsCmd::new,
+            "create-branch", CreateBranchCmd::new,
+            "protect-branch", ProtectBranchCmd::new,
+            "assign-members", AssignMembersCmd::new,
+            "publish-template", PublishTemplateCmd::new,
+            "create-merge-request", CreateMergeRequestCmd::new,
+            "checkout-submissions", CheckoutSubmissionsCmd::new,
+            "export-sources", ExportSourcesCmd::new,
+            "clone", CloneCmd::new);
 
     public static void main(String[] args) throws Exception {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
@@ -44,18 +44,33 @@ public class GitLabToolsCli {
         int batchIndex = indexOf(args, "--batch");
         if (batchIndex == INDEX_NOT_FOUND) {
             var cmdArgs = subarray(args, 1, args.length);
+            var cmd = constructCmd(cmdName, cmdArgs);
             confirm(cmdName, List.<String[]>of(cmdArgs));
-            execute(cmdName, cmdArgs);
+            cmd.execute();
         } else {
             var constArgs = subarray(args, 1, batchIndex);
             var varArgs = subarray(args, batchIndex + 1, args.length);
             var completeArgs = stream(varArgs)
                     .map(a -> addAll(constArgs, split(a)))
                     .collect(toList());
-            confirm(cmdName, completeArgs);
+            var cmds = new ArrayList<Cmd<?>>();
             for (var cmdArgs : completeArgs) {
-                execute(cmdName, cmdArgs);
+                cmds.add(constructCmd(cmdName, cmdArgs));
             }
+            confirm(cmdName, completeArgs);
+            for (var cmd : cmds) {
+                cmd.execute();
+            }
+        }
+    }
+
+    private static Cmd<?> constructCmd(String name, String[] args) throws Exception {
+        try {
+            return COMMANDS.get(name).construct(args);
+        } catch (ArgumentValidationException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+            return null;
         }
     }
 
@@ -63,7 +78,6 @@ public class GitLabToolsCli {
      * To prevent accidental execution of a command within an IDE (and possibly
      * disastrous consequences), require confirmation.
      */
-    @SuppressWarnings("resource")
     private static void confirm(String cmd, List<String[]> argsList) {
         if (runFromIde()) {
             System.out.print("About to execute" + (argsList.size() == 1 ? " " : "\n"));
@@ -80,7 +94,7 @@ public class GitLabToolsCli {
     }
 
     private static boolean runFromIde() {
-        // assuming IDE attaches a Java agent (IntelliJJ does...)
+        // assuming IDE attaches a Java agent (IntelliJ does...)
         var args = ManagementFactory.getRuntimeMXBean().getInputArguments();
         return args.stream().anyMatch(a -> a.startsWith("-javaagent:"));
     }
@@ -102,13 +116,5 @@ public class GitLabToolsCli {
             }
         }
         return list.toArray(String[]::new);
-    }
-
-    private static void execute(String name, String[] args) throws Exception {
-        try {
-            COMMANDS.get(name).construct(args).execute();
-        } catch (ArgumentValidationException e) {
-            System.err.println(e.getMessage());
-        }
     }
 }
