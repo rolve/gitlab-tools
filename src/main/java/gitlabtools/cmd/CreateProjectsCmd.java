@@ -4,6 +4,7 @@ import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.CommitPayload;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.ProjectApprovalsConfig;
 
 import java.nio.file.Path;
 import java.util.Set;
@@ -71,6 +72,15 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
                     .withBranch(args.getDefaultBranch())
                     .withAction(CREATE, text, "README.md"));
 
+            // configure some simplifying settings
+            if (!args.isSkipSettings()) {
+                var approvals = new ProjectApprovalsConfig()
+                        .withMergeRequestsAuthorApproval(false)
+                        .withMergeRequestsDisableCommittersApproval(true)
+                        .withDisableOverridingApproversPerMergeRequest(true);
+                gitlab.getProjectApi().setApprovalsConfiguration(project, approvals);
+            }
+
             progress.advance();
         }
     }
@@ -93,5 +103,8 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
         @Option(defaultValue = "Privates Repository von ")
         String getReadmeText();
+
+        @Option
+        boolean isSkipSettings();
     }
 }
