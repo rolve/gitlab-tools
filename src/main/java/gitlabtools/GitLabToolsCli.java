@@ -19,6 +19,7 @@ public class GitLabToolsCli {
         "protect-branch", ProtectBranchCmd::new,
         "assign-members", AssignMembersCmd::new,
         "publish-template", PublishTemplateCmd::new,
+        "create-merge-request", CreateMergeRequestCmd::new,
         "checkout-submissions", CheckoutSubmissionsCmd::new,
         "export-sources", ExportSourcesCmd::new,
         "clone", CloneCmd::new);
