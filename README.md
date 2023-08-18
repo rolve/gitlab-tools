@@ -30,9 +30,9 @@ First, download the jar file above and make sure you have a JRE installed
 (Java 11 or greater). For authentication, the tools work with a 'token.txt' 
 file, which must contain a
 [GitLab access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)
-with `api` scope. If no such file is found, the program can create a
+with `api` scope. ~~If no such file is found, the program can create a
 suitable access token for you. You'll need to provide your GitLab username 
-and password for this one time.
+and password for this one time.~~ (This is currently broken for newer versions of GitLab.)
 
 Note that all commands can be executed repeatedly without changing 
 previously created or published things (they are [idempotent](https://en.wikipedia.org/wiki/Idempotence)).
