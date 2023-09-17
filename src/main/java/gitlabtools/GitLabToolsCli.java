@@ -59,10 +59,11 @@ public class GitLabToolsCli {
 
     /**
      * To prevent accidental execution of a command within an IDE (and possibly
-     * disastrous consequences), require confirmation.
+     * disastrous consequences), require confirmation. This can be disabled
+     * by setting the environment variable GITLAB_TOOLS_SKIP_CONFIRM.
      */
     private static void confirm(String[] args) {
-        if (runFromIde()) {
+        if (runFromIde() && requireConfirmation()) {
             System.out.println("About to execute " + join(" ", args));
             System.out.print("Press Enter to continue.");
             try {
@@ -77,5 +78,9 @@ public class GitLabToolsCli {
         // assuming IDE attaches a Java agent (IntelliJ does...)
         var args = ManagementFactory.getRuntimeMXBean().getInputArguments();
         return args.stream().anyMatch(a -> a.startsWith("-javaagent:"));
+    }
+
+    private static boolean requireConfirmation() {
+        return System.getenv("GITLAB_TOOLS_SKIP_CONFIRM") == null;
     }
 }
