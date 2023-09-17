@@ -1,5 +1,6 @@
 package gitlabtools.cmd;
 
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.AccessLevel;
@@ -8,11 +9,14 @@ import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectApprovalsConfig;
 
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Set;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static gitlabtools.CourseFileReader.readSimpleCourseFile;
 import static gitlabtools.CourseFileReader.readTeamsCourseFile;
+import static java.nio.file.Files.exists;
+import static java.nio.file.Files.isRegularFile;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.gitlab4j.api.models.CommitAction.Action.CREATE;
@@ -20,10 +24,23 @@ import static org.gitlab4j.api.models.CommitAction.Action.CREATE;
 public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
 
     private final AccessLevel access;
+    private final Collection<? extends Set<String>> teams;
 
     public CreateProjectsCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
         access = AccessLevel.valueOf(args.getDefaultBranchAccess().toUpperCase());
+
+        var courseFile = Path.of(args.getCourseFile()).toAbsolutePath();
+        if (!exists(courseFile)) {
+            throw new ArgumentValidationException("File " + courseFile + " not found");
+        } else if (!isRegularFile(courseFile)) {
+            throw new ArgumentValidationException("File " + courseFile + " is not a regular file");
+        }
+        teams = args.isTeamProjects()
+                ? readTeamsCourseFile(courseFile)
+                : readSimpleCourseFile(courseFile).stream()
+                    .map(Set::of)
+                    .collect(toList());
     }
 
     @Override
@@ -33,12 +50,6 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
         var existingProjects = gitlab.getGroupApi().getProjects(args.getGroup()).stream()
                 .map(Project::getName)
                 .collect(toSet());
-
-        var teams = args.isTeamProjects()
-                ? readTeamsCourseFile(Path.of(args.getCourseFile()))
-                : readSimpleCourseFile(Path.of(args.getCourseFile())).stream()
-                        .map(Set::of)
-                        .collect(toList());
 
         System.out.println("Creating " + teams.size() + " project(s)...");
         for (var team : teams) {

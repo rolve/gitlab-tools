@@ -7,8 +7,7 @@ import org.gitlab4j.api.models.RepositoryFile;
 import java.nio.file.Path;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.Files.readAllBytes;
+import static java.nio.file.Files.*;
 import static java.util.Objects.requireNonNullElse;
 
 public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
@@ -19,7 +18,9 @@ public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
     public PublishFileCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
         file = Path.of(args.getFile()).toAbsolutePath();
-        if (!isRegularFile(file)) {
+        if (!exists(file)) {
+            throw new ArgumentValidationException("File " + file + " not found");
+        } else if (!isRegularFile(file)) {
             throw new ArgumentValidationException("File " + file + " is not a regular file");
         }
         content = readAllBytes(file);
