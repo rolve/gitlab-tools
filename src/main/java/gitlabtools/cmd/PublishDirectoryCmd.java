@@ -15,24 +15,25 @@ import java.util.Set;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Objects.requireNonNullElse;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 import static org.eclipse.jgit.api.MergeCommand.FastForwardMode.FF;
 
 /**
- * Publishes the content in a given "template" directory into a directory of
- * existing repositories (or the root directory). If this command is used
- * repeatedly to publish multiple templates, the 'workDir' option can be
- * used to reduce execution time by avoiding subsequent clone operations.
+ * Publishes the content of a given directory into directories of existing
+ * repositories (or the root directory). If this command is used repeatedly to
+ * publish multiple directories, the 'workDir' option can be used to reduce
+ * execution time by avoiding subsequent clone operations.
  */
-public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> {
+public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args> {
 
     private static final int ATTEMPTS = 3;
     private static final int SLEEP_TIME = 200;
     private static final Set<String> PRIMORDIAL_FILES = Set.of(".git", "README.md");
 
-    public PublishTemplateCmd(String[] rawArgs) throws Exception {
+    public PublishDirectoryCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 
@@ -40,7 +41,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
     protected void doExecute() throws Exception {
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
-        var templateDir = Path.of(args.getTemplateDir());
+        var dir = Path.of(args.getDir());
 
         Path workDir;
         if (args.getWorkDir() == null) {
@@ -52,7 +53,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
         }
 
         var projects = getProjects();
-        System.out.println("Publishing template to " + projects.size() + " repositories...");
+        System.out.println("Publishing directory to " + projects.size() + " repositories...");
         for (var project : projects) {
             try {
                 var repoDir = workDir.resolve(project.getName());
@@ -117,9 +118,9 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
                     createDirectories(destDir);
                 }
 
-                copyDir(templateDir, destDir, args.getIgnorePattern());
+                copyDir(dir, destDir, args.getIgnorePattern());
                 git.add().addFilepattern(".").call();
-                var message = "Publish " + requireNonNullElse(args.getDestDir(), "template");
+                var message = "Publish " + requireNonNullElse(args.getDestDir(), "directory");
                 var commitId = git.commit()
                         .setMessage(message)
                         .call().getId();
@@ -137,7 +138,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
                             .include(git.getRepository().resolve("origin/" + extra))
                             .setFastForward(FF)
                             .call();
-                    // then merge commit with template
+                    // then merge commit with directory
                     git.merge()
                             .include(commitId)
                             .setMessage(message)
@@ -203,7 +204,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
             for (var source : (Iterable<Path>) walk::iterator) {
                 var rel = src.relativize(source);
                 if (matcher == null || !matcher.matches(rel)) {
-                    copy(source, dest.resolve(rel));
+                    copy(source, dest.resolve(rel), REPLACE_EXISTING);
                 }
             }
         }
@@ -211,7 +212,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
 
     interface Args extends CmdForProjects.Args {
         @Option
-        String getTemplateDir();
+        String getDir();
 
         @Option(defaultToNull = true)
         String getDestDir();
@@ -221,7 +222,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
 
         /**
          * A GLOB pattern that is applied to the relative path of each file
-         * in the template directory.
+         * in the directory.
          */
         @Option(defaultToNull = true)
         String getIgnorePattern();
@@ -235,7 +236,7 @@ public class PublishTemplateCmd extends CmdForProjects<PublishTemplateCmd.Args> 
 
         /**
          * A list of extra branches into which the branch with the published
-         * template is merged. Must all exist in the GitLab repo.
+         * directory is merged. Must all exist in the GitLab repo.
          */
         @Option(defaultValue = {})
         List<String> getExtraBranches();

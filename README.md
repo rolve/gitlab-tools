@@ -8,8 +8,9 @@ teaching.
 When teaching programming, you often want students to have their own Git 
 repository. These tools help you do this using
 [GitLab](https://about.gitlab.com/), by allowing you to create large numbers 
-of GitLab projects, assign members, publish exercise templates, and 
-collect submissions, all using simple commands and text files.
+of GitLab projects, assign members, publish directories and files as
+exercise templates, and collect submissions, all using simple commands and
+text files.
 
 To use these tools, you need a GitLab instance and a user with the 
 permissions to create projects and groups. The command line tools use the
@@ -35,11 +36,11 @@ suitable access token for you. You'll need to provide your GitLab username
 and password for this one time.~~ (This is currently broken for newer versions of GitLab.)
 
 Note that all commands can be executed repeatedly without changing 
-previously created or published things (they are [idempotent](https://en.wikipedia.org/wiki/Idempotence)).
+previously created or published things (they are _[idempotent](https://en.wikipedia.org/wiki/Idempotence)_).
 This is handy if students join later; in that case, just add them to the 
 course file (see below) and run previously executed commands again. The 
-commands detect existing projects, members, and published templates and skip 
-these.
+commands detect existing projects, members, and published files and
+directories and skip these.
 
 ### Create individual projects
 
@@ -105,7 +106,7 @@ command:
 
 Note that this command does not require a course file. Instead, it 
 determines the users to add as members based on the names of the existing 
-projects in the given subgroup. If you used a project name prefix with 
+projects in the given group. If you used a project name prefix with 
 `create-projects`, let the command know about it:
 
     java -jar gitlab-tools.jar assign-members \
@@ -118,25 +119,47 @@ If you created team projects, specify this too:
         ...
         --teamProjects
 
-### Publish templates
+### Publish files
 
-The following command allows you to publish code templates (or any files, 
-actually) to all projects in a GitLab subgroup. It clones each of the 
-projects, copies a given directory containing the template files, commits, and 
-pushes the changes back to GitLab.
+There are two commands to publish files into the repositories inside a
+GitLab group. They can only be used to publish _new files_, not overwrite
+existing ones (with one exception). This limitation is intentional: First,
+it prevents accidentally overwriting the students' work; second, it makes it
+more efficient to check which repositories have already been processed when
+executing the commands repeatedly (see above).
 
-    java -jar gitlab-tools.jar publish-template \
+The following command allows you to publish the contents of a given directory
+(e.g., a code template for a programming exercise) to all repositories in a
+GitLab group. The command clones each of the repositories, copies the files,
+commits, and pushes the changes back to GitLab.
+
+    java -jar gitlab-tools.jar publish-dir \
         --gitlabUrl https://your-gitlab-instance.org \
         --group path/of/gitlab/group \
-        --templateDir path-to-template-dir
+        --dir path-to-dir
         --destDir dir-within-repo
 
-Here, `path-to-template-dir` should point to the local directory that 
-contains the files that you want to publish; `dir-within-repo` is the name 
-(or relative path) of the directory inside the repository in which the 
-template files will be placed. If you omit `--destDir`, the contents of the 
-template directory will be placed directly into the root directory of the 
-repository.
+Here, `path-to-dir` should point to the local directory that contains the
+files that you want to publish; `dir-within-repo` is the relative path of
+the directory that will be created inside the repository and into which the
+files will be copied. Any repository that already contains a directory (or
+file) with that path is skipped. If `--destDir` is omitted, the
+contents of the local directory will be copied into the _root directory_ of
+the repository. Any non-empty repository is skipped. (A repository is
+considered non-empty if it contains any file except for a `README.md`, which
+is possibly overwritten if present.)
+
+To publish a single file, use the following command instead:
+
+    java -jar gitlab-tools.jar publish-file \
+        --gitlabUrl https://your-gitlab-instance.org \
+        --group path/of/gitlab/group \
+        --file path-to-file
+        --destDir dir-within-repo
+
+Again, `dir-within-repo` is the directory in which the file will be copied;
+if omitted, the file will be copied directly into the root directory of the
+repository. Any repository that already contains a file with the given path is skipped.
 
 ### Further commands and help
 

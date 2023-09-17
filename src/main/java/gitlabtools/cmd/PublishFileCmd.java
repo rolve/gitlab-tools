@@ -11,12 +11,12 @@ import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.Objects.requireNonNullElse;
 
-public class AddFileCmd extends CmdForProjects<AddFileCmd.Args> {
+public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
 
     private final Path file;
     private final byte[] content;
 
-    public AddFileCmd(String[] rawArgs) throws Exception {
+    public PublishFileCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
         file = Path.of(args.getFile()).toAbsolutePath();
         if (!isRegularFile(file)) {
