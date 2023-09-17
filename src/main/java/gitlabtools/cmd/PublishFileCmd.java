@@ -30,7 +30,7 @@ public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
     protected void doExecute() throws Exception {
         var destDir = (args.getDestDir().replaceAll("/$", "") + "/").replaceAll("^/", "");
         var destFile = destDir + file.getFileName();
-        var message = requireNonNullElse(args.getCommitMessage(), "Add " + file.getFileName());
+        var message = requireNonNullElse(args.getCommitMessage(), "Publish " + file.getFileName());
 
         var fileApi = gitlab.getRepositoryFileApi();
         for (var project : getProjects()) {

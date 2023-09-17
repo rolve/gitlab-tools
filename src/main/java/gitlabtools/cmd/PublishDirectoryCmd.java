@@ -120,7 +120,8 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
 
                 copyDir(dir, destDir, args.getIgnorePattern());
                 git.add().addFilepattern(".").call();
-                var message = "Publish " + requireNonNullElse(args.getDestDir(), "directory");
+                var message = requireNonNullElse(args.getCommitMessage(),
+                        "Publish " + requireNonNullElse(args.getDestDir(), "directory"));
                 var commitId = git.commit()
                         .setMessage(message)
                         .call().getId();
@@ -226,6 +227,9 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
          */
         @Option(defaultToNull = true)
         String getIgnorePattern();
+
+        @Option(defaultToNull = true)
+        String getCommitMessage();
 
         /**
          * Must already exist in the GitLab repo. If not set, the default
