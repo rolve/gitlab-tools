@@ -18,6 +18,11 @@ import static java.util.stream.Collectors.toSet;
 import static org.gitlab4j.api.Constants.ActionType.PUSHED;
 import static org.gitlab4j.api.Constants.SortOrder.DESC;
 
+/**
+ * Creates a merge request for each project in the given group, to be used for
+ * code review. The merge request is created so that all changes on the default
+ * branch since the last commit of an instructor are included.
+ */
 public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.Args> {
 
     private final List<String> projectsWithNoCommits = new ArrayList<>();
@@ -91,6 +96,17 @@ public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.
     }
 
     public interface Args extends CmdForProjects.Args {
+        /**
+         * To create a merge request, two branches are needed: a source branch
+         * and a target branch. In principle, the source branch is the default
+         * branch (e.g. 'main'), containing all the recent commits. Since we
+         * want to avoid that new commits are automatically added to the merge
+         * request, we create a new (protected) branch. This option allows to
+         * specify the name of the source branch. If not specified, a default
+         * name containing the current date is used. The target branch is
+         * created at the last commit of an instructor and is named like the
+         * source branch, but with the suffix '-base'.
+         */
         @Option(defaultToNull = true)
         String getBranchName();
 
