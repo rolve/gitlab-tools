@@ -6,20 +6,22 @@ import gitlabtools.auth.TokenCreationException;
 import gitlabtools.auth.TokenCreator;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.models.Event;
 import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Project;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Scanner;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.function.Predicate;
 
 import static java.nio.file.Files.readAllLines;
-import static java.util.Spliterator.ORDERED;
-import static java.util.Spliterators.spliteratorUnknownSize;
+import static java.time.temporal.ChronoUnit.DAYS;
+import static org.gitlab4j.api.Constants.ActionType.PUSHED;
+import static org.gitlab4j.api.Constants.SortOrder.DESC;
 
 public abstract class Cmd<A extends Args> {
 
@@ -111,8 +113,23 @@ public abstract class Cmd<A extends Args> {
         return gitlab.getGroupApi().getGroup(args.getGroup());
     }
 
-    protected static <E> Stream<E> stream(Pager<E> pager) {
-        var pages = StreamSupport.stream(spliteratorUnknownSize(pager, ORDERED), false);
-        return pages.flatMap(List::stream);
+    protected Event getLastPushBefore(Project project, String branch,
+                                      Instant deadline) throws GitLabApiException {
+        return getLastPushBefore(project, branch, deadline, e -> true);
+    }
+
+    protected Event getLastPushBefore(Project project, String branch,
+                                      Instant deadline, Predicate<Event> filter) throws GitLabApiException {
+        // fetch all push-events on the day of the deadline and earlier
+        // (actually, add 1 day to deadline since GitLab ignores time of day)
+        var pushes = gitlab.getEventsApi().getProjectEventsStream(project.getId(),
+                PUSHED, null, Date.from(deadline.plus(1, DAYS)), null, DESC);
+
+        // filter precisely here:
+        return pushes
+                .filter(e -> e.getPushData().getRef().equals(branch))
+                .filter(e -> !e.getCreatedAt().after(Date.from(deadline)))
+                .filter(filter)
+                .findFirst().orElse(null);
     }
 }

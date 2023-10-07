@@ -1,18 +1,16 @@
 package gitlabtools.cmd;
 
-import static com.lexicalscope.jewel.cli.CliFactory.createCli;
-import static java.util.stream.Collectors.toList;
-import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
-
+import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.Project;
-
-import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.models.User;
 
 import java.io.IOException;
 import java.util.List;
+
+import static com.lexicalscope.jewel.cli.CliFactory.createCli;
+import static org.gitlab4j.api.models.AccessLevel.DEVELOPER;
 
 public class AssignMembersCmd extends CmdForProjects<AssignMembersCmd.Args> {
 
@@ -83,10 +81,8 @@ public class AssignMembersCmd extends CmdForProjects<AssignMembersCmd.Args> {
             progress.interrupt();
         }
         System.out.println("Fetching users from GitLab...");
-
         try {
-            users = stream(gitlab.getUserApi().getUsers(100))
-                    .collect(toList());
+            users = gitlab.getUserApi().getUsers();
         } catch (GitLabApiException e) {
             throw new RuntimeException(e);
         }

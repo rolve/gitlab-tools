@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.Date;
+import java.util.function.Predicate;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
@@ -18,12 +18,9 @@ import static java.nio.file.Files.exists;
 import static java.time.LocalDateTime.now;
 import static java.time.LocalDateTime.parse;
 import static java.time.ZoneId.systemDefault;
-import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.Objects.requireNonNullElse;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
-import static org.gitlab4j.api.Constants.ActionType.PUSHED;
-import static org.gitlab4j.api.Constants.SortOrder.DESC;
 
 public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCmd.Args> {
 
@@ -37,7 +34,9 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
                     ? now()
                     : parse(args.getDeadline());
             deadline = localDeadline.atZone(systemDefault()).toInstant();
-            System.out.println("Using local deadline " + localDeadline + " (UTC: " + deadline + ")");
+            if (args.getDeadline() != null) {
+                System.out.println("Using local deadline " + localDeadline + " (UTC: " + deadline + ")");
+            }
         } catch (DateTimeParseException e) {
             throw new ArgumentValidationException("Invalid deadline: " + args.getDeadline(), e);
         }
@@ -56,17 +55,7 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
             var repoDir = destDir.resolve(project.getName());
             var branch = requireNonNullElse(args.getBranch(), project.getDefaultBranch());
 
-            // fetch all push-events on the day of the deadline and earlier
-            // (actually, add 1 day to deadline since GitLab ignores time of day)
-            var pager = gitlab.getEventsApi().getProjectEvents(project.getId(),
-                    PUSHED, null, Date.from(deadline.plus(1, DAYS)), null, DESC, 100);
-
-            // filter precisely here:
-            var lastPush = stream(pager)
-                    .filter(e -> e.getPushData().getRef().equals(branch))
-                    .filter(e -> e.getCreatedAt().before(Date.from(deadline)))
-                    .findFirst().orElse(null);
-
+            var lastPush = getLastPushBefore(project, branch, deadline);
             if (lastPush == null) {
                 progress.advance("failed");
                 progress.interrupt();
