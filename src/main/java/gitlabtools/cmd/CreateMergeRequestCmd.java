@@ -4,6 +4,9 @@ import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.*;
 
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -27,7 +30,7 @@ public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.
 
     private final List<String> projectsWithNoCommits = new ArrayList<>();
 
-    public CreateMergeRequestCmd(String[] rawArgs) throws Exception {
+    public CreateMergeRequestCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

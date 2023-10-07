@@ -24,7 +24,7 @@ import static java.util.Spliterators.spliteratorUnknownSize;
 public abstract class Cmd<A extends Args> {
 
     public interface Constructor {
-        Cmd<?> construct(String[] args) throws Exception;
+        Cmd<?> construct(String[] args) throws IOException;
     }
 
     protected final A args;

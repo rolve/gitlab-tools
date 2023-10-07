@@ -8,6 +8,7 @@ import org.gitlab4j.api.models.CommitPayload;
 import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.ProjectApprovalsConfig;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
@@ -26,7 +27,7 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
     private final AccessLevel access;
     private final Collection<? extends Set<String>> teams;
 
-    public CreateProjectsCmd(String[] rawArgs) throws Exception {
+    public CreateProjectsCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
         access = AccessLevel.valueOf(args.getDefaultBranchAccess().toUpperCase());
 

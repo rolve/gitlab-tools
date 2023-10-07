@@ -3,11 +3,13 @@ package gitlabtools.cmd;
 import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.models.AccessLevel;
 
+import java.io.IOException;
+
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 
 public class CreateBranchCmd extends CmdForProjects<CreateBranchCmd.Args> {
 
-    public CreateBranchCmd(String[] rawArgs) throws Exception {
+    public CreateBranchCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

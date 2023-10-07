@@ -25,7 +25,7 @@ public class ExportSourcesCmd extends CmdForProjects<ExportSourcesCmd.Args> {
 
     private CredentialsProvider credentials;
 
-    public ExportSourcesCmd(String[] rawArgs) throws Exception {
+    public ExportSourcesCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

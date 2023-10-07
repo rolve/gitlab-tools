@@ -6,6 +6,7 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
@@ -16,7 +17,7 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
 
     private CredentialsProvider credentials;
 
-    public CloneCmd(String[] rawArgs) throws Exception {
+    public CloneCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

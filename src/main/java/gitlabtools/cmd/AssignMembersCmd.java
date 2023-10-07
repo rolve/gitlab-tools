@@ -11,13 +11,14 @@ import org.gitlab4j.api.models.Project;
 import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.models.User;
 
+import java.io.IOException;
 import java.util.List;
 
 public class AssignMembersCmd extends CmdForProjects<AssignMembersCmd.Args> {
 
     private List<User> users = null;
 
-    public AssignMembersCmd(String[] rawArgs) throws Exception {
+    public AssignMembersCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

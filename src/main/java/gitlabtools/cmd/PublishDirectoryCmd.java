@@ -33,7 +33,7 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
     private static final int SLEEP_TIME = 200;
     private static final Set<String> PRIMORDIAL_FILES = Set.of(".git", "README.md");
 
-    public PublishDirectoryCmd(String[] rawArgs) throws Exception {
+    public PublishDirectoryCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

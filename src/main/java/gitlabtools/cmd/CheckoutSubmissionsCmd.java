@@ -5,6 +5,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Date;
 
@@ -25,7 +26,7 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
 
     private static final int ATTEMPTS = 3;
 
-    public CheckoutSubmissionsCmd(String[] rawArgs) throws Exception {
+    public CheckoutSubmissionsCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

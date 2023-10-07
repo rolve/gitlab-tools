@@ -4,6 +4,7 @@ import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.models.RepositoryFile;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
@@ -15,7 +16,7 @@ public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
     private final Path file;
     private final byte[] content;
 
-    public PublishFileCmd(String[] rawArgs) throws Exception {
+    public PublishFileCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
         file = Path.of(args.getFile()).toAbsolutePath();
         if (!exists(file)) {
