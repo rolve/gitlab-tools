@@ -1,5 +1,6 @@
 package gitlabtools.cmd;
 
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.Option;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -7,6 +8,8 @@ import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
@@ -25,19 +28,23 @@ import static org.gitlab4j.api.Constants.SortOrder.DESC;
 public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCmd.Args> {
 
     private static final int ATTEMPTS = 3;
+    private final Instant deadline;
 
     public CheckoutSubmissionsCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
+        try {
+            var localDeadline = args.getDeadline() == null
+                    ? now()
+                    : parse(args.getDeadline());
+            deadline = localDeadline.atZone(systemDefault()).toInstant();
+            System.out.println("Using local deadline " + localDeadline + " (UTC: " + deadline + ")");
+        } catch (DateTimeParseException e) {
+            throw new ArgumentValidationException("Invalid deadline: " + args.getDeadline(), e);
+        }
     }
 
     @Override
     protected void doExecute() throws Exception {
-        var localDeadline = args.getDeadline() == null
-                ? now()
-                : parse(args.getDeadline());
-        var deadline = localDeadline.atZone(systemDefault()).toInstant();
-        System.out.println("Using local deadline " + localDeadline + " (UTC: " + deadline + ")");
-
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var destDir = Path.of(args.getDestDir());
