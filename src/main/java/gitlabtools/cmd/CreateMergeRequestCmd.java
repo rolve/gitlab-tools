@@ -4,6 +4,8 @@ import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -17,6 +19,8 @@ import static org.gitlab4j.api.Constants.ActionType.PUSHED;
 import static org.gitlab4j.api.Constants.SortOrder.DESC;
 
 public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.Args> {
+
+    private final List<String> projectsWithNoCommits = new ArrayList<>();
 
     public CreateMergeRequestCmd(String[] rawArgs) throws Exception {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -46,6 +50,7 @@ public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.
             var lastCommit = lastPushedCommit(pushes.stream(), project.getDefaultBranch());
             if (lastCommit.equals(lastInstructorCommit)) {
                 progress.advance("no commits");
+                projectsWithNoCommits.add(project.getName());
                 continue;
             }
 
@@ -72,6 +77,17 @@ public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.
         gitlab.getRepositoryApi().createBranch(project, name, ref);
         gitlab.getProtectedBranchesApi().protectBranch(project, name,
                 AccessLevel.MAINTAINER, AccessLevel.MAINTAINER);
+    }
+
+    @Override
+    protected void printSummary() {
+        super.printSummary();
+        if (!projectsWithNoCommits.isEmpty()) {
+            System.out.println("\nProjects without commits:");
+            for (var project : projectsWithNoCommits) {
+                System.out.println("    " + project);
+            }
+        }
     }
 
     public interface Args extends CmdForProjects.Args {

@@ -98,10 +98,14 @@ public abstract class Cmd<A extends Args> {
         progress = new ProgressTracker()
                 .usingChar("existing", '-').usingChar("failed", 'X');
         doExecute();
-        progress.printSummary();
+        printSummary();
     }
 
     protected abstract void doExecute() throws Exception;
+
+    protected void printSummary() {
+        progress.printSummary();
+    }
 
     protected Group getGroup() throws GitLabApiException {
         return gitlab.getGroupApi().getGroup(args.getGroup());
