@@ -9,12 +9,14 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Event;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.PushData;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.function.Predicate;
 
@@ -113,13 +115,13 @@ public abstract class Cmd<A extends Args> {
         return gitlab.getGroupApi().getGroup(args.getGroup());
     }
 
-    protected Event getLastPushBefore(Project project, String branch,
-                                      Instant deadline) throws GitLabApiException {
-        return getLastPushBefore(project, branch, deadline, e -> true);
+    protected String lastPushedCommitBefore(Project project, String branch,
+                                            Instant deadline) throws GitLabApiException {
+        return lastPushedCommitBefore(project, branch, deadline, e -> true);
     }
 
-    protected Event getLastPushBefore(Project project, String branch,
-                                      Instant deadline, Predicate<Event> filter) throws GitLabApiException {
+    protected String lastPushedCommitBefore(Project project, String branch,
+                                            Instant deadline, Predicate<Event> filter) throws GitLabApiException {
         // fetch all push-events on the day of the deadline and earlier
         // (actually, add 1 day to deadline since GitLab ignores time of day)
         var pushes = gitlab.getEventsApi().getProjectEventsStream(project.getId(),
@@ -127,9 +129,12 @@ public abstract class Cmd<A extends Args> {
 
         // filter precisely here:
         return pushes
-                .filter(e -> e.getPushData().getRef().equals(branch))
                 .filter(e -> !e.getCreatedAt().after(Date.from(deadline)))
                 .filter(filter)
+                .map(Event::getPushData)
+                .filter(p -> p.getRef().equals(branch))
+                .map(PushData::getCommitTo)
+                .filter(Objects::nonNull)
                 .findFirst().orElse(null);
     }
 }

@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
-import java.util.function.Predicate;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
@@ -55,11 +54,11 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
             var repoDir = destDir.resolve(project.getName());
             var branch = requireNonNullElse(args.getBranch(), project.getDefaultBranch());
 
-            var lastPush = getLastPushBefore(project, branch, deadline);
-            if (lastPush == null) {
+            var lastCommit = lastPushedCommitBefore(project, branch, deadline);
+            if (lastCommit == null) {
                 progress.advance("failed");
                 progress.interrupt();
-                System.out.printf("Skipping %s, no push events found before deadline.\n",
+                System.out.printf("Skipping %s, no commits found before deadline.\n",
                         project.getName());
                 continue;
             }
@@ -87,7 +86,6 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
                     }
 
                     // go to last commit before the deadline
-                    var lastCommit = lastPush.getPushData().getCommitTo();
                     git.checkout()
                             .setName(lastCommit)
                             .call();
