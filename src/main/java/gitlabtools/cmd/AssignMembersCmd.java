@@ -21,7 +21,7 @@ public class AssignMembersCmd extends CmdForProjects<AssignMembersCmd.Args> {
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         for (var project : getProjects()) {
             var name = project.getName();
             if (args.isWithProjectNamePrefix()) {

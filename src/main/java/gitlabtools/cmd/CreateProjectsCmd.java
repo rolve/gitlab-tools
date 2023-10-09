@@ -45,7 +45,12 @@ public class CreateProjectsCmd extends Cmd<CreateProjectsCmd.Args> {
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected int taskCount() {
+        return teams.size();
+    }
+
+    @Override
+    protected void executeTasks() throws Exception {
         var branchApi = gitlab.getProtectedBranchesApi();
 
         var existingProjects = gitlab.getGroupApi().getProjects(args.getGroup()).stream()

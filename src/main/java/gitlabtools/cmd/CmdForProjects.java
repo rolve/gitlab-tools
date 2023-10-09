@@ -15,11 +15,20 @@ import static java.util.stream.Collectors.toList;
 
 public abstract class CmdForProjects<A extends CmdForProjects.Args> extends Cmd<A> {
 
+    private List<Project> projects;
+
     public CmdForProjects(A args) throws IOException {
         super(args);
     }
 
-    protected List<Project> getProjects() throws GitLabApiException, IOException {
+    protected final List<Project> getProjects() throws GitLabApiException, IOException {
+        if (projects == null) {
+            projects = getProjectsFromGitLab();
+        }
+        return projects;
+    }
+
+    private List<Project> getProjectsFromGitLab() throws GitLabApiException, IOException {
         var projects = gitlab.getGroupApi().getProjects(args.getGroup());
         if (args.getCourseFile() != null) {
             projects = filter(projects);
@@ -35,6 +44,11 @@ public abstract class CmdForProjects<A extends CmdForProjects.Args> extends Cmd<
         return projects.stream()
                 .filter(filter)
                 .collect(toList());
+    }
+
+    @Override
+    protected int taskCount() throws Exception {
+        return getProjects().size();
     }
 
     interface Args extends gitlabtools.cmd.Args {

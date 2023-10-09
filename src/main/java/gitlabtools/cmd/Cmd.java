@@ -99,13 +99,26 @@ public abstract class Cmd<A extends Args> {
     }
 
     public void execute() throws Exception {
-        progress = new ProgressTracker()
+        var tasks = taskCount();
+        int charsPerLine;
+        if (tasks < 60) {
+            charsPerLine = 10;
+        } else if (tasks < 150) {
+            charsPerLine = 20;
+        } else {
+            charsPerLine = 50;
+        }
+        progress = new ProgressTracker(System.out, charsPerLine)
                 .usingChar("existing", '-').usingChar("failed", 'X');
-        doExecute();
+
+        executeTasks();
+
         printSummary();
     }
 
-    protected abstract void doExecute() throws Exception;
+    protected abstract int taskCount() throws Exception;
+
+    protected abstract void executeTasks() throws Exception;
 
     protected void printSummary() {
         progress.printSummary();

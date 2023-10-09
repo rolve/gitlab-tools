@@ -28,7 +28,7 @@ public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         var destDir = (args.getDestDir().replaceAll("/$", "") + "/").replaceAll("^/", "");
         var destFile = destDir + file.getFileName();
         var message = requireNonNullElse(args.getCommitMessage(), "Publish " + file.getFileName());

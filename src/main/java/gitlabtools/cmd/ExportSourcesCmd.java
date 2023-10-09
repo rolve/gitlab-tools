@@ -30,7 +30,7 @@ public class ExportSourcesCmd extends CmdForProjects<ExportSourcesCmd.Args> {
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var destDir = Path.of(args.getDestinationDir());

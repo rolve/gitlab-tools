@@ -67,7 +67,7 @@ public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         var sourceBranch = requireNonNullElse(args.getBranchName(), "review-" + now());
         var targetBranch = sourceBranch + "-base";
 

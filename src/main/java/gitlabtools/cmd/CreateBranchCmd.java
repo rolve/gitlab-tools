@@ -14,7 +14,7 @@ public class CreateBranchCmd extends CmdForProjects<CreateBranchCmd.Args> {
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         var repoApi = gitlab.getRepositoryApi();
         for (var project : getProjects()) {
             if (repoApi.getOptionalBranch(project, args.getBranch()).isPresent()) {

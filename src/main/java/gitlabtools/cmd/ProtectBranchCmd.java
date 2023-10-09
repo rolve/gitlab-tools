@@ -14,7 +14,7 @@ public class ProtectBranchCmd extends CmdForProjects<ProtectBranchCmd.Args> {
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         var branchApi = gitlab.getProtectedBranchesApi();
         var branch = args.getBranch();
         var access = AccessLevel.valueOf(args.getBranchAccess().toUpperCase());

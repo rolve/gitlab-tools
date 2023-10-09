@@ -42,7 +42,7 @@ public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCm
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var destDir = Path.of(args.getDestDir());

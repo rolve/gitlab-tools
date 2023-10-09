@@ -38,7 +38,7 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var dir = Path.of(args.getDir());

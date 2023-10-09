@@ -22,7 +22,7 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
     }
 
     @Override
-    protected void doExecute() throws Exception {
+    protected void executeTasks() throws Exception {
         credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var destDir = Path.of(args.getDestDir());
