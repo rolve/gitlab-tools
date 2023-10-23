@@ -55,8 +55,8 @@ public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.
                     ? localDeadline
                     : parse(args.getReleaseDateTime());
             releaseDateTime = localReleaseDateTime.atZone(systemDefault()).toInstant();
-            if (!releaseDateTime.isBefore(deadline)) {
-                throw new ArgumentValidationException("Release date/time must be before deadline");
+            if (releaseDateTime.isAfter(deadline)) {
+                throw new ArgumentValidationException("Release date/time must not be after deadline");
             }
             if (args.getReleaseDateTime() != null) {
                 System.out.println("Using local release date/time " + localReleaseDateTime + " (UTC: " + releaseDateTime + ")");
