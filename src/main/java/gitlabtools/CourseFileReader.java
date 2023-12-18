@@ -38,7 +38,7 @@ public class CourseFileReader {
     }
 
     private static TeamMember parseTeamsCourseLine(String line) {
-        var parts = line.split("\t");
+        var parts = line.split("\\s+");
         if (parts.length != 2) {
             throw new RuntimeException("illegal line in course file: '" + line + "'");
         }
