@@ -21,12 +21,12 @@ import static java.util.Objects.requireNonNullElse;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 
-public class CheckoutSubmissionsCmd extends CmdForProjects<CheckoutSubmissionsCmd.Args> {
+public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
 
     private static final int ATTEMPTS = 3;
     private final Instant deadline;
 
-    public CheckoutSubmissionsCmd(String[] rawArgs) throws IOException {
+    public CheckoutCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
         try {
             var localDeadline = args.getDeadline() == null

@@ -21,7 +21,7 @@ public class GitLabToolsCli {
             "publish-file", PublishFileCmd::new,
             "publish-dir", PublishDirectoryCmd::new,
             "create-merge-request", CreateMergeRequestCmd::new,
-            "checkout-submissions", CheckoutSubmissionsCmd::new,
+            "checkout", CheckoutCmd::new,
             "export-sources", ExportSourcesCmd::new,
             "clone", CloneCmd::new);
 
