@@ -68,11 +68,15 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
                 try {
                     if (exists(repoDir)) {
                         git = open(repoDir.toFile());
-                        // need to switch to default branch, in case we are in
-                        // "detached head" state (from previous checkout)
-                        git.checkout()
-                                .setName(branch)
-                                .call();
+                        if (git.getRepository().getBranch().equals(lastCommit)) {
+                            progress.advance("existing");
+                            break;
+                        }
+                        if (!git.getRepository().getBranch().equals(branch)) {
+                            git.checkout()
+                                    .setName(branch)
+                                    .call();
+                        }
                         git.pull()
                                 .setCredentialsProvider(credentials)
                                 .call();
@@ -89,6 +93,8 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
                     git.checkout()
                             .setName(lastCommit)
                             .call();
+
+                    progress.advance();
                     break;
                 } catch (TransportException e) {
                     progress.interrupt();
@@ -104,8 +110,6 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
                     }
                 }
             }
-
-            progress.advance();
         }
     }
 
