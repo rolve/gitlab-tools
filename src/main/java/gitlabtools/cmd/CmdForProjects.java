@@ -8,9 +8,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static gitlabtools.CourseFileReader.readSimpleCourseFile;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
 public abstract class CmdForProjects<A extends CmdForProjects.Args> extends Cmd<A> {
@@ -29,21 +30,19 @@ public abstract class CmdForProjects<A extends CmdForProjects.Args> extends Cmd<
     }
 
     private List<Project> getProjectsFromGitLab() throws GitLabApiException, IOException {
-        var projects = gitlab.getGroupApi().getProjects(args.getGroup());
+        var projects = gitlab.getGroupApi().getProjectsStream(args.getGroup())
+                .sorted(comparing(Project::getName));
         if (args.getCourseFile() != null) {
             projects = filter(projects);
         }
-        return projects;
+        return projects.collect(toList());
     }
 
-    private List<Project> filter(List<Project> projects) throws IOException {
+    private Stream<Project> filter(Stream<Project> projects) throws IOException {
         var names = Set.copyOf(readSimpleCourseFile(Path.of(args.getCourseFile())));
-        Predicate<Project> filter = args.isWithProjectNamePrefix()
+        return projects.filter(args.isWithProjectNamePrefix()
                 ? p -> names.contains(p.getName().split("_", 2)[1])
-                : p -> names.contains(p.getName());
-        return projects.stream()
-                .filter(filter)
-                .collect(toList());
+                : p -> names.contains(p.getName()));
     }
 
     @Override
