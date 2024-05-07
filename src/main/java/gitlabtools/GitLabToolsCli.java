@@ -9,21 +9,23 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import static java.lang.String.join;
+import static java.util.Map.entry;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 
 public class GitLabToolsCli {
 
-    private static final Map<String, Cmd.Constructor> COMMANDS = Map.of(
-            "create-projects", CreateProjectsCmd::new,
-            "create-branch", CreateBranchCmd::new,
-            "protect-branch", ProtectBranchCmd::new,
-            "assign-members", AssignMembersCmd::new,
-            "publish-file", PublishFileCmd::new,
-            "publish-dir", PublishDirectoryCmd::new,
-            "create-merge-request", CreateMergeRequestCmd::new,
-            "checkout", CheckoutCmd::new,
-            "export-sources", ExportSourcesCmd::new,
-            "clone", CloneCmd::new);
+    private static final Map<String, Cmd.Constructor> COMMANDS = Map.ofEntries(
+            entry("create-projects", CreateProjectsCmd::new),
+            entry("create-branch", CreateBranchCmd::new),
+            entry("protect-branch", ProtectBranchCmd::new),
+            entry("assign-members", AssignMembersCmd::new),
+            entry("publish-file", PublishFileCmd::new),
+            entry("publish-dir", PublishDirectoryCmd::new),
+            entry("create-merge-request", CreateMergeRequestCmd::new),
+            entry("extract-from-merge-requests", ExtractFromMergeRequestsCmd::new),
+            entry("checkout", CheckoutCmd::new),
+            entry("export-sources", ExportSourcesCmd::new),
+            entry("clone", CloneCmd::new));
 
     public static void main(String[] args) throws Exception {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
