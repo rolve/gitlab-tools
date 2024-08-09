@@ -2,6 +2,7 @@ image: maven:3-openjdk-11
 
 variables:
   MVN_REPO: $CI_PROJECT_DIR/maven-repo
+  ARTIFACT_JAR_NAME: gitlab-tools.jar
 
 cache:
   paths:
@@ -28,13 +29,14 @@ integration-test:
     DOCKER_DRIVER: overlay2
   script:
     - mvn verify -B -DskipUnitTests -Dmaven.repo.local=$MVN_REPO
-  artifacts:
-    paths:
-      - target/gitlab-tools.jar
 
 deploy:
   stage: deploy
   script:
     - mvn deploy -B -DskipTests -s ci_settings.xml -Dmaven.repo.local=$MVN_REPO
+    - mv target/*-jar-with-dependencies.jar target/$ARTIFACT_JAR_NAME
+  artifacts:
+    paths:
+      - target/$ARTIFACT_JAR_NAME
   rules:
     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
