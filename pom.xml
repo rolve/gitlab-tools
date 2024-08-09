@@ -2,7 +2,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>gitlab-tools</groupId>
+
+    <groupId>ch.trick17.gitlabtools</groupId>
     <artifactId>gitlab-tools</artifactId>
     <version>0.1-SNAPSHOT</version>
 
@@ -79,13 +80,13 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>gitlabtools.GitLabToolsCli</mainClass>
+                            <mainClass>ch.trick17.gitlabtools.GitLabToolsCli</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>gitlab-tools</finalName>
+                    <finalName>${project.artifactId}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
