@@ -28,6 +28,9 @@ integration-test:
     DOCKER_DRIVER: overlay2
   script:
     - mvn verify -B -DskipUnitTests -Dmaven.repo.local=$MVN_REPO
+  artifacts:
+    paths:
+      - target/gitlab-tools.jar
 
 deploy:
   stage: deploy
