@@ -1,4 +1,4 @@
-# GitLab Tools (for the Classroom) [![pipeline status](https://gitlab.fhnw.ch/michael.faes/gitlab-tools/badges/main/pipeline.svg)](https://gitlab.fhnw.ch/michael.faes/gitlab-tools/-/commits/main)
+# GitLab Tools (for the Classroom) [![pipeline status](https://gitlab.fhnw.ch/gitlab-tools/gitlab-tools/badges/main/pipeline.svg)](https://gitlab.fhnw.ch/gitlab-tools/gitlab-tools/-/commits/main)
 
 Command line tools for managing large numbers of GitLab projects, e.g., for teaching.
 
@@ -11,7 +11,7 @@ To use these tools, you need a GitLab instance and a user with the  permissions 
 
 ## Download
 
-Download the latest version: [gitlab-tools.jar](https://gitlab.fhnw.ch/michael.faes/gitlab-tools/-/jobs/artifacts/main/raw/target/gitlab-tools.jar?job=integration-test)
+Download the latest version: [gitlab-tools.jar](https://gitlab.fhnw.ch/gitlab-tools/gitlab-tools/-/jobs/artifacts/main/raw/target/gitlab-tools.jar?job=deploy)
 
 
 ## How to use this
