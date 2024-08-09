@@ -2,7 +2,6 @@ package ch.trick17.gitlabtools;
 
 import ch.trick17.gitlabtools.cmd.*;
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
-import gitlabtools.cmd.*;
 
 import java.lang.management.ManagementFactory;
 import java.util.Map;
