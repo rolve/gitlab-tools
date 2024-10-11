@@ -2,6 +2,7 @@ package ch.trick17.gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -73,59 +75,42 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                 var branch = requireNonNullElse(args.getBranch(), project.getDefaultBranch());
 
                 Git git = null;
-                for (int attempts = ATTEMPTS; attempts-- > 0;) {
+                for (int attempts = ATTEMPTS; attempts-- > 0; ) {
                     try {
                         if (exists(repoDir)) {
                             git = open(repoDir.toFile());
                             git.fetch()
                                     .setCredentialsProvider(credentials)
                                     .call();
-
-                            var remoteBranch = git.getRepository().findRef("origin/" + branch);
-                            if (remoteBranch == null) {
-                                progress.advance("failed");
-                                progress.interrupt();
-                                System.out.println("Remote branch " + branch + " not found for " + project.getName());
-                                continue projects;
-                            }
-
-                            for (var extra : args.getExtraBranches()) {
-                                var remoteExtra = git.getRepository().findRef("origin/" + extra);
-                                if (remoteExtra == null) {
-                                    progress.advance("failed");
-                                    progress.interrupt();
-                                    System.out.println("Remote branch " + extra + " not found for " + project.getName());
-                                    continue projects;
-                                }
-                            }
-
-                            var create = git.branchList().call().stream()
-                                    .map(Ref::getName)
-                                    .noneMatch(("refs/heads/" + branch)::equals);
-                            git.checkout()
-                                    .setName(branch)
-                                    .setCreateBranch(create)
-                                    .call();
-                            git.merge()
-                                    .include(remoteBranch)
-                                    .setFastForward(FF)
-                                    .call();
                         } else {
                             git = cloneRepository()
                                     .setURI(project.getWebUrl())
-                                    .setBranch(branch)
                                     .setDirectory(repoDir.toFile())
                                     .setCredentialsProvider(credentials)
                                     .call();
                             progress.additionalInfo("newly cloned");
                         }
+
+                        var allBranches = new ArrayList<>(List.of(branch));
+                        allBranches.addAll(args.getExtraBranches());
+                        for (var b : allBranches) {
+                            var remote = git.getRepository().findRef("origin/" + b);
+                            if (remote == null) {
+                                progress.advance("failed");
+                                progress.interrupt();
+                                System.out.println("Remote branch " + b + " not found for " + project.getName());
+                                continue projects;
+                            }
+                        }
+
+                        checkOutRemoteBranch(git, branch);
                         break;
                     } catch (TransportException e) {
                         progress.interrupt();
                         e.printStackTrace(System.out);
                         System.out.println(
-                                "Transport exception for " + project.getName()
-                                        + "! Attempts left: " + attempts);
+                                "Transport exception for " + project.getName() +
+                                "! Attempts left: " + attempts);
                         if (attempts == 0) {
                             throw e;
                         }
@@ -153,26 +138,14 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                         .call().getId();
 
                 for (var extra : args.getExtraBranches()) {
-                    var create = git.branchList().call().stream()
-                            .map(Ref::getName)
-                            .noneMatch(("refs/heads/" + extra)::equals);
-                    git.checkout()
-                            .setName(extra)
-                            .setCreateBranch(create)
-                            .call();
-                    // first, merge remote changes
-                    git.merge()
-                            .include(git.getRepository().findRef("origin/" + extra))
-                            .setFastForward(FF)
-                            .call();
-                    // then merge commit with directory
+                    checkOutRemoteBranch(git, extra);
                     git.merge()
                             .include(commitId)
                             .setMessage(message)
                             .call();
                 }
 
-                for (int attempts = ATTEMPTS; attempts-- > 0;) {
+                for (int attempts = ATTEMPTS; attempts-- > 0; ) {
                     try {
                         var push = git.push()
                                 .add(branch)
@@ -186,8 +159,8 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                         progress.interrupt();
                         e.printStackTrace(System.out);
                         System.out.println(
-                                "Transport exception for " + project.getName()
-                                        + "! Attempts left: " + attempts);
+                                "Transport exception for " + project.getName() +
+                                "! Attempts left: " + attempts);
                         if (attempts == 0) {
                             throw e;
                         }
@@ -204,6 +177,36 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                 System.out.println("Problem with " + project.getName() + ":");
                 e.printStackTrace(System.out);
             }
+        }
+    }
+
+    /**
+     * Helper method to check out the remote branch with the given name. If
+     * there already exists a local branch with that name, it is checked out and
+     * fast-forwarded to the remote branch, if necessary. Otherwise, it is
+     * created with the remote branch as the start point. In both cases, the
+     * remote branch must already exist, i.e., any fetching must be done before
+     * calling this method.
+     */
+    private static void checkOutRemoteBranch(Git git, String branch) throws GitAPIException, IOException {
+        // apparently, there is no cleaner way to do this...
+        var create = git.branchList().call().stream()
+                .map(Ref::getName)
+                .noneMatch(("refs/heads/" + branch)::equals);
+        if (create) {
+            git.checkout()
+                    .setCreateBranch(true)
+                    .setName(branch)
+                    .setStartPoint("origin/" + branch)
+                    .call();
+        } else {
+            git.checkout()
+                    .setName(branch)
+                    .call();
+            git.merge()
+                    .include(git.getRepository().findRef("origin/" + branch))
+                    .setFastForward(FF)
+                    .call();
         }
     }
 
