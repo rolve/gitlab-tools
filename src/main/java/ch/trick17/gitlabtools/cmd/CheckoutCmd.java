@@ -79,12 +79,7 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
                             progress.advance("existing");
                             break;
                         }
-                        if (!git.getRepository().getBranch().equals(branch)) {
-                            git.checkout()
-                                    .setName(branch)
-                                    .call();
-                        }
-                        git.pull()
+                        git.fetch()
                                 .setCredentialsProvider(credentials)
                                 .call();
                     } else {
