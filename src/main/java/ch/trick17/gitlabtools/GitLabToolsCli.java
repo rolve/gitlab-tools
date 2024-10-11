@@ -23,7 +23,7 @@ public class GitLabToolsCli {
             entry("publish-dir", PublishDirectoryCmd::new),
             entry("create-merge-request", CreateMergeRequestCmd::new),
             entry("extract-from-merge-requests", ExtractFromMergeRequestsCmd::new),
-            entry("checkout", CheckoutCmd::new),
+            entry("checkout-with-deadline", CheckoutWithDeadlineCmd::new),
             entry("export-sources", ExportSourcesCmd::new),
             entry("clone", CloneCmd::new));
 

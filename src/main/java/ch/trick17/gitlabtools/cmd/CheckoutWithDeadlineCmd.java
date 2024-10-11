@@ -29,12 +29,12 @@ import static org.eclipse.jgit.api.Git.open;
  * exact same deadline is used for all projects, even if the command is taking a
  * long time to process all of them.
  */
-public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
+public class CheckoutWithDeadlineCmd extends CmdForProjects<CheckoutWithDeadlineCmd.Args> {
 
     private static final int ATTEMPTS = 3;
     private final Instant deadline;
 
-    public CheckoutCmd(String[] rawArgs) throws IOException {
+    public CheckoutWithDeadlineCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
         try {
             var localDeadline = args.getDeadline() == null
