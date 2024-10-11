@@ -2,9 +2,7 @@ package ch.trick17.gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
@@ -15,13 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static ch.trick17.gitlabtools.cmd.GitUtils.checkOutRemoteBranch;
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.Objects.requireNonNullElse;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
-import static org.eclipse.jgit.api.MergeCommand.FastForwardMode.FF;
 
 /**
  * Publishes the content of a given directory into all repositories in the given
@@ -177,36 +175,6 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                 System.out.println("Problem with " + project.getName() + ":");
                 e.printStackTrace(System.out);
             }
-        }
-    }
-
-    /**
-     * Helper method to check out the remote branch with the given name. If
-     * there already exists a local branch with that name, it is checked out and
-     * fast-forwarded to the remote branch, if necessary. Otherwise, it is
-     * created with the remote branch as the start point. In both cases, the
-     * remote branch must already exist, i.e., any fetching must be done before
-     * calling this method.
-     */
-    private static void checkOutRemoteBranch(Git git, String branch) throws GitAPIException, IOException {
-        // apparently, there is no cleaner way to do this...
-        var create = git.branchList().call().stream()
-                .map(Ref::getName)
-                .noneMatch(("refs/heads/" + branch)::equals);
-        if (create) {
-            git.checkout()
-                    .setCreateBranch(true)
-                    .setName(branch)
-                    .setStartPoint("origin/" + branch)
-                    .call();
-        } else {
-            git.checkout()
-                    .setName(branch)
-                    .call();
-            git.merge()
-                    .include(git.getRepository().findRef("origin/" + branch))
-                    .setFastForward(FF)
-                    .call();
         }
     }
 
