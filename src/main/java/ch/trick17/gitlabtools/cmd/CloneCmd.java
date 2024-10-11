@@ -1,9 +1,8 @@
 package ch.trick17.gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
-import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
@@ -13,9 +12,13 @@ import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 
+/**
+ * Clones all repositories in the --group into the --destDir directory and
+ * optionally checks out a specific branch.
+ */
 public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
 
-    private CredentialsProvider credentials;
+    private static final int ATTEMPTS = 3;
 
     public CloneCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
@@ -23,7 +26,7 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
 
     @Override
     protected void executeTasks() throws Exception {
-        credentials = new UsernamePasswordCredentialsProvider("", token);
+        var credentials = new UsernamePasswordCredentialsProvider("", token);
 
         var destDir = Path.of(args.getDestDir());
         createDirectories(destDir);
@@ -32,29 +35,24 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
         System.out.println("Cloning " + projects.size() + " projects...");
         for (var project : projects) {
             var repoDir = destDir.resolve(project.getName());
-            clone(project.getWebUrl(), repoDir);
-            progress.advance();
-        }
-    }
 
-    private void clone(String projectUrl, Path repoDir) throws GitAPIException {
-        int attempts = 2;
-        while (attempts-- > 0) {
-            try {
-                cloneRepository()
-                        .setURI(projectUrl)
+            for (int attempts = ATTEMPTS; attempts-- > 0; ) {
+                try (Git ignored = cloneRepository()
+                        .setURI(project.getWebUrl())
                         .setDirectory(repoDir.toFile())
                         .setCredentialsProvider(credentials)
-                        .call()
-                        .close();
-                break; // done
-            } catch (TransportException e) {
-                if (attempts == 0) {
-                    throw e;
-                } else {
+                        .call()) {
+
+                    progress.advance();
+                    break;
+                } catch (TransportException e) {
                     progress.interrupt();
                     e.printStackTrace(System.out);
-                    System.out.println("Transport exception! Attempts left: " + attempts);
+                    System.out.println("Transport exception for " + project.getName() +
+                                       "! Attempts left: " + attempts);
+                    if (attempts == 0) {
+                        throw e;
+                    }
                 }
             }
         }
