@@ -11,6 +11,14 @@ import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.*;
 import static java.util.Objects.requireNonNullElse;
 
+/**
+ * Publishes a single given file into all repositories in the given group, using
+ * the GitLab file API.
+ * <p>
+ * If a file with the same path already exists in a repository (in the given
+ * branch), the command assumes that the file has been published before and
+ * skips the repository.
+ */
 public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
 
     private final Path file;
@@ -50,18 +58,31 @@ public class PublishFileCmd extends CmdForProjects<PublishFileCmd.Args> {
     }
 
     public interface Args extends CmdForProjects.Args {
+        /**
+         * The local file system path to the file to publish.
+         */
         @Option
         String getFile();
 
+        /**
+         * The path of a directory in the GitLab repository into which the file
+         * is published, e.g., "foo/bar". If unspecified, the file is published
+         * to the root of the repository.
+         */
         @Option(defaultValue = "/")
         String getDestDir();
 
+        /**
+         * The commit message to use for the commit that publishes the file. If
+         * unspecified, a default message is used.
+         */
         @Option(defaultToNull = true)
         String getCommitMessage();
 
         /**
-         * Must already exist in the GitLab repo. If not set, the default
-         * branch configured in GitLab is used.
+         * The branch to publish the file into. Must already exist in the GitLab
+         * repository. If unspecified, the default branch configured in GitLab
+         * is used.
          */
         @Option(defaultToNull = true)
         String getBranch();

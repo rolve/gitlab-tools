@@ -22,10 +22,18 @@ import static org.eclipse.jgit.api.Git.open;
 import static org.eclipse.jgit.api.MergeCommand.FastForwardMode.FF;
 
 /**
- * Publishes the content of a given directory into directories of existing
- * repositories (or the root directory). If this command is used repeatedly to
- * publish multiple directories, the 'workDir' option can be used to reduce
- * execution time by avoiding subsequent clone operations.
+ * Publishes the content of a given directory into all repositories in the given
+ * group. To do this, each repository is cloned into a local working directory,
+ * the given directory is copied into it and the changes are committed and
+ * pushed back to the server. By default, the working directory is deleted
+ * afterward; if this command is to be used repeatedly to publish multiple
+ * directories, a persistent working directory can be defined using the
+ * 'workDir' option, reducing execution time of subsequent publish operations by
+ * avoiding repeated cloning.
+ * <p>
+ * If a non-empty directory with the same path already exists in the repository
+ * (in the given branch), the command assumes that the directory has been
+ * published before and skips the repository.
  */
 public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args> {
 
@@ -212,35 +220,56 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
     }
 
     interface Args extends CmdForProjects.Args {
+        /**
+         * The local file system path to the directory to publish.
+         */
         @Option
         String getDir();
 
+        /**
+         * The path of a directory in the GitLab repository into which the
+         * content of the local directory is published, e.g., "foo/bar". If
+         * unspecified, the content is published to the root of the repository.
+         */
         @Option(defaultToNull = true)
         String getDestDir();
 
+        /**
+         * The local file system path to a directory that is used to clone the
+         * repositories. This directory is created if it does not exist. If
+         * unspecified, a temporary directory is used and deleted afterward.
+         * Otherwise, the working directory is kept to speed up subsequent
+         * publish operations.
+         */
         @Option(defaultToNull = true)
         String getWorkDir();
 
         /**
-         * A GLOB pattern that is applied to the relative path of each file
-         * in the directory.
+         * A GLOB pattern that is applied to the relative path of each file in
+         * the directory. Matching files are not published. If unspecified, all
+         * files are published.
          */
         @Option(defaultToNull = true)
         String getIgnorePattern();
 
+        /**
+         * The commit message to use for the commit that publishes the
+         * directory. If unspecified, a default message is used.
+         */
         @Option(defaultToNull = true)
         String getCommitMessage();
 
         /**
-         * Must already exist in the GitLab repo. If not set, the default
-         * branch configured in GitLab is used.
+         * The branch to publish the directory into. Must already exist in the
+         * GitLab repository. If unspecified, the default branch configured in
+         * GitLab is used.
          */
         @Option(defaultToNull = true)
         String getBranch();
 
         /**
          * A list of extra branches into which the branch with the published
-         * directory is merged. Must all exist in the GitLab repo.
+         * directory is merged. Must all exist in the GitLab repository.
          */
         @Option(defaultValue = {})
         List<String> getExtraBranches();
