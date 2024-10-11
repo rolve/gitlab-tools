@@ -10,6 +10,7 @@ import java.nio.file.Path;
 
 import static com.lexicalscope.jewel.cli.CliFactory.createCli;
 import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.exists;
 import static org.eclipse.jgit.api.Git.cloneRepository;
 
 /**
@@ -37,6 +38,11 @@ public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
             var repoDir = destDir.resolve(project.getName());
 
             for (int attempts = ATTEMPTS; attempts-- > 0; ) {
+                if (exists(repoDir)) {
+                    progress.advance("existing");
+                    break;
+                }
+
                 try (Git ignored = cloneRepository()
                         .setURI(project.getWebUrl())
                         .setDirectory(repoDir.toFile())

@@ -70,8 +70,8 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
                 continue;
             }
 
-            Git git = null;
             for (int attempts = ATTEMPTS; attempts-- > 0; ) {
+                Git git = null;
                 try {
                     if (exists(repoDir)) {
                         git = open(repoDir.toFile());
