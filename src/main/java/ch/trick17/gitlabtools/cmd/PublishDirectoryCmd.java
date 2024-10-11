@@ -62,7 +62,7 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
 
         var projects = getProjects();
         System.out.println("Publishing directory to " + projects.size() + " repositories...");
-        for (var project : projects) {
+        projects: for (var project : projects) {
             try {
                 var repoDir = workDir.resolve(project.getName());
                 if (alreadyPublished(repoDir)) {
@@ -81,6 +81,24 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                                     .setCredentialsProvider(credentials)
                                     .call();
 
+                            var remoteBranch = git.getRepository().findRef("origin/" + branch);
+                            if (remoteBranch == null) {
+                                progress.advance("failed");
+                                progress.interrupt();
+                                System.out.println("Remote branch " + branch + " not found for " + project.getName());
+                                continue projects;
+                            }
+
+                            for (var extra : args.getExtraBranches()) {
+                                var remoteExtra = git.getRepository().findRef("origin/" + extra);
+                                if (remoteExtra == null) {
+                                    progress.advance("failed");
+                                    progress.interrupt();
+                                    System.out.println("Remote branch " + extra + " not found for " + project.getName());
+                                    continue projects;
+                                }
+                            }
+
                             var create = git.branchList().call().stream()
                                     .map(Ref::getName)
                                     .noneMatch(("refs/heads/" + branch)::equals);
@@ -89,7 +107,7 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                                     .setCreateBranch(create)
                                     .call();
                             git.merge()
-                                    .include(git.getRepository().resolve("origin/" + branch))
+                                    .include(remoteBranch)
                                     .setFastForward(FF)
                                     .call();
                         } else {
@@ -144,7 +162,7 @@ public class PublishDirectoryCmd extends CmdForProjects<PublishDirectoryCmd.Args
                             .call();
                     // first, merge remote changes
                     git.merge()
-                            .include(git.getRepository().resolve("origin/" + extra))
+                            .include(git.getRepository().findRef("origin/" + extra))
                             .setFastForward(FF)
                             .call();
                     // then merge commit with directory
