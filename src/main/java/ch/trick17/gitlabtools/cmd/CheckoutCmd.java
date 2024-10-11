@@ -24,9 +24,10 @@ import static org.eclipse.jgit.api.Git.open;
 /**
  * Similar to {@link CloneCmd}, clones all repositories in the --group into the
  * --destDir directory, but additionally checks out a specific commit that
- * corresponds to the last push before a given deadline. By using the GitLab
- * event API, this command ensures that the exact same deadline is used for all
- * projects, even if the command is taking a long time to process all of them.
+ * corresponds to the last push before a given deadline (resulting in a detached
+ * HEAD state). By using the GitLab event API, this command ensures that the
+ * exact same deadline is used for all projects, even if the command is taking a
+ * long time to process all of them.
  */
 public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
 
@@ -122,11 +123,10 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
         /**
          * The deadline to use to determine the commit to check out. The GitLab
          * API is queried for the last push event before the deadline for the
-         * given branch and the corresponding commit is checked out. This
-         * results in a detached HEAD state. The deadline is interpreted as
-         * local time and must be specified in ISO-8601 format, e.g.
-         * "2007-12-03T10:15:30". If unspecified, the time at which the command
-         * is started is used.
+         * given branch and the corresponding commit is checked out. The
+         * deadline is interpreted as local time and must be specified in
+         * ISO-8601 format, e.g. "2007-12-03T10:15:30". If unspecified, the time
+         * at which the command is started is used.
          */
         @Option(defaultToNull = true)
         String getDeadline();
