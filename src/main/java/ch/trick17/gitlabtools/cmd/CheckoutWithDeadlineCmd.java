@@ -22,16 +22,17 @@ import static org.eclipse.jgit.api.Git.cloneRepository;
 import static org.eclipse.jgit.api.Git.open;
 
 /**
- * Similar to {@link CloneCmd}, clones all repositories in the --group into the
- * --destDir directory, but additionally checks out a specific commit that
- * corresponds to the last push before a given deadline (resulting in a detached
- * HEAD state). By using the GitLab event API, this command ensures that the
- * exact same deadline is used for all projects, even if the command is taking a
- * long time to process all of them.
+ * Similar to {@link CheckoutCmd}, clones all repositories in the --group into
+ * the --destDir directory, but checks out a specific commit that corresponds to
+ * the last push before a given deadline (resulting in a detached HEAD state).
+ * By using the GitLab event API, this command ensures that the exact same
+ * deadline is used for all projects, even if the command is taking a long time
+ * to process all of them.
  */
 public class CheckoutWithDeadlineCmd extends CmdForProjects<CheckoutWithDeadlineCmd.Args> {
 
     private static final int ATTEMPTS = 3;
+
     private final Instant deadline;
 
     public CheckoutWithDeadlineCmd(String[] rawArgs) throws IOException {

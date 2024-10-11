@@ -19,13 +19,13 @@ import static org.eclipse.jgit.api.Git.open;
 
 /**
  * Clones all repositories in the --group into the --destDir directory and
- * optionally checks out a specific branch.
+ * checks out the default or a given branch.
  */
-public class CloneCmd extends CmdForProjects<CloneCmd.Args> {
+public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
 
     private static final int ATTEMPTS = 3;
 
-    public CloneCmd(String[] rawArgs) throws IOException {
+    public CheckoutCmd(String[] rawArgs) throws IOException {
         super(createCli(Args.class).parseArguments(rawArgs));
     }
 

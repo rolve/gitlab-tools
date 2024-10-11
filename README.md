@@ -114,14 +114,16 @@ Execute the jar file without specifying a command to list further available comm
 
 Each command has a `--help` option that lists available options. For example,
 
-    java -jar gitlab-tools.jar clone --help
+    java -jar gitlab-tools.jar checkout --help
 
 produces something like the following:
 
     The options available are:
-        [--defaultBranch value]
-        --destinationDir value
-        [--gitlabUrl value]
+        [--branch value]
+        [--courseFile value]
+        --destDir value
+        [--gitLabUrl value]
         --group value
         [--help]
         [--tokenFile value]
+        [--withProjectNamePrefix]
