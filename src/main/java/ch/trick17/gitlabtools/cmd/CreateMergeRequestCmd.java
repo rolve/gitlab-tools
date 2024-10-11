@@ -134,7 +134,9 @@ public class CreateMergeRequestCmd extends CmdForProjects<CreateMergeRequestCmd.
          * This option allows to specify the name of the source branch. If not
          * specified, a default name containing the current date is used. The
          * target branch is named like the source branch, but with the suffix
-         * '-base'.
+         * '-base'. Both branches will be protected after creation, such that
+         * only maintainers can push to them. This is to prevent students from
+         * adding additional commits to be reviewed.
          */
         @Option(defaultToNull = true)
         String getBranchName();
