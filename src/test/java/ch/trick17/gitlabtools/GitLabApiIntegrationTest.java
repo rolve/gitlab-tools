@@ -3,7 +3,6 @@ package ch.trick17.gitlabtools;
 import ch.trick17.gitlabtools.auth.AuthenticationException;
 import ch.trick17.gitlabtools.auth.TokenCreationException;
 import ch.trick17.gitlabtools.auth.TokenCreator;
-import org.apache.commons.lang3.ArrayUtils;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Group;
@@ -14,8 +13,11 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import static java.lang.String.join;
+import static java.util.Arrays.stream;
+import static java.util.stream.Stream.concat;
 
 public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
 
@@ -76,9 +78,10 @@ public class GitLabApiIntegrationTest extends GitLabIntegrationTest {
     }
 
     protected String[] withTestDefaults(String... args) {
-        return ArrayUtils.addAll(args,
+        var defaults = Stream.of(
                 "--gitLabUrl", URL,
                 "--tokenFile", tokenFile(),
                 "--group", GROUP + "/" + subgroup.getName());
+        return concat(defaults, stream(args)).toArray(String[]::new);
     }
 }

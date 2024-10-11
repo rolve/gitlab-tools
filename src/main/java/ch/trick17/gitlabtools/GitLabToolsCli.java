@@ -9,8 +9,8 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import static java.lang.String.join;
+import static java.util.Arrays.copyOfRange;
 import static java.util.Map.entry;
-import static org.apache.commons.lang3.ArrayUtils.subarray;
 
 public class GitLabToolsCli {
 
@@ -44,7 +44,7 @@ public class GitLabToolsCli {
             return;
         }
 
-        var cmd = constructCmd(cmdName, subarray(args, 1, args.length));
+        var cmd = constructCmd(cmdName, copyOfRange(args, 1, args.length));
         confirm(args);
         cmd.execute();
     }
