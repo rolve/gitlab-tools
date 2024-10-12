@@ -37,7 +37,7 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
         createDirectories(destDir);
 
         var projects = getProjects();
-        System.out.println("Cloning " + projects.size() + " projects...");
+        System.out.println("Checking out " + projects.size() + " projects...");
         for (var project : projects) {
             var repoDir = destDir.resolve(project.getName());
             var branch = requireNonNullElse(args.getBranch(), project.getDefaultBranch());
