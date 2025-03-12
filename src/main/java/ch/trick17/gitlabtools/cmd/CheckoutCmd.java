@@ -39,7 +39,7 @@ public class CheckoutCmd extends CmdForProjects<CheckoutCmd.Args> {
         var projects = getProjects();
         System.out.println("Checking out " + projects.size() + " projects...");
         for (var project : projects) {
-            var repoDir = destDir.resolve(project.getName());
+            var repoDir = destDir.resolve(project.getPathWithNamespace());
             var branch = requireNonNullElse(args.getBranch(), project.getDefaultBranch());
 
             for (int attempts = ATTEMPTS; attempts-- > 0; ) {

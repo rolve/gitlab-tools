@@ -2,11 +2,15 @@ package ch.trick17.gitlabtools.cmd;
 
 import com.lexicalscope.jewel.cli.Option;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.GroupFilter;
 import org.gitlab4j.api.models.Project;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -30,13 +34,20 @@ public abstract class CmdForProjects<A extends CmdForProjects.Args> extends Cmd<
     }
 
     private List<Project> getProjectsFromGitLab() throws GitLabApiException, IOException {
+        final List<Group> descendants = gitlab.getGroupApi().getDescendantGroups(args.getGroup(), new GroupFilter().withAllAvailable(true));
         var projects = gitlab.getGroupApi().getProjectsStream(args.getGroup())
-                .sorted(comparing(Project::getName));
+                .sorted(comparing(Project::getPathWithNamespace));
+        for (Group descendant : descendants) {
+            projects = Stream.concat(projects, gitlab.getGroupApi().getProjectsStream(descendant))
+                    .sorted(comparing(Project::getPathWithNamespace));
+        }
+
         if (args.getCourseFile() != null) {
             projects = filter(projects);
         }
         return projects.collect(toList());
     }
+
 
     private Stream<Project> filter(Stream<Project> projects) throws IOException {
         var names = Set.copyOf(readSimpleCourseFile(Path.of(args.getCourseFile())));
